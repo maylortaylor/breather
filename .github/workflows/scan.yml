@@ -1,0 +1,48 @@
+name: Scan
+
+# Inert until the first push: this repo has no remote before v1.
+#
+# Secret scanning on every PR, push to main, and weekly. Deliberately
+# unfiltered, because a secret can be committed in a docs-only PR.
+on:
+  pull_request:
+    branches: [main]
+  push:
+    branches: [main]
+  schedule:
+    # Weekly, so a secret committed after a PR merged still surfaces.
+    - cron: '17 6 * * 1'
+
+permissions:
+  # The gitleaks CLI scans the local checkout's history, not the GitHub API.
+  contents: read
+
+jobs:
+  secrets:
+    name: Secret scan
+    runs-on: ubuntu-latest
+    steps:
+      # SHA-pinned. The SHA was resolved from the API; the version comment is
+      # a courtesy and can say anything.
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          # gitleaks needs history to scan commits, not just the tree.
+          fetch-depth: 0
+
+      # gitleaks-action needs a paid license under an organization. The CLI is
+      # MIT-licensed and free, so run the pinned binary directly: same scanner,
+      # same default ruleset. Version-pinned and SHA256-verified.
+      - name: Gitleaks
+        env:
+          GITLEAKS_VERSION: 8.30.1
+          GITLEAKS_SHA256: 551f6fc83ea457d62a0d98237cbad105af8d557003051f41f3e7ca7b3f2470eb
+        run: |
+          set -euo pipefail
+          # -f so a 404 fails here with an HTTP error instead of surfacing
+          # later as a confusing checksum mismatch.
+          curl -fsSL "https://github.com/gitleaks/gitleaks/releases/download/v${GITLEAKS_VERSION}/gitleaks_${GITLEAKS_VERSION}_linux_x64.tar.gz" -o gitleaks.tar.gz
+          echo "${GITLEAKS_SHA256}  gitleaks.tar.gz" | sha256sum -c -
+          tar -xzf gitleaks.tar.gz gitleaks
+          # Scans the full commit history (fetch-depth 0 above); exits
+          # non-zero on a finding. --config is explicit so it cannot drop out.
+          ./gitleaks git . --config .gitleaks.toml --redact --verbose

@@ -1,0 +1,13 @@
+# Secrets: never commit. Only .env.example is tracked.
+.env*
+!.env.example
+*.pem
+*.key
+
+# Dependencies and builds
+node_modules/
+dist/
+coverage/
+
+# OS
+.DS_Store

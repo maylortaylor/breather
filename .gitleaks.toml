@@ -1,0 +1,4 @@
+title = "breather gitleaks config"
+
+[extend]
+useDefault = true
