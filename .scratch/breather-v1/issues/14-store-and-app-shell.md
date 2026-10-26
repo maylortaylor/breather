@@ -33,3 +33,9 @@ npm run check:build
 npm run dev
 ```
 - Open `http://localhost:5173/breather/lab.html` and play one sound to confirm the Lab still works.
+
+## Comments
+- The App shell styles the near-black background in `src/index.css`, not StyleX. The StyleX plugin is off under Vitest, so `stylex.create` would throw in the smoke test. Ticket 15 can move colors into tokens.
+- The store holds every key in the spec except `mix`; it arrives with the preset schema (ticket 16). Saved under `breather.state`: `welcomeSeen`, `dim`, `secondsMode`, `master`, `presetId`.
+- `vitest-axe` pulls in `axe-core` (MPL-2.0). It is a devDependency and never ships in `dist/`.
+- The Lab entry is `lab.html` plus `src/lab/main.tsx`. Vite builds only `index.html`, so the Lab stays out of `dist/`.
