@@ -1,5 +1,5 @@
 Type: build
-Status: claimed
+Status: resolved
 Blocked by: 19
 Model: sonnet
 
@@ -41,3 +41,6 @@ npm run dev
 - Added: the Up arrow opens the sheet, so a keyboard user can reach it. Escape and the handle close it. `touch-action: none` on the resting screen so a swipe up reaches pointer events.
 - Tabs 22 and 25 replace `null` in the `BODIES` map in `Sheet.tsx`.
 - Added a Settings pill at bottom centre (Matt's review: the sheet was undiscoverable). It stays outside the dissolve, toggles the sheet, and sits 12px above the sheet on phones so it never covers content; the gestures, handle and Escape still work.
+
+## Answer
+Resolved 2026-10-26. All 9 criteria pass, plus a visible "Settings" pill at the bottom centre added after Matt's review: with the sheet closed, nothing on screen said it existed. Matt checked the dissolve and the button and approved ("much better"). The sheet also opens on a tap away from the ring, a swipe up or the Up arrow. Master volume is no longer persisted, per ticket 06. Tabs are empty until tickets 22 to 25.
