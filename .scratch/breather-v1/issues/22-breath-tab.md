@@ -30,3 +30,11 @@ npm run check
 npm run dev
 ```
 - Matt checks: drag tempo to each end and back to center; the snap is felt, the hint matches the ring, and the metronome detents sound as the PLAN table says.
+
+## Comments
+- Built in four commits. `src/ui/BreathTab.tsx` (new), `src/ui/breathLogic.ts` (pure, 100% lines), and small additive edits to `Slider.tsx` (optional `detent`, `ends`, `valueText` props; the Master slider renders as before), `Sheet.tsx` (one import, one line) and `Gate.tsx`.
+- Gap closed outside the ticket: the store never saved `mix`, so AC6 could not pass. `store.ts` now writes `mix` to `breather.state` once it differs from the default, and reads it back through `parseState`. Gate restores a saved mix even when no preset id is stored.
+- The tempo snap runs on pointer release only. Arrow keys step by 0.025 and stop on 0.5 first, so a key never sticks inside the snap radius. The metronome snaps live below detent 2; its arrow keys jump stop to stop.
+- The voice preview plays on its own `metro-preview` layer, so the running beats keep their trims.
+- Seconds mode: the hint reads "Inhale about 4s". Disabling the tempo slider there is ticket 23.
+- Deferred check from ticket 21 (10-minute steady heartbeat above detent 2) is Matt's, in the foreground.
