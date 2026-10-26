@@ -1,9 +1,24 @@
 // Throwaway Lab UI: the LFO bank, the per-row volume control (single or range slider), and the
 // small "i" help bubbles.
 import * as stylex from "@stylexjs/stylex";
-import { useEffect, useId, useRef, useState, type CSSProperties, type ReactNode } from "react";
+import {
+  useCallback,
+  useEffect,
+  useId,
+  useLayoutEffect,
+  useRef,
+  useState,
+  type CSSProperties,
+  type ReactNode,
+} from "react";
 import { MAX_PERIOD, MIN_PERIOD, type LfoShape } from "../audio/lfo";
 import type { LfoChoice, Modulator, RowSetting } from "../audio/modulation";
+import {
+  createDelayedAction,
+  LONG_PRESS_MS,
+  TOOLTIP_DELAY_MS,
+  type DelayedAction,
+} from "./tooltipTimer";
 
 const FRAME_MS = 33;
 const REDUCED_FRAME_MS = 250;
@@ -109,7 +124,6 @@ const styles = stylex.create({
   },
   dotOn: { opacity: 1, boxShadow: "0 0 0 2px #0b1020, 0 0 0 4px #ffffff" },
   cell: { display: "inline-flex", alignItems: "center", gap: 6, fontSize: 14, color: "#b8c4e8" },
-  volume: { flexGrow: 2, flexBasis: 220, minWidth: 150 },
   slider: { position: "relative", height: 28, flexGrow: 1 },
   bar: {
     position: "absolute",
@@ -162,29 +176,14 @@ const styles = stylex.create({
     "::-webkit-slider-runnable-track": { backgroundColor: "transparent" },
     "::-moz-range-track": { backgroundColor: "transparent" },
   },
-  infoWrap: { position: "relative", display: "inline-flex" },
-  infoBtn: {
-    width: 20,
-    height: 20,
-    padding: 0,
-    borderRadius: 10,
-    borderWidth: 1,
-    borderStyle: "solid",
-    borderColor: "#5a6fae",
-    backgroundColor: "transparent",
-    color: "#b8c4e8",
-    fontSize: 12,
-    fontStyle: "italic",
-    fontFamily: "Georgia, serif",
-    cursor: "help",
-    lineHeight: 1,
-  },
+  tipWrap: { position: "relative", display: "inline-flex", alignItems: "center", gap: 6 },
+  tipFill: { flexGrow: 1, minWidth: 0 },
+  tipVolume: { flexGrow: 2, flexBasis: 220, minWidth: 150, display: "flex" },
   tip: {
-    position: "absolute",
-    top: 26,
+    position: "fixed",
     zIndex: 20,
     width: "max-content",
-    maxWidth: "min(240px, 70vw)",
+    maxWidth: "min(260px, calc(100vw - 16px))",
     padding: "8px 10px",
     borderRadius: 8,
     backgroundColor: "#060a18",
@@ -194,89 +193,162 @@ const styles = stylex.create({
     color: "#e8ecf8",
     fontSize: 13,
     lineHeight: 1.35,
-    fontStyle: "normal",
     textAlign: "left",
+    pointerEvents: "none",
   },
-  tipLeft: { left: -4 },
-  tipRight: { right: -4 },
 });
 
-/** The "i" button and its one-line bubble. Hover, keyboard focus or tap opens it; Escape or a tap elsewhere closes it. */
-export function Info({ text, align = "left" }: { text: string; align?: "left" | "right" }) {
+/**
+ * Wraps a control (or a small group of them) with a one-line tooltip. It shows after the pointer or
+ * keyboard focus rests on the control for 4 s, or after a 600 ms touch long press; it hides on
+ * leave, blur, Escape, scroll or a tap elsewhere. The text is linked to every control inside with
+ * aria-describedby at all times, so screen readers get it without the delay.
+ */
+export function Tip({
+  text,
+  grow,
+  children,
+}: {
+  text: string;
+  grow?: "fill" | "volume";
+  children: ReactNode;
+}) {
   const id = useId();
   const [open, setOpen] = useState(false);
-  const [pinned, setPinned] = useState(false);
   const wrap = useRef<HTMLSpanElement>(null);
+  const tip = useRef<HTMLSpanElement>(null);
+  const hideSoon = useRef<ReturnType<typeof setTimeout> | null>(null);
+  // Set after a touch long press so the lift of the finger does not also click the control.
+  const swallowClick = useRef(false);
+  const touchStart = useRef<{ x: number; y: number } | null>(null);
+  const timers = useRef<{ hover: DelayedAction; press: DelayedAction } | null>(null);
 
   useEffect(() => {
-    if (!open) return;
-    const close = () => {
-      setOpen(false);
-      setPinned(false);
-    };
-    const onDown = (ev: PointerEvent) => {
-      if (!wrap.current?.contains(ev.target as Node)) close();
-    };
-    const onKey = (ev: KeyboardEvent) => {
-      if (ev.key === "Escape") close();
-    };
-    document.addEventListener("pointerdown", onDown);
-    document.addEventListener("keydown", onKey);
+    const hover = createDelayedAction(TOOLTIP_DELAY_MS, () => setOpen(true));
+    const press = createDelayedAction(LONG_PRESS_MS, () => {
+      swallowClick.current = true;
+      setOpen(true);
+    });
+    timers.current = { hover, press };
     return () => {
-      document.removeEventListener("pointerdown", onDown);
-      document.removeEventListener("keydown", onKey);
+      hover.cancel();
+      press.cancel();
+      timers.current = null;
     };
+  }, []);
+
+  const hide = useCallback(() => {
+    timers.current?.hover.cancel();
+    timers.current?.press.cancel();
+    if (hideSoon.current) clearTimeout(hideSoon.current);
+    hideSoon.current = null;
+    setOpen(false);
+  }, []);
+
+  // Link the text to every focusable control inside, whether or not the bubble is showing.
+  useEffect(() => {
+    for (const el of wrap.current?.querySelectorAll("button, input, select, [role=group]") ?? []) {
+      el.setAttribute("aria-describedby", id);
+    }
+  });
+
+  // While open: close on Escape, scroll, or a pointer press anywhere.
+  useEffect(() => {
+    if (!open) return;
+    const onKey = (ev: KeyboardEvent) => ev.key === "Escape" && hide();
+    document.addEventListener("keydown", onKey);
+    document.addEventListener("pointerdown", hide);
+    window.addEventListener("scroll", hide, true);
+    return () => {
+      document.removeEventListener("keydown", onKey);
+      document.removeEventListener("pointerdown", hide);
+      window.removeEventListener("scroll", hide, true);
+    };
+  }, [open, hide]);
+
+  // Keep the bubble inside the viewport, below the control (so it never covers a thumb), or above
+  // it when there is no room below.
+  useLayoutEffect(() => {
+    const t = tip.current;
+    const w = wrap.current;
+    if (!open || !t || !w) return;
+    const r = w.getBoundingClientRect();
+    const b = t.getBoundingClientRect();
+    const left = Math.min(Math.max(8, r.left), Math.max(8, innerWidth - b.width - 8));
+    const below = r.bottom + 8;
+    const top = below + b.height > innerHeight - 8 ? Math.max(8, r.top - b.height - 8) : below;
+    t.style.left = `${left}px`;
+    t.style.top = `${top}px`;
+    t.style.visibility = "visible";
   }, [open]);
 
   return (
-    <span ref={wrap} {...stylex.props(styles.infoWrap)}>
-      <button
-        type="button"
-        aria-label="More info"
-        aria-describedby={id}
-        aria-expanded={open}
-        {...stylex.props(styles.infoBtn)}
-        onPointerEnter={(ev) => ev.pointerType === "mouse" && setOpen(true)}
-        onPointerLeave={(ev) => ev.pointerType === "mouse" && !pinned && setOpen(false)}
-        onFocus={(ev) => ev.currentTarget.matches(":focus-visible") && setOpen(true)}
-        onBlur={() => {
-          setOpen(false);
-          setPinned(false);
-        }}
-        onClick={() => {
-          const next = !pinned;
-          setPinned(next);
-          setOpen(next);
-        }}
-      >
-        i
-      </button>
+    <span
+      ref={wrap}
+      {...stylex.props(
+        styles.tipWrap,
+        grow === "fill" && styles.tipFill,
+        grow === "volume" && styles.tipVolume
+      )}
+      onPointerEnter={(ev) => {
+        if (ev.pointerType === "mouse") timers.current?.hover.start();
+      }}
+      onPointerMove={(ev) => {
+        if (ev.pointerType === "mouse" && !open) timers.current?.hover.start();
+        const t0 = touchStart.current;
+        if (t0 && Math.hypot(ev.clientX - t0.x, ev.clientY - t0.y) > 10) {
+          timers.current?.press.cancel();
+        }
+      }}
+      onPointerLeave={(ev) => {
+        if (ev.pointerType === "mouse") hide();
+      }}
+      onPointerDownCapture={(ev) => {
+        swallowClick.current = false;
+        if (ev.pointerType === "mouse") {
+          hide();
+        } else {
+          touchStart.current = { x: ev.clientX, y: ev.clientY };
+          timers.current?.press.start();
+        }
+      }}
+      onPointerUp={() => {
+        timers.current?.press.cancel();
+        touchStart.current = null;
+        if (open && swallowClick.current) {
+          hideSoon.current = setTimeout(hide, 1500);
+        }
+      }}
+      onPointerCancel={() => {
+        timers.current?.press.cancel();
+        touchStart.current = null;
+      }}
+      onClickCapture={(ev) => {
+        if (swallowClick.current) {
+          swallowClick.current = false;
+          ev.preventDefault();
+          ev.stopPropagation();
+        }
+      }}
+      onContextMenu={(ev) => {
+        if (swallowClick.current || timers.current?.press.pending) ev.preventDefault();
+      }}
+      onFocus={(ev) => {
+        if ((ev.target as HTMLElement).matches(":focus-visible")) timers.current?.hover.start();
+      }}
+      onBlur={hide}
+    >
+      {children}
       <span
+        ref={tip}
         id={id}
         role="tooltip"
         hidden={!open}
-        {...stylex.props(styles.tip, align === "left" ? styles.tipLeft : styles.tipRight)}
+        style={{ visibility: "hidden" }}
+        {...stylex.props(styles.tip)}
       >
         {text}
       </span>
-    </span>
-  );
-}
-
-/** A control with its "i" next to it. */
-export function WithInfo({
-  info,
-  align,
-  children,
-}: {
-  info: string;
-  align?: "left" | "right";
-  children: ReactNode;
-}) {
-  return (
-    <span {...stylex.props(styles.cell)}>
-      {children}
-      <Info text={info} align={align} />
     </span>
   );
 }
@@ -337,42 +409,41 @@ function LfoCard({ modulator, index, onChange }: Props & { index: number }) {
       </div>
       <canvas ref={canvas} width={260} height={48} {...stylex.props(styles.trace)} />
       <div {...stylex.props(styles.inline)}>
-        <input
-          type="range"
-          aria-label={`LFO ${index + 1} period`}
-          min={MIN_PERIOD}
-          max={MAX_PERIOD}
-          step={1}
-          value={period}
-          style={{ flexGrow: 1, minWidth: 0 }}
-          onChange={(ev) => {
-            const v = Number(ev.target.value);
-            modulator.setPeriod(index, v);
-            setPeriod(modulator.bank.lfos[index]?.period ?? v);
-            onChange();
-          }}
-        />
-        <Info text="How long one full rise and fall takes, 8 s to 120 s." align="right" />
-      </div>
-      <div {...stylex.props(styles.toggles)}>
-        {(["sine", "smooth-random"] as const).map((s) => (
-          <button
-            key={s}
-            aria-pressed={shape === s}
-            {...stylex.props(styles.small, shape === s && styles.smallOn)}
-            onClick={() => {
-              modulator.setShape(index, s);
-              setShape(s);
+        <Tip text="How long one full rise and fall takes, 8 s to 120 s." grow="fill">
+          <input
+            type="range"
+            aria-label={`LFO ${index + 1} period`}
+            min={MIN_PERIOD}
+            max={MAX_PERIOD}
+            step={1}
+            value={period}
+            style={{ width: "100%" }}
+            onChange={(ev) => {
+              const v = Number(ev.target.value);
+              modulator.setPeriod(index, v);
+              setPeriod(modulator.bank.lfos[index]?.period ?? v);
               onChange();
             }}
-          >
-            {s === "sine" ? "Sine" : "Smooth random"}
-          </button>
-        ))}
-        <Info
-          text="Sine rises and falls evenly. Smooth random wanders and never repeats."
-          align="right"
-        />
+          />
+        </Tip>
+      </div>
+      <div {...stylex.props(styles.toggles)}>
+        <Tip text="Sine rises and falls evenly. Smooth random wanders and never repeats.">
+          {(["sine", "smooth-random"] as const).map((s) => (
+            <button
+              key={s}
+              aria-pressed={shape === s}
+              {...stylex.props(styles.small, shape === s && styles.smallOn)}
+              onClick={() => {
+                modulator.setShape(index, s);
+                setShape(s);
+                onChange();
+              }}
+            >
+              {s === "sine" ? "Sine" : "Smooth random"}
+            </button>
+          ))}
+        </Tip>
       </div>
     </div>
   );
@@ -428,7 +499,14 @@ export function RowVolume({
 
   return (
     <>
-      <span {...stylex.props(styles.cell, styles.volume)}>
+      <Tip
+        grow="volume"
+        text={
+          ranged
+            ? "Right thumb: the loudest this sound gets. Left thumb: the quietest it gets as the LFO swings. The colored fill shows the level right now."
+            : "How loud this sound is."
+        }
+      >
         <span {...stylex.props(styles.slider)}>
           <span {...stylex.props(styles.bar)} />
           {ranged && (
@@ -471,16 +549,9 @@ export function RowVolume({
             onChange={(ev) => update({ ...row, max: Math.max(Number(ev.target.value), row.min) })}
           />
         </span>
-        <Info
-          text={
-            ranged
-              ? "Right thumb: the loudest this sound gets. Left thumb: the quietest it gets as the LFO swings. The colored fill shows the level right now."
-              : "How loud this sound is."
-          }
-        />
-      </span>
+      </Tip>
       {withLfo && (
-        <WithInfo info="Tap a color to let that slow wave move this sound's volume. Tap it again to stop.">
+        <Tip text="Tap a color to let that slow wave move this sound's volume. Tap it again to stop.">
           <span role="group" aria-label={`${name} LFO`} {...stylex.props(styles.dots)}>
             {modulator.bank.lfos.map((lfo, i) => {
               const choice = (i + 1) as LfoChoice;
@@ -513,7 +584,7 @@ export function RowVolume({
               );
             })}
           </span>
-        </WithInfo>
+        </Tip>
       )}
     </>
   );

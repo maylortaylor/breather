@@ -6,7 +6,7 @@ import { CATALOG, ONE_SHOT_LAYER, trimOf, type Entry } from "../audio/catalog";
 import { createEngine, DEFAULT_LAYER, type Engine, type Sound } from "../audio/engine";
 import { DEFAULT_METRONOME_VOICE } from "../audio/metronome";
 import { createModulator, type ModSnapshot } from "../audio/modulation";
-import { Info, LfoPanel, RowVolume, WithInfo } from "./Lfo";
+import { LfoPanel, RowVolume, Tip } from "./Lfo";
 
 type Verdict = "approve" | "reject";
 const ONE_SHOTS = new Set(CATALOG.filter((e) => "once" in e).map((e) => e.id));
@@ -176,13 +176,13 @@ export function Lab() {
     <main {...stylex.props(styles.page)}>
       <h1>Listening Lab</h1>
       {!engine ? (
-        <WithInfo info="Starts the sound engine. Browsers need a tap before they allow audio.">
+        <Tip text="Starts the sound engine. Browsers need a tap before they allow audio.">
           <button {...stylex.props(styles.btn, styles.big)} onClick={begin}>
             Begin
           </button>
-        </WithInfo>
+        </Tip>
       ) : (
-        <WithInfo info="The overall loudness of everything.">
+        <Tip text="The overall loudness of everything.">
           <label>
             Master volume{" "}
             <input
@@ -198,7 +198,7 @@ export function Lab() {
               }}
             />
           </label>
-        </WithInfo>
+        </Tip>
       )}
 
       <h2 {...stylex.props(styles.h2)}>LFO bank</h2>
@@ -214,7 +214,7 @@ export function Lab() {
                 {"once" in entry && entry.label === DEFAULT_METRONOME_VOICE ? " (default)" : ""}
               </span>
               {"loop" in entry ? (
-                <WithInfo info="Starts or stops this sound. It fades in over 1.5 s.">
+                <Tip text="Starts or stops this sound. It fades in over 1.5 s.">
                   <button
                     {...stylex.props(styles.btn, playing[entry.id] && styles.on)}
                     disabled={!engine}
@@ -222,9 +222,9 @@ export function Lab() {
                   >
                     {playing[entry.id] ? "Stop" : "Play"}
                   </button>
-                </WithInfo>
+                </Tip>
               ) : (
-                <WithInfo info="Plays this sound one time.">
+                <Tip text="Plays this sound one time.">
                   <button
                     {...stylex.props(styles.btn)}
                     disabled={!engine}
@@ -236,7 +236,7 @@ export function Lab() {
                   >
                     Play once
                   </button>
-                </WithInfo>
+                </Tip>
               )}
               <RowVolume
                 id={entry.id}
@@ -247,25 +247,24 @@ export function Lab() {
                 onChange={saveLfo}
               />
               <span {...stylex.props(styles.verdicts)}>
-                <button
-                  {...stylex.props(styles.btn, verdicts[entry.id] === "approve" && styles.on)}
-                  aria-pressed={verdicts[entry.id] === "approve"}
-                  onClick={() => setVerdict(entry.id, "approve")}
-                >
-                  Approve
-                </button>
-                <Info text="Marks this sound as good enough to keep." align="right" />
-                <button
-                  {...stylex.props(styles.btn, verdicts[entry.id] === "reject" && styles.bad)}
-                  aria-pressed={verdicts[entry.id] === "reject"}
-                  onClick={() => setVerdict(entry.id, "reject")}
-                >
-                  Reject
-                </button>
-                <Info
-                  text="Marks this sound as not good enough. Press again to clear."
-                  align="right"
-                />
+                <Tip text="Marks this sound as good enough to keep.">
+                  <button
+                    {...stylex.props(styles.btn, verdicts[entry.id] === "approve" && styles.on)}
+                    aria-pressed={verdicts[entry.id] === "approve"}
+                    onClick={() => setVerdict(entry.id, "approve")}
+                  >
+                    Approve
+                  </button>
+                </Tip>
+                <Tip text="Marks this sound as not good enough. Press again to clear.">
+                  <button
+                    {...stylex.props(styles.btn, verdicts[entry.id] === "reject" && styles.bad)}
+                    aria-pressed={verdicts[entry.id] === "reject"}
+                    onClick={() => setVerdict(entry.id, "reject")}
+                  >
+                    Reject
+                  </button>
+                </Tip>
               </span>
             </div>
           ))}
