@@ -57,6 +57,7 @@ export default defineConfig({
     coverage: {
       provider: "v8",
       include: [
+        "src/breath/phases.ts",
         "src/audio/dsp.ts",
         "src/audio/lfo.ts",
         "src/audio/mixer.ts",
