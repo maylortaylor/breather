@@ -32,6 +32,28 @@ function hfRatio(a: Float32Array): number {
   for (let i = 1; i < a.length; i++) sum += Math.abs((a[i] ?? 0) - (a[i - 1] ?? 0));
   return sum / (a.length - 1) / rmsOf(a);
 }
+/** Goertzel power at one frequency. */
+function goertzel(a: Float32Array, hz: number, sampleRate: number): number {
+  const w = (2 * Math.PI * hz) / sampleRate;
+  const coeff = 2 * Math.cos(w);
+  let s1 = 0;
+  let s2 = 0;
+  for (let i = 0; i < a.length; i++) {
+    const s0 = (a[i] ?? 0) + coeff * s1 - s2;
+    s2 = s1;
+    s1 = s0;
+  }
+  return s1 * s1 + s2 * s2 - coeff * s1 * s2;
+}
+/** Mean power per bin over `count` linearly spaced probes in [lo, hi] Hz, in dB. */
+function bandDensityDb(a: Float32Array, sampleRate: number, lo: number, hi: number): number {
+  const count = 60;
+  let sum = 0;
+  for (let k = 0; k < count; k++) {
+    sum += goertzel(a, lo + ((hi - lo) * (k + 0.5)) / count, sampleRate);
+  }
+  return 10 * Math.log10(sum / count);
+}
 function maxStep(a: Float32Array): number {
   let m = 0;
   for (let i = 1; i < a.length; i++) m = Math.max(m, Math.abs((a[i] ?? 0) - (a[i - 1] ?? 0)));
@@ -69,6 +91,14 @@ describe("makeNoise", () => {
     const hf = (k: "white" | "pink" | "brown") => hfRatio(makeNoise(k, 48000, 10, createRng(3)));
     expect(hf("brown")).toBeLessThan(hf("pink"));
     expect(hf("pink")).toBeLessThan(hf("white"));
+  });
+
+  it("pink falls about 10 dB per decade (100 to 400 Hz vs 1 to 4 kHz)", () => {
+    const sr = 48000;
+    const buf = makeNoise("pink", sr, 10, createRng(21)).subarray(0, sr * 4);
+    const drop = bandDensityDb(buf, sr, 100, 400) - bandDensityDb(buf, sr, 1000, 4000);
+    expect(drop).toBeGreaterThan(7);
+    expect(drop).toBeLessThan(13);
   });
 
   it("white is lowpassed: less high-frequency energy than raw white samples", () => {

@@ -65,7 +65,7 @@ All sounds are synthesized. Each layer has its own volume slider (0 = silent) fe
 | Sound | Synthesis approach |
 | --- | --- |
 | White noise | Looping buffer of random samples, 10+ seconds long to avoid audible seams |
-| Pink noise | Same, filtered with a standard pinking filter (Paul Kellet or similar) |
+| Pink noise | Same, generated with the Voss-McCartney algorithm |
 | Brown noise | Integrated white noise with leak, normalized |
 | Ocean waves | Pink or brown noise through a lowpass whose cutoff and gain follow a slow LFO (roughly 8 to 14 seconds per swell), plus a faint highpassed hiss on the crest |
 | Underwater bubbles | Randomly timed short sine blips with a quick upward pitch glide and fast decay, through a lowpass and light reverb |

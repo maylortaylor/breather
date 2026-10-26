@@ -25,6 +25,8 @@ export type NoiseKind = "white" | "pink" | "brown";
 const MIN_LOOP_SEC = 10;
 const LOOP_FADE_SEC = 0.5;
 const NOISE_PEAK = 0.9;
+/** Octave rows in the Voss-McCartney pink generator. */
+const PINK_ROWS = 10;
 /** About -24 dBFS. Loudness is set by RMS, so white, pink and brown sit at the same level. */
 export const TARGET_RMS = 0.063;
 /** Gentle top-end roll-off applied at generation. Brown is already dark. */
@@ -59,28 +61,31 @@ export function makeNoise(
   const fade = Math.round(sampleRate * LOOP_FADE_SEC);
   const raw = new Float32Array(n + fade);
 
-  let b0 = 0,
-    b1 = 0,
-    b2 = 0,
-    b3 = 0,
-    b4 = 0,
-    b5 = 0,
-    b6 = 0,
-    brown = 0;
+  // Voss-McCartney pink: row k holds a random value that is redrawn every 2^k samples (when
+  // the counter's lowest set bit is k). Summing the rows plus one white term gives a 1/f tilt.
+  const rows = new Float64Array(PINK_ROWS);
+  let rowSum = 0;
+  let counter = 0;
+  if (kind === "pink") {
+    for (let k = 0; k < PINK_ROWS; k++) {
+      rows[k] = rng() * 2 - 1;
+      rowSum += rows[k] ?? 0;
+    }
+  }
+  let brown = 0;
   for (let i = 0; i < raw.length; i++) {
     const w = rng() * 2 - 1;
     if (kind === "white") {
       raw[i] = w;
     } else if (kind === "pink") {
-      // Paul Kellet's economy pinking filter.
-      b0 = 0.99886 * b0 + w * 0.0555179;
-      b1 = 0.99332 * b1 + w * 0.0750759;
-      b2 = 0.969 * b2 + w * 0.153852;
-      b3 = 0.8665 * b3 + w * 0.3104856;
-      b4 = 0.55 * b4 + w * 0.5329522;
-      b5 = -0.7616 * b5 - w * 0.016898;
-      raw[i] = b0 + b1 + b2 + b3 + b4 + b5 + b6 + w * 0.5362;
-      b6 = w * 0.115926;
+      counter = (counter + 1) % (1 << PINK_ROWS);
+      if (counter !== 0) {
+        const k = 31 - Math.clz32(counter & -counter);
+        const fresh = rng() * 2 - 1;
+        rowSum += fresh - (rows[k] ?? 0);
+        rows[k] = fresh;
+      }
+      raw[i] = rowSum + w;
     } else {
       // Leaky integrator: brown noise without the slow drift of a pure integral.
       brown = (brown + 0.02 * w) / 1.02;
