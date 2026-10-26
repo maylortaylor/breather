@@ -67,7 +67,16 @@ if (!existsSync(swPath)) {
   }
 }
 
-// 3. Registration scope.
+// 3. The dev-only Listening Lab must not ship.
+for (const rel of files) {
+  if (/\.(?:html|js|css|map|json|webmanifest)$/.test(rel)) {
+    if (readFileSync(join(dist, rel), "utf8").includes("Listening Lab")) {
+      failures.push(`dev-only Lab code is in dist/: ${rel}`);
+    }
+  }
+}
+
+// 4. Registration scope.
 const reg = existsSync(join(dist, "registerSW.js"))
   ? readFileSync(join(dist, "registerSW.js"), "utf8")
   : "";
