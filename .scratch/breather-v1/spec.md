@@ -83,7 +83,7 @@ Parsing: `parseState` and `parsePreset` take `unknown`, drop unknown sound ids, 
 4. Tapping the ring pauses and resumes the guide; background sounds keep playing.
 5. The metronome detents behave as in PLAN Controls, and timing stays steady for 10 minutes in the foreground.
 6. Seconds mode runs 4, 7, 8 seconds, ticks once a second and disables the tempo slider with a tooltip.
-7. The Sounds tab adds and removes any of the 10 loops, each with a volume slider and the 3 LFO colour buttons.
+7. The Sounds tab adds and removes any of the 9 loops, each with a volume slider and the 3 LFO colour buttons.
 8. Built-in and user presets apply with a 3 s crossfade; built-ins are read-only and offer "Save as new".
 9. A 30, 60 or 90 minute sleep timer fades everything on the audio clock, then stops audio and animation.
 10. The aurora breathes with the phase, dims in dim mode, slows under reduced motion, and pauses in a hidden tab.

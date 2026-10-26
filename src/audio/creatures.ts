@@ -4,7 +4,6 @@ import {
   createTriggerScheduler,
   whalePlan,
   type TriggerScheduler,
-  type WhaleVariant,
 } from "./dsp";
 import { connectOut, fadeIn, type Engine, type Sound } from "./engine";
 
@@ -89,15 +88,15 @@ export function bubblesSound(engine: Engine, layer: string): Sound {
 }
 
 /**
- * One whale call from a plan: glides between pitches on harmonic partials, an optional sweeping
- * bandpass formant and lowpass, swelling in and out. Everything feeds the shared reverb.
+ * One whale call from a plan: a slow glide on harmonic partials through a lowpass, swelling in and
+ * out. Everything feeds the shared reverb.
  */
-export function whaleSound(engine: Engine, variant: WhaleVariant, layer: string): Sound {
+export function whaleSound(engine: Engine, layer: string): Sound {
   const { ctx } = engine;
   let out: GainNode | null = null;
   const call = (at: number) => {
     if (!out) return;
-    const plan = whalePlan(variant, Math.random);
+    const plan = whalePlan(Math.random);
     const end = at + plan.duration;
 
     const env = ctx.createGain();
@@ -106,25 +105,12 @@ export function whaleSound(engine: Engine, variant: WhaleVariant, layer: string)
     env.gain.setValueAtTime(plan.level, at + plan.duration * 0.6);
     env.gain.linearRampToValueAtTime(0.0001, end);
 
-    let head: AudioNode = ctx.createGain();
-    const mix = head as GainNode;
-    if (plan.formant) {
-      const band = ctx.createBiquadFilter();
-      band.type = "bandpass";
-      band.Q.value = plan.formant.q;
-      band.frequency.setValueAtTime(plan.formant.fromHz, at);
-      band.frequency.linearRampToValueAtTime(plan.formant.toHz, end);
-      head.connect(band);
-      head = band;
-    }
-    if (plan.lowpassHz) {
-      const lp = ctx.createBiquadFilter();
-      lp.type = "lowpass";
-      lp.frequency.value = plan.lowpassHz;
-      head.connect(lp);
-      head = lp;
-    }
-    head.connect(env).connect(out);
+    const mix = ctx.createGain();
+    const lp = ctx.createBiquadFilter();
+    lp.type = "lowpass";
+    lp.frequency.value = plan.lowpassHz;
+    mix.connect(lp);
+    lp.connect(env).connect(out);
     // The sends must see the same dark, enveloped signal.
     const send = ctx.createGain();
     send.gain.value = plan.reverb;

@@ -320,34 +320,9 @@ describe("bubbles", () => {
 describe("whalePlan", () => {
   const rng = createRng(31);
 
-  it("A: humpback song of 3 to 6 contiguous 2 to 6 s glides between 150 and 900 Hz", () => {
+  it("blue moan has a 20 to 80 Hz fundamental doubled an octave up, and is very slow", () => {
     for (let i = 0; i < 100; i++) {
-      const p = whalePlan("A", rng);
-      expect(p.segments.length).toBeGreaterThanOrEqual(3);
-      expect(p.segments.length).toBeLessThanOrEqual(6);
-      p.segments.forEach((seg, j) => {
-        expect(seg.duration).toBeGreaterThanOrEqual(2);
-        expect(seg.duration).toBeLessThanOrEqual(6);
-        for (const hz of [seg.startHz, seg.endHz]) {
-          expect(hz).toBeGreaterThanOrEqual(150);
-          expect(hz).toBeLessThanOrEqual(900);
-        }
-        if (j > 0) expect(seg.startHz).toBe(p.segments[j - 1]?.endHz);
-      });
-      expect(p.duration).toBeCloseTo(
-        p.segments.reduce((a, g) => a + g.duration, 0),
-        9
-      );
-      expect(p.partials.length).toBeGreaterThanOrEqual(3);
-      expect(p.partials[0]).toEqual({ ratio: 1, amp: 1 });
-      expect(p.formant).not.toBeNull();
-      expect(p.lowpassHz).toBeNull();
-    }
-  });
-
-  it("B: blue moan has a 20 to 80 Hz fundamental doubled an octave up, and is very slow", () => {
-    for (let i = 0; i < 100; i++) {
-      const p = whalePlan("B", rng);
+      const p = whalePlan(rng);
       expect(p.duration).toBeGreaterThanOrEqual(8);
       for (const seg of p.segments) {
         expect(seg.startHz).toBeGreaterThanOrEqual(20);
@@ -358,15 +333,6 @@ describe("whalePlan", () => {
       const octave = p.partials.find((q) => q.ratio === 2);
       expect(octave?.amp).toBeGreaterThanOrEqual(0.6);
     }
-  });
-
-  it("C: distant call is a quieter, darker, wetter A", () => {
-    const a = whalePlan("A", createRng(5));
-    const c = whalePlan("C", createRng(5));
-    expect(c.segments).toEqual(a.segments);
-    expect(c.lowpassHz).toBe(1200);
-    expect(c.level).toBeLessThan(a.level);
-    expect(c.reverb).toBeGreaterThan(a.reverb);
   });
 });
 

@@ -21,7 +21,6 @@ export const TRIMS: Record<string, number> = {
   // the +4 dB the listener asked for in mean terms), not by the -30 dBFS mean target, which clips.
   bubbles: 28,
   "whale-b": 5.5,
-  "whale-c": 25,
   "pad-dreamy": 2.27,
   "pad-tonal": 1.6,
   "pad-deep": 1.47,
@@ -45,8 +44,7 @@ const loops: [string, string, string, (e: Engine, id: string) => Sound][] = [
   ["brown", "Brown noise", "Noise", (e, id) => noiseSound(e, "brown", id)],
   ["ocean", "Ocean waves", "Nature", (e, id) => oceanSound(e, id)],
   ["bubbles", "Underwater bubbles", "Nature", (e, id) => bubblesSound(e, id)],
-  ["whale-b", "Whale B: blue moan", "Nature", (e, id) => whaleSound(e, "B", id)],
-  ["whale-c", "Whale C: distant call", "Nature", (e, id) => whaleSound(e, "C", id)],
+  ["whale-b", "Whale B: blue moan", "Nature", (e, id) => whaleSound(e, id)],
   ["pad-dreamy", "Pad: Dreamy", "Music", (e, id) => padSound(e, "dreamy", id)],
   ["pad-tonal", "Pad: Tonal", "Music", (e, id) => padSound(e, "tonal", id)],
   ["pad-deep", "Pad: Deep", "Music", (e, id) => padSound(e, "deep", id)],

@@ -101,3 +101,6 @@ Resolved with Matt on 2026-10-25 after three listening rounds. Built on `prototy
 - Spikes from ADR-0003 all passed: Oxfmt and Oxlint options, StyleX #1918 did not reproduce, vite-plugin-pwa registers at `/breather/`.
 - No CC0 samples are needed. Every sound stays synthesized.
 - The branch stays open for ticket 12. Whether it merges or gets rebuilt from build tickets is decided when 12 resolves.
+
+### Matt's re-listen, 2026-10-26
+Whale C (distant call) is now rejected and removed. The humpback code that only whales A and C used went with it. Everything else stays approved, including both soft ticks. The loop set is 9 sounds: white, pink and brown noise, ocean, bubbles, whale B, and the 3 pads.

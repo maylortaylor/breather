@@ -14,7 +14,7 @@ Let the listener add and remove sounds from colour chips, each playing sound get
 - One file, `src/ui/SoundsTab.tsx`, using `Slider.tsx` and the `Mixer` from ticket 17.
 
 ## Acceptance criteria
-1. Chips show the 10 loops grouped Noise, Nature, Music; a playing chip looks clearly on.
+1. Chips show the 9 loops grouped Noise, Nature, Music; a playing chip looks clearly on.
 2. Tapping an off chip adds a row and fades the sound in over 1.5 s; tapping it again removes the row and fades it out.
 3. Any combination of the 3 Music chips can be on at once, each with its own row; turning one off never stops another.
 4. Each row has one volume slider and the 3 LFO colour buttons; picking one turns the slider into a range filled in that LFO's colour, moving with the live level.
