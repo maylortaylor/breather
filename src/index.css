@@ -32,3 +32,36 @@ body {
   gap: 16px;
   text-align: center;
 }
+
+/* The controls sheet dissolves through a noise-like mask: three tiled dot grids of different sizes
+   whose holes grow with --cut (set inline by sheetStyle). At -1px nothing is cut; at 12px every
+   tile is gone. No images, so the CSP stays default-src 'self'. */
+@property --cut {
+  syntax: "<length>";
+  inherits: false;
+  initial-value: -1px;
+}
+
+.sheet-mask {
+  --hole: radial-gradient(circle at 50% 50%, transparent var(--cut), #000 calc(var(--cut) + 1px));
+  -webkit-mask-image: var(--hole), var(--hole), var(--hole);
+  mask-image: var(--hole), var(--hole), var(--hole);
+  -webkit-mask-size:
+    13px 13px,
+    17px 17px,
+    23px 23px;
+  mask-size:
+    13px 13px,
+    17px 17px,
+    23px 23px;
+  -webkit-mask-position:
+    0 0,
+    5px 3px,
+    11px 7px;
+  mask-position:
+    0 0,
+    5px 3px,
+    11px 7px;
+  -webkit-mask-composite: source-in;
+  mask-composite: intersect;
+}
