@@ -5,7 +5,36 @@ import { noiseSound, oceanSound } from "./noise";
 import { padSound } from "./pads";
 
 /** One-shots need to read over a playing loop, so they start much louder than loops. */
-export const ONE_SHOT_LAYER = 0.9;
+export const ONE_SHOT_LAYER = 0.8;
+
+/**
+ * Level match, multiplied into the layer gain. At the default slider and master, every loop
+ * measures about -30 dBFS RMS at the output and every one-shot peaks about -14 dBFS.
+ * Measured in Chrome with an analyser on the output.
+ */
+export const TRIMS: Record<string, number> = {
+  white: 18.6,
+  pink: 19.3,
+  brown: 18.6,
+  ocean: 33.1,
+  // Sparse, so its mean sits about 30 dB under each blip. Capped by peak (about -14 dBFS), not
+  // by the -30 dBFS mean target, which would clip.
+  bubbles: 45,
+  "whale-a": 8,
+  "whale-b": 6.5,
+  "whale-c": 20,
+  "pad-dreamy": 2.27,
+  "pad-tonal": 1.6,
+  "pad-deep": 1.47,
+  "metro-soft-tick": 0.57,
+  "metro-wood-block": 0.55,
+  "metro-bell": 0.54,
+  "metro-heartbeat-thump": 0.64,
+  "phase-inhale-rising-": 0.69,
+  "phase-hold-steady-": 0.7,
+  "phase-exhale-falling-": 0.69,
+};
+export const trimOf = (id: string): number => TRIMS[id] ?? 1;
 
 export type Entry =
   | { id: string; label: string; group: string; loop: (engine: Engine) => Sound }

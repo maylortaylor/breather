@@ -14,6 +14,8 @@ export interface Engine {
   layer(name: string): GainNode;
   setMaster(value: number): void;
   setLayer(name: string, value: number): void;
+  /** Per-sound level match, multiplied into the layer gain. */
+  setTrim(name: string, trim: number): void;
 }
 
 /** Slider position (0 to 1) to gain. Squared so the low end has fine control. */
@@ -25,7 +27,7 @@ export function createEngine(): Engine {
 
   // layers -> master -> limiter -> output
   const master = ctx.createGain();
-  master.gain.value = sliderToGain(0.5) * MASTER_CAP;
+  master.gain.value = sliderToGain(0.7) * MASTER_CAP;
   const limiter = ctx.createDynamicsCompressor();
   limiter.threshold.value = -3;
   limiter.knee.value = 6;
@@ -47,11 +49,13 @@ export function createEngine(): Engine {
   reverbSend.connect(convolver).connect(reverbReturn).connect(master);
 
   const layers = new Map<string, GainNode>();
+  const trims = new Map<string, number>();
+  const levels = new Map<string, number>();
   const layer = (name: string) => {
     let node = layers.get(name);
     if (!node) {
       node = ctx.createGain();
-      node.gain.value = sliderToGain(DEFAULT_LAYER);
+      node.gain.value = sliderToGain(DEFAULT_LAYER) * (trims.get(name) ?? 1);
       node.connect(master);
       layers.set(name, node);
     }
@@ -66,7 +70,14 @@ export function createEngine(): Engine {
     reverbSend,
     layer,
     setMaster: (v) => ramp(master.gain, sliderToGain(v) * MASTER_CAP),
-    setLayer: (name, v) => ramp(layer(name).gain, sliderToGain(v)),
+    setLayer: (name, v) => {
+      levels.set(name, v);
+      ramp(layer(name).gain, sliderToGain(v) * (trims.get(name) ?? 1));
+    },
+    setTrim: (name, trim) => {
+      trims.set(name, trim);
+      ramp(layer(name).gain, sliderToGain(levels.get(name) ?? DEFAULT_LAYER) * trim);
+    },
   };
 }
 

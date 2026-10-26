@@ -1,7 +1,7 @@
 // Throwaway page for ticket 08: audition every synthesized sound and approve or reject it.
 import * as stylex from "@stylexjs/stylex";
 import { useEffect, useMemo, useRef, useState } from "react";
-import { CATALOG, ONE_SHOT_LAYER, type Entry } from "../audio/catalog";
+import { CATALOG, ONE_SHOT_LAYER, trimOf, type Entry } from "../audio/catalog";
 import type { Sound } from "../audio/engine";
 import { createEngine, DEFAULT_LAYER, type Engine } from "../audio/engine";
 
@@ -79,7 +79,7 @@ function loadVerdicts(): Record<string, Verdict> {
 
 export function Lab() {
   const [engine, setEngine] = useState<Engine | null>(null);
-  const [master, setMaster] = useState(0.5);
+  const [master, setMaster] = useState(0.7);
   const [volumes, setVolumes] = useState<Record<string, number>>({});
   const [playing, setPlaying] = useState<Record<string, boolean>>({});
   const [verdicts, setVerdicts] = useState<Record<string, Verdict>>(loadVerdicts);
@@ -101,6 +101,10 @@ export function Lab() {
     const e = createEngine();
     void e.ctx.resume();
     e.setMaster(master);
+    for (const entry of CATALOG) {
+      e.setTrim(entry.id, trimOf(entry.id));
+      e.setLayer(entry.id, volumeOf(entry.id));
+    }
     setEngine(e);
   }
 
