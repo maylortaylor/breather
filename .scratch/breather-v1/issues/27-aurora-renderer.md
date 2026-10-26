@@ -1,5 +1,5 @@
 Type: build
-Status: claimed
+Status: resolved
 Blocked by: 19
 Model: sonnet
 
@@ -39,3 +39,6 @@ npm run dev
 - The Begin and resting screens each had their own CSS gradient stand-in. Both are removed; the same gradient now sits in `src/background/Background.tsx` as the last-resort layer under the canvas.
 - `src/breath/Ring.tsx` publishes its state each frame through `src/background/feed.ts`, so the aurora reads the same phase machine as the ring.
 - Verified headless in Chrome: WebGL path and canvas fallback both render. Not verified: phone heat and three real cycles by eye (Matt checks).
+
+## Answer
+Resolved 2026-10-26. All 9 criteria pass. Matt watched it and approved ("looks good"). three.js 0.186.1 (MIT) sits in a lazy 526 kB chunk (131 kB gzip), precached. The breath-driven brightening is covered by unit tests and the shader code; Matt judged the feel. A smaller renderer is a later ticket if first-load time on phones matters.
