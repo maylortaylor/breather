@@ -22,6 +22,17 @@ Triage roles are in [`docs/agents/triage-labels.md`](docs/agents/triage-labels.m
 - **Never take shader or noise code without a license check.** Only MIT-compatible code and CC0 audio. See `THIRD_PARTY.md`.
 - **Never build inside a wayfinder map.** Maps plan; build tickets execute.
 
+## Third-party code and audio rules
+
+1. Write the aurora shader and noise code from scratch. Never copy or port Shadertoy code (default CC BY-NC-SA).
+2. Never paste Paul Kellett's pink-noise snippet (no stated license). Use Voss-McCartney or derived filters.
+3. Borrowed code needs an MIT, CC0 or Unlicense header. Log URL, author and date in `THIRD_PARTY.md`.
+4. No audio files in v1. Later samples must be CC0, approved by ear, logged with source, license URL, date and SHA-256.
+5. Never use CC BY-NC or Sampling+. CC BY only with an in-app About credit.
+6. Ship Nunito with its `OFL.txt`. Keep the copyright notice and never sell the font alone.
+7. npm licenses: allow MIT, ISC, BSD-2/3, Apache-2.0, 0BSD, CC0, Unlicense. Deny GPL, AGPL, CC-BY-NC, unlicensed.
+8. Details and the check command: `docs/research/license-provenance.md`.
+
 ## Models
 
 Opus plans, Sonnet builds. Planning, grilling, wayfinding and review run on Opus. A build ticket carries a `Model: sonnet` line and is implemented one ticket per fresh context.
