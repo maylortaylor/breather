@@ -2,12 +2,19 @@ import react from "@vitejs/plugin-react";
 import stylex from "@stylexjs/unplugin/vite";
 import { defineConfig } from "vite-plus";
 import { VitePWA } from "vite-plugin-pwa";
+import { withCsp } from "./scripts/buildRules";
 
 const testing = Boolean(process.env.VITEST);
 
 export default defineConfig({
   base: "/breather/",
   plugins: [
+    // The CSP meta is build-only: the dev server injects inline scripts that it would block.
+    {
+      name: "breather:csp",
+      apply: "build",
+      transformIndexHtml: { order: "pre", handler: withCsp },
+    },
     // Build-only plugins hold dev servers open, which stalls vitest on exit.
     ...(testing
       ? []
@@ -19,6 +26,7 @@ export default defineConfig({
           VitePWA({
             strategies: "generateSW",
             registerType: "autoUpdate",
+            includeManifestIcons: false,
             manifest: {
               id: "/breather/",
               start_url: "/breather/",
@@ -30,15 +38,16 @@ export default defineConfig({
               theme_color: "#0b1020",
               icons: [
                 { src: "icon-192.png", sizes: "192x192", type: "image/png" },
+                { src: "icon-512.png", sizes: "512x512", type: "image/png" },
                 {
-                  src: "icon-512.png",
+                  src: "icon-maskable-512.png",
                   sizes: "512x512",
                   type: "image/png",
-                  purpose: "any maskable",
+                  purpose: "maskable",
                 },
               ],
             },
-            workbox: { globPatterns: ["**/*.{js,css,html,woff2}"] },
+            workbox: { globPatterns: ["**/*.{js,css,html,woff2,png,webmanifest}"] },
           }),
         ]),
   ],
@@ -72,6 +81,7 @@ export default defineConfig({
         "src/ui/sheetLogic.ts",
         "src/ui/soundsLogic.ts",
         "src/ui/tooltipTimer.ts",
+        "scripts/buildRules.ts",
         "src/store.ts",
         "src/presets.ts",
       ],
