@@ -1,5 +1,5 @@
 Type: build
-Status: claimed
+Status: resolved
 Blocked by: 15, 27
 Model: sonnet
 
@@ -36,3 +36,6 @@ npm run preview
 - CSP: `default-src 'self'; media-src 'self' blob:; worker-src 'self'; manifest-src 'self'; object-src 'none'; base-uri 'self'; form-action 'self'`. `media-src blob:` is for ticket 29 (spec question 3). No `unsafe-*`, no outside host. The built bundle has no `eval` or `new Function`, and `index.html` has no inline script or style attribute.
 - The icons are placeholders from `scripts/make-icons.mjs` (no dependency). Matt swaps in a real pack later: keep the names `icon-192.png`, `icon-512.png`, `icon-maskable-512.png`, `apple-touch-icon.png`. The maskable icon is now a separate file instead of `purpose: "any maskable"` on the 512.
 - Unverified without a browser: criteria 6 (no CSP violation in the console) and 7 (offline reload).
+
+## Answer
+Resolved 2026-10-26. All 8 criteria pass. Matt ran the browser checks (no policy errors through Begin, the tabs and the aurora; service worker active at `/breather/`; full app loads offline) and approved ("all look good"). The CSP is `default-src 'self'; media-src 'self' blob:; worker-src 'self'; manifest-src 'self'; object-src 'none'; base-uri 'self'; form-action 'self'`, added at build time only. The icons are placeholders with stable file names (`icon-192.png`, `icon-512.png`, `icon-maskable-512.png`, the touch icon); Matt will swap in a real pack later.
