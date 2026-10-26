@@ -3,6 +3,7 @@
 // exists in dist/, and that every one of them is in the service worker precache list.
 import { existsSync, readdirSync, readFileSync, statSync } from "node:fs";
 import { join, posix } from "node:path";
+import { checkHtml, checkManifest, checkPrecache } from "./buildRules.ts";
 
 const BASE = "/breather/";
 const dist = new URL("../dist/", import.meta.url).pathname;
@@ -23,9 +24,13 @@ if (!existsSync(join(dist, "index.html"))) {
   process.exit(1);
 }
 
+// 0. The page: CSP meta, no inline source, nothing off-origin, canonical and touch icon.
+// The CSP forbids what these rules forbid, so a failure here is a page that would break in use.
+const html = readFileSync(join(dist, "index.html"), "utf8");
+failures.push(...checkHtml(html));
+
 // 1. References from index.html and from JS chunks.
 const referenced = new Set();
-const html = readFileSync(join(dist, "index.html"), "utf8");
 for (const m of html.matchAll(/(?:src|href)="([^"]+\.(?:css|js))"/g)) {
   referenced.add(toRel(m[1]));
 }
@@ -62,9 +67,10 @@ if (!existsSync(swPath)) {
   for (const rel of new Set([...referenced, ...built])) {
     if (!precached.has(rel)) failures.push(`asset is not in the service worker precache: ${rel}`);
   }
-  // Fonts load offline from the precache and ship with their licence text (AGENTS.md rule 6).
+  // The shell (page, manifest, icons, font) must work offline.
+  failures.push(...checkPrecache(precached, files));
+  // Fonts ship with their licence text (AGENTS.md rule 6).
   for (const rel of files.filter((f) => f.endsWith(".woff2"))) {
-    if (!precached.has(rel)) failures.push(`font is not in the service worker precache: ${rel}`);
     if (!existsSync(join(dist, posix.dirname(rel), "OFL.txt"))) {
       failures.push(`font has no OFL.txt beside it: ${rel}`);
     }
@@ -72,6 +78,17 @@ if (!existsSync(swPath)) {
   for (const url of precached) {
     if (!existsSync(join(dist, url))) failures.push(`precache entry is missing from dist/: ${url}`);
   }
+}
+
+// 2b. The manifest.
+if (existsSync(join(dist, "manifest.webmanifest"))) {
+  const manifest = JSON.parse(readFileSync(join(dist, "manifest.webmanifest"), "utf8"));
+  failures.push(...checkManifest(manifest));
+  for (const icon of manifest.icons ?? []) {
+    if (!existsSync(join(dist, icon.src))) failures.push(`manifest icon is missing: ${icon.src}`);
+  }
+} else {
+  failures.push("dist/manifest.webmanifest is missing");
 }
 
 // 3. The dev-only Listening Lab must not ship.
