@@ -6,7 +6,9 @@ import { CATALOG, ONE_SHOT_LAYER, trimOf, type Entry } from "../audio/catalog";
 import { createEngine, DEFAULT_LAYER, type Engine, type Sound } from "../audio/engine";
 import { DEFAULT_METRONOME_VOICE } from "../audio/metronome";
 import { createModulator, type ModSnapshot } from "../audio/modulation";
-import { LfoPanel, RowVolume, Tip } from "./Lfo";
+import { RowVolume } from "../ui/Slider";
+import { Tip } from "../ui/Tip";
+import { LfoPanel } from "./Lfo";
 
 type Verdict = "approve" | "reject";
 const ONE_SHOTS = new Set(CATALOG.filter((e) => "once" in e).map((e) => e.id));

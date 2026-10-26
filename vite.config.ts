@@ -68,7 +68,7 @@ export default defineConfig({
         "src/audio/mixer.ts",
         "src/audio/session.ts",
         "src/contrast.ts",
-        "src/lab/tooltipTimer.ts",
+        "src/ui/tooltipTimer.ts",
         "src/store.ts",
         "src/presets.ts",
       ],
