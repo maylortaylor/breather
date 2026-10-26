@@ -67,3 +67,10 @@ Every sound was driven in real Chrome through an analyser on the output: all 17 
 | @stylexjs/stylex, @stylexjs/unplugin | 0.19.1 |
 | vite-plugin-pwa | 2.0.0 |
 | @vitest/coverage-v8 | 5.0.5 |
+
+### Matt's first listen, 2026-10-25
+- First build: every sound was a constant sharp high-pitched hiss and far too loud. Fixed with stereo noise, a rolled-off top end, RMS normalization, a damped reverb tail, a soft limiter and 1.5 s fade-ins.
+- Approved: white, pink and brown noise; ocean waves; all 3 music pads (Dreamy, Tonal, Deep), "great for now".
+- Bubbles: keep, but less often and more random.
+- Whales: rejected. Retry as three variants (humpback song, deep moan, distant call) to pick from.
+- Metronome voices, phase tones and test tone: silent to the ear. Cause: one-shots used the loop layer default and landed near -45 dBFS. Retry with their own level.
