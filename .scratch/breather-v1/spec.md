@@ -59,7 +59,7 @@ Persisted keys, each JSON with `version: 1`. Every key starts with `breather.` (
 - `breather.presets`: `{ version, presets: Preset[] }`, user presets only, at most 10, names at most 24 characters.
 - `breather.lab.*` stay as the Lab's own keys.
 
-Parsing: `parseState` and `parsePreset` take `unknown`, drop unknown sound ids, clamp numbers to range, and return null for a missing or higher `version`. A null falls back to the defaults. Built-ins (ticket 06 table) live in `presets.ts`; first launch loads Sleep. Seconds mode is a setting, not part of a preset. Music chips are one pad at a time (assumed, question 2).
+Parsing: `parseState` and `parsePreset` take `unknown`, drop unknown sound ids, clamp numbers to range, and return null for a missing or higher `version`. A null falls back to the defaults. Built-ins (ticket 06 table) live in `presets.ts`; first launch loads Sleep. Seconds mode is a setting, not part of a preset. Music chips are independent: any combination of the 3 pads can play at once (Matt, question 2).
 
 ## Errors and fallbacks
 1. Storage throws or holds garbage: run from memory with defaults, show nothing.
@@ -102,10 +102,10 @@ Session length or cycle count, voice cues, a tips panel, analytics, preset expor
 - A three.js shader on low-end phones may miss 30 fps; the reduced-resolution path is the mitigation.
 - The silent keep-alive needs a source: a generated blob URL adds `media-src blob:` to the CSP (question 3).
 
-## Questions for Matt (build defaults in brackets)
-1. On a phase-change beat, does the phase tone play alone, or with the metronome voice? Sleep reads "heartbeat, phase changes only". [phase tone alone]
-2. Can two music pads play at once, or is the pad one mood at a time? [one at a time]
-3. iOS keep-alive: a silent WAV generated as a blob URL (CSP gains `media-src blob:`), or a committed silent file that bends the no-audio-files rule? [blob URL]
-4. How long is the sleep timer's final fade? [the last 5 minutes]
-5. Who makes the final app icon? [placeholder icons ship until then]
-6. Should the app hold a Screen Wake Lock while a sleep timer runs? [no, a note only, per ticket 07]
+## Answered by Matt on 2026-10-26
+1. A phase-change beat plays the phase tone alone, without the metronome voice.
+2. Music pads are independent chips: any combination of the 3 can play together. This replaces the one-at-a-time default.
+3. The iPhone keep-alive audio is a silent WAV generated as a blob URL. The CSP gains `media-src blob:`. No audio file is committed.
+4. The sleep timer fades out over its last 5 minutes.
+5. Placeholder icons ship in v1. Matt will find or make an icon pack later.
+6. No Screen Wake Lock. The app only shows a note telling the listener to keep the screen on.
