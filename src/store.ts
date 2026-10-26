@@ -77,16 +77,13 @@ export type AppState = {
 };
 
 // The subset that survives a reload, under `breather.state`.
-export type SavedState = Pick<
-  AppState,
-  "welcomeSeen" | "dim" | "secondsMode" | "master" | "presetId"
->;
+// Master volume is never stored: every launch starts at the default (spec "State").
+export type SavedState = Pick<AppState, "welcomeSeen" | "dim" | "secondsMode" | "presetId">;
 
 const SAVED_TYPES: { [K in keyof SavedState]: (v: unknown) => boolean } = {
   welcomeSeen: (v) => typeof v === "boolean",
   dim: (v) => typeof v === "boolean",
   secondsMode: (v) => typeof v === "boolean",
-  master: (v) => typeof v === "number" && v >= 0 && v <= 1,
   presetId: (v) => typeof v === "string",
 };
 
@@ -109,7 +106,6 @@ export function saveState(s: SavedState): void {
     welcomeSeen: s.welcomeSeen,
     dim: s.dim,
     secondsMode: s.secondsMode,
-    master: s.master,
     presetId: s.presetId,
   });
 }

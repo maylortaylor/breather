@@ -88,7 +88,7 @@ describe("storage failures", () => {
     expect(persist("state").read()).toBeNull();
     expect(loadState()).toEqual({});
     expect(() =>
-      saveState({ welcomeSeen: false, dim: true, secondsMode: false, master: 0.7, presetId: null })
+      saveState({ welcomeSeen: false, dim: true, secondsMode: false, presetId: null })
     ).not.toThrow();
   });
 
@@ -103,7 +103,7 @@ describe("saved state", () => {
   it("writes only keys that start with breather.", () => {
     const ls = memoryStorage();
     vi.stubGlobal("localStorage", ls);
-    saveState({ welcomeSeen: true, dim: true, secondsMode: false, master: 0.5, presetId: "calm" });
+    saveState({ welcomeSeen: true, dim: true, secondsMode: false, presetId: "calm" });
     persist("presets").write([]);
     expect(ls.setKeys.length).toBeGreaterThan(0);
     for (const k of ls.setKeys) expect(k.startsWith("breather.")).toBe(true);
@@ -119,6 +119,18 @@ describe("saved state", () => {
         }),
       })
     );
-    expect(loadState()).toEqual({ welcomeSeen: true, master: 0.4 });
+    expect(loadState()).toEqual({ welcomeSeen: true });
+  });
+});
+
+describe("master volume", () => {
+  it("is never written to storage and an old stored value is ignored", () => {
+    const ls = memoryStorage({
+      "breather.state": JSON.stringify({ version: 1, value: { master: 0.2, dim: true } }),
+    });
+    vi.stubGlobal("localStorage", ls);
+    expect(loadState()).toEqual({ dim: true });
+    saveState({ welcomeSeen: true, dim: true, secondsMode: false, presetId: "calm" });
+    expect(ls.getItem("breather.state")).not.toContain("master");
   });
 });
