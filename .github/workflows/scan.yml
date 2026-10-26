@@ -2,16 +2,19 @@ name: Scan
 
 # Inert until the first push: this repo has no remote before v1.
 #
-# Secret scanning on every PR, push to main, and weekly. Deliberately
-# unfiltered, because a secret can be committed in a docs-only PR.
+# Secret scanning on every PR and push to main. Deliberately unfiltered (no
+# paths-ignore), because a secret can be committed in a docs-only PR. No
+# schedule: every commit reaches main through one of these two triggers
+# (ADR-0002, lean Actions).
 on:
   pull_request:
     branches: [main]
   push:
     branches: [main]
-  schedule:
-    # Weekly, so a secret committed after a PR merged still surfaces.
-    - cron: '17 6 * * 1'
+
+concurrency:
+  group: scan-${{ github.ref }}
+  cancel-in-progress: true
 
 permissions:
   # The gitleaks CLI scans the local checkout's history, not the GitHub API.

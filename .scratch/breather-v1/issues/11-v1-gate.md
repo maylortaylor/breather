@@ -10,6 +10,7 @@ Define done for v1 and the first-push procedure.
 - Local history goes public at the first push, so a clean `gitleaks git .` over full history is required first.
 - A local hook denies pushing `main` to origin, so the first push is a manual push by Matt.
 - Remote setup: enable GitHub secret scanning and push protection, and let `.github/workflows/scan.yml` start running.
+- Open a platform-repo ticket for the roboborealis Caddy rule (proxy `/breather/*`, add the trailing slash, `no-cache` on `sw.js`) plus an "Apps by roboBOREALIS" link (ADR-0002). v1 resolves only after the app installs from `roboborealis.com/breather/`.
 
 ## How to resolve
 Type `/grill-me`. Produces a v1 checklist under `## Answer` with numbered acceptance criteria. Then run `bootstrap-process.sh` for labels and decide whether to migrate `.scratch/` tickets to GitHub issues.

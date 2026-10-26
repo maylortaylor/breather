@@ -15,12 +15,12 @@ v1 of the app described in [`docs/PLAN.md`](../../docs/PLAN.md), runnable locall
 - Sound source: oscillators and generated noise only. Samples only after user review.
 - Sleep timer 30 / 60 / 90 min with a long fade-out. Presets built-in plus user-saved.
 - Commit identity: GitHub noreply email, see [03](issues/03-commit-identity.md).
+- Hosting: `roboborealis.com/breather/`, Caddy proxy to GitHub Pages, see [01](issues/01-hosting-and-owner.md).
 - Haptics, PWA and dim mode are in v1.
 - Background: aurora borealis first.
 - Session length and cycle count: out of v1.
 
 ## Not yet specified
-- Hosting and repo owner: [01](issues/01-hosting-and-owner.md)
 - Stack, tests, Node pin: [02](issues/02-stack-and-tests.md)
 - Analytics: [04](issues/04-analytics.md)
 - UI layout: [05](issues/05-ui-layout.md)
