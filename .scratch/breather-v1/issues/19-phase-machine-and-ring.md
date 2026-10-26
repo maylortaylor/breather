@@ -30,3 +30,8 @@ npm run check
 npm run dev
 ```
 - Matt checks: breathe along for three cycles; the ring and countdown feel even, and pause and resume land on the same beat.
+
+## Comments
+- Built on build/19-phase-machine-and-ring (3 commits). Ring is a React component plus a `createRing()` BreathVisual; the machine lives in `Breath` until ticket 21 shares it with the scheduler.
+- Added `getSession()` to `src/audio/session.ts` so the ring reads `ctx.currentTime`.
+- Not checked in a real browser from this session (no browser extension); the CSS custom properties are confirmed in the built CSS.
