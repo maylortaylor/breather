@@ -1,4 +1,5 @@
 import { Component, type ErrorInfo, type ReactNode } from "react";
+import { Background } from "./background/Background";
 import { Breath } from "./breath/Ring";
 import { Gate, SoundNote } from "./ui/Gate";
 import { useStore } from "./store";
@@ -36,6 +37,7 @@ type AppProps = { children?: ReactNode; onReload?: () => void };
 export function App({ children, onReload = () => window.location.reload() }: AppProps) {
   return (
     <ErrorBoundary onReload={onReload}>
+      <Background />
       <main className="shell">{children}</main>
     </ErrorBoundary>
   );

@@ -12,7 +12,7 @@ const styles = stylex.create({
   screen: {
     minHeight: "100vh",
     boxSizing: "border-box",
-    // Cancels the shell padding so the gradient fills the window.
+    // Cancels the shell padding so the screen fills the window.
     margin: -24,
     padding: 24,
     display: "flex",
@@ -22,8 +22,6 @@ const styles = stylex.create({
     gap: 20,
     textAlign: "center",
     color: colors.text,
-    // Stand-in for the aurora until ticket 27.
-    backgroundImage: `linear-gradient(160deg, ${colors.auroraA}, ${colors.auroraB} 55%, ${colors.auroraC})`,
   },
   card: {
     maxWidth: 440,

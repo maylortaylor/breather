@@ -1,5 +1,6 @@
 import * as stylex from "@stylexjs/stylex";
 import { useEffect, useRef, useState, type ReactNode } from "react";
+import { publishBreath } from "../background/feed";
 import { getSession } from "../audio/session";
 import { store, useStore } from "../store";
 import { colors } from "../theme.stylex";
@@ -85,7 +86,7 @@ const styles = stylex.create({
   screen: {
     minHeight: "100vh",
     boxSizing: "border-box",
-    // Cancels the shell padding so the gradient fills the window.
+    // Cancels the shell padding so the screen fills the window.
     margin: -24,
     padding: 24,
     display: "flex",
@@ -95,8 +96,6 @@ const styles = stylex.create({
     gap: 28,
     textAlign: "center",
     color: colors.text,
-    // Stand-in for the aurora until ticket 27.
-    backgroundImage: `linear-gradient(160deg, ${colors.auroraA}, ${colors.auroraB} 55%, ${colors.auroraC})`,
   },
   button: {
     position: "relative",
@@ -159,12 +158,15 @@ export function Breath({ now, machine, children }: BreathProps) {
     mq?.addEventListener?.("change", onMotion);
     let frame = 0;
     const loop = () => {
-      visual.draw(phases.stateAt(clock()));
+      const state = phases.stateAt(clock());
+      visual.draw(state);
+      publishBreath(state);
       frame = requestAnimationFrame(loop);
     };
     loop();
     return () => {
       cancelAnimationFrame(frame);
+      publishBreath(null);
       mq?.removeEventListener?.("change", onMotion);
       visual.unmount();
     };

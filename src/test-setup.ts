@@ -11,3 +11,9 @@ vi.mock("@stylexjs/stylex", () => {
     createTheme: () => ({}),
   };
 });
+
+// jsdom has no canvas: report "no context" quietly instead of logging "not implemented".
+if (typeof HTMLCanvasElement !== "undefined") {
+  HTMLCanvasElement.prototype.getContext = (() =>
+    null) as typeof HTMLCanvasElement.prototype.getContext;
+}
