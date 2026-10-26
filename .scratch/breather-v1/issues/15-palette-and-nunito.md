@@ -30,3 +30,11 @@ npm run check:build
 npm run preview
 ```
 - Matt checks: open the preview in normal and dim theme and confirm the colours read as calm, deep and not too bright.
+
+## Comments
+- Palette and dim values live in `src/theme.stylex.ts`. The contrast maths and the audit live in `src/contrast.ts` (in `coverage.include`) so `theme.test.ts` can break a palette on purpose and watch the audit fail.
+- The three tables: text on grounds, text on each tab field, and tab accent on every tab field. Each tab has a lifted accent token for the active-tab mark. Thumbs need 3:1 on the surface and every tab field. LFO colours need 3:1 on the surface and may not equal any tab colour.
+- The alpha rule scans every `.tsx` and `.css` under `src/`: a block that sets `color` may not use an alpha colour or `opacity`. The palette file allows only six-digit hex.
+- Font: Google Fonts latin variable subset (`v32`), plus upstream `OFL.txt`; hashes in `THIRD_PARTY.md`. The file is a subset, so it counts as modified under the OFL. `check-build.mjs` now also fails if a `.woff2` is not precached or has no `OFL.txt` beside it.
+- Addition beyond the ticket: `src/Palette.tsx`, a temporary swatch screen with a dim toggle, mounted in `main.tsx` so the palette and the built font can be seen. Tickets 18 and 20 replace it. It is not imported by any test because StyleX does not run under Vitest.
+- Criterion 7 (network blocked, reload the built preview) needs devtools; only checked that the preview serves the font with 200 and that it is in the precache.
