@@ -28,3 +28,9 @@ Give the app one pure module that defines a mix, the three built-in presets, and
 npm test
 npm run check
 ```
+
+## Comments
+- `parsePreset` takes one preset object that carries `version: 1` (`serializePreset` adds it). `parsePresetList` reads the stored `{ version, presets }` and forces `builtIn` false, so storage cannot forge a read-only preset. Both return null for a missing or higher version.
+- The spec `Mix` has no field for "heartbeat at phase changes only". Sleep and Reset save the heartbeat voice at level 0.3; the phase-change-only mode is for the metronome ticket to decide. Focus saves level 0.
+- Built-in levels are first guesses, to be tuned by ear. Sleep tempo is slider 0 (about 28 s a cycle).
+- `restoreLaunch` returns Sleep's mix, `dim: true`, `presetId: "sleep"` on first launch.
