@@ -1,5 +1,13 @@
 import { describe, expect, it } from "vite-plus/test";
-import { clampPeriod, createLfoBank, DEFAULT_LFOS, MAX_PERIOD, MIN_PERIOD, modGain } from "./lfo";
+import {
+  clampPeriod,
+  createLfoBank,
+  DEFAULT_LFOS,
+  levelAt,
+  MAX_PERIOD,
+  MIN_PERIOD,
+  modGain,
+} from "./lfo";
 import { createRng } from "./dsp";
 
 const make = (period: number, shape: "sine" | "smooth-random", seed = 1) =>
@@ -141,22 +149,59 @@ describe("createLfoBank", () => {
   });
 });
 
+describe("levelAt", () => {
+  it("moves between the minimum and maximum slider positions", () => {
+    expect(levelAt(0.2, 0.8, 0)).toBeCloseTo(0.2, 12);
+    expect(levelAt(0.2, 0.8, 1)).toBeCloseTo(0.8, 12);
+    expect(levelAt(0.2, 0.8, 0.5)).toBeCloseTo(0.5, 12);
+  });
+
+  it("is constant when min equals max", () => {
+    for (const v of [0, 0.25, 1]) expect(levelAt(0.4, 0.4, v)).toBe(0.4);
+  });
+
+  it("never leaves [min, max] and treats a minimum above the maximum as equal to it", () => {
+    for (let v = -0.5; v <= 1.5; v += 0.1) {
+      const l = levelAt(0.1, 0.9, v);
+      expect(l).toBeGreaterThanOrEqual(0.1);
+      expect(l).toBeLessThanOrEqual(0.9);
+    }
+    expect(levelAt(0.9, 0.3, 0)).toBe(0.3);
+  });
+});
+
 describe("modGain", () => {
-  it("is 1 at depth 0 whatever the LFO does", () => {
-    for (const v of [0, 0.3, 1]) expect(modGain(0, v)).toBe(1);
+  it("is 1 when min equals max, whatever the LFO does", () => {
+    for (const v of [0, 0.3, 1]) expect(modGain(0.6, 0.6, v)).toBe(1);
   });
 
-  it("is 1 - depth * (1 - value)", () => {
-    expect(modGain(1, 0)).toBe(0);
-    expect(modGain(1, 1)).toBe(1);
-    expect(modGain(0.5, 0)).toBe(0.5);
-    expect(modGain(0.5, 0.5)).toBe(0.75);
-    expect(modGain(0.8, 0.25)).toBeCloseTo(0.4, 12);
+  it("is 1 at the top of the LFO and the min-to-max gain ratio at the bottom", () => {
+    expect(modGain(0.5, 1, 1)).toBe(1);
+    expect(modGain(0.5, 1, 0)).toBeCloseTo(0.25, 12);
+    expect(modGain(0.3, 0.6, 0)).toBeCloseTo(0.25, 12);
   });
 
-  it("never goes negative or above 1, even for out-of-range inputs", () => {
-    expect(modGain(2, -1)).toBe(0);
-    expect(modGain(-1, 0)).toBe(1);
-    expect(modGain(1, 5)).toBe(1);
+  it("follows the slider-to-gain curve between the thumbs", () => {
+    // Level 0.75 of a 1.0 maximum: 0.75^2 / 1^2.
+    expect(modGain(0.5, 1, 0.5)).toBeCloseTo(0.5625, 12);
+  });
+
+  it("reaches silence when the minimum is 0", () => {
+    expect(modGain(0, 0.8, 0)).toBe(0);
+    expect(modGain(0, 0.8, 1)).toBe(1);
+  });
+
+  it("stays within the gain of the minimum and 1, and never goes negative", () => {
+    const floor = modGain(0.2, 0.7, 0);
+    for (let v = -1; v <= 2; v += 0.05) {
+      const g = modGain(0.2, 0.7, v);
+      expect(g).toBeGreaterThanOrEqual(floor);
+      expect(g).toBeLessThanOrEqual(1);
+    }
+    expect(modGain(-1, 0.5, 0)).toBe(0);
+  });
+
+  it("is 1 when the maximum is 0, because nothing is audible anyway", () => {
+    expect(modGain(0, 0, 0.3)).toBe(1);
   });
 });

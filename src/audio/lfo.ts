@@ -1,5 +1,5 @@
 // Pure LFO math. Time is passed in (seconds, never read from a clock) so tests need no timers.
-import { createRng, type Rng } from "./dsp";
+import { createRng, sliderToGain, type Rng } from "./dsp";
 
 export const MIN_PERIOD = 8;
 export const MAX_PERIOD = 120;
@@ -95,9 +95,20 @@ export function createLfoBank(configs: readonly LfoConfig[], rng: Rng): LfoBank 
   return { lfos, sample: (t) => lfos.map((l) => l.value(t)) };
 }
 
-/** Gain multiplier for a sound: depth 0 leaves it alone, depth 1 swings it down to silence. */
-export function modGain(depth: number, lfoValue: number): number {
-  const d = Math.min(1, Math.max(0, depth));
+/** Slider-space level for a sound: min at the bottom of the LFO, max at the top. */
+export function levelAt(min: number, max: number, lfoValue: number): number {
+  const hi = Math.min(1, Math.max(0, max));
+  const lo = Math.min(hi, Math.max(0, min));
   const v = Math.min(1, Math.max(0, lfoValue));
-  return 1 - d * (1 - v);
+  return lo + (hi - lo) * v;
+}
+
+/**
+ * Multiplier on top of the sound's maximum-volume gain. The level runs from min to max on the
+ * same slider-to-gain curve as the volume slider, so min 0 reaches true silence.
+ */
+export function modGain(min: number, max: number, lfoValue: number): number {
+  const top = sliderToGain(Math.min(1, Math.max(0, max)));
+  if (top === 0) return 1;
+  return sliderToGain(levelAt(min, max, lfoValue)) / top;
 }

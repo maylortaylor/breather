@@ -1,12 +1,14 @@
-// Throwaway Lab UI for the LFO bank: a panel of three LFOs and a per-row picker with a live bar.
+// Throwaway Lab UI: the LFO bank, the per-row volume control (single or range slider), and the
+// small "i" help bubbles.
 import * as stylex from "@stylexjs/stylex";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useId, useRef, useState, type CSSProperties, type ReactNode } from "react";
 import { MAX_PERIOD, MIN_PERIOD, type LfoShape } from "../audio/lfo";
-import type { LfoChoice, Modulator } from "../audio/modulation";
+import type { LfoChoice, Modulator, RowSetting } from "../audio/modulation";
 
 const FRAME_MS = 33;
 const REDUCED_FRAME_MS = 250;
-const NEUTRAL = "#5a6a99";
+const NEUTRAL = "#7f93d0";
+const THUMB = 18;
 
 // One shared requestAnimationFrame loop, about 30 fps, idle while the tab is hidden.
 const subscribers = new Set<(now: number) => void>();
@@ -48,7 +50,7 @@ function useFrame(cb: (nowSec: number) => void) {
 const styles = stylex.create({
   panel: {
     display: "grid",
-    gridTemplateColumns: "repeat(auto-fit, minmax(210px, 1fr))",
+    gridTemplateColumns: "repeat(auto-fit, minmax(230px, 1fr))",
     gap: 12,
     marginBlock: 16,
   },
@@ -63,7 +65,8 @@ const styles = stylex.create({
   title: { display: "flex", alignItems: "center", gap: 8, fontSize: 14, marginBottom: 6 },
   swatch: { width: 12, height: 12, borderRadius: 6 },
   trace: { width: "100%", height: 48, display: "block", marginBlock: 6 },
-  toggles: { display: "flex", gap: 6, marginTop: 6 },
+  inline: { display: "flex", alignItems: "center", gap: 6 },
+  toggles: { display: "flex", alignItems: "center", gap: 6, marginTop: 6 },
   small: {
     backgroundColor: "#1a2547",
     color: "#e8ecf8",
@@ -77,15 +80,6 @@ const styles = stylex.create({
     cursor: "pointer",
   },
   smallOn: { backgroundColor: "#2f4a8a", borderColor: "#9db4ff" },
-  rowLfo: {
-    gridColumn: "1 / -1",
-    display: "flex",
-    alignItems: "center",
-    flexWrap: "wrap",
-    gap: 10,
-    fontSize: 13,
-    color: "#b8c4e8",
-  },
   select: {
     backgroundColor: "#1a2547",
     color: "#e8ecf8",
@@ -95,31 +89,186 @@ const styles = stylex.create({
     borderRadius: 6,
     paddingBlock: 4,
     paddingInline: 8,
-    fontSize: 13,
+    fontSize: 14,
   },
-  track: {
-    position: "relative",
-    flexGrow: 1,
-    minWidth: 120,
-    height: 12,
+  cell: { display: "inline-flex", alignItems: "center", gap: 6, fontSize: 14, color: "#b8c4e8" },
+  volume: { flexGrow: 2, flexBasis: 220, minWidth: 150 },
+  slider: { position: "relative", height: 28, flexGrow: 1 },
+  bar: {
+    position: "absolute",
+    insetInline: 0,
+    top: 10,
+    height: 8,
+    borderRadius: 4,
     backgroundColor: "#0e152d",
-    borderRadius: 6,
     borderWidth: 1,
     borderStyle: "solid",
     borderColor: "#2a3869",
-    overflow: "hidden",
+    boxSizing: "border-box",
   },
-  fill: { position: "absolute", insetBlock: 0, left: 0, borderRadius: 6 },
-  dot: {
+  band: { position: "absolute", top: 10, height: 8, opacity: 0.28 },
+  fill: { position: "absolute", top: 10, height: 8, borderRadius: 4, left: 0 },
+  range: {
     position: "absolute",
-    top: 1,
-    width: 8,
-    height: 8,
-    marginLeft: -4,
-    borderRadius: 4,
-    backgroundColor: "#ffffff",
+    inset: 0,
+    width: "100%",
+    height: 28,
+    margin: 0,
+    backgroundColor: "transparent",
+    appearance: "none",
+    pointerEvents: "none",
+    "::-webkit-slider-thumb": {
+      appearance: "none",
+      pointerEvents: "auto",
+      width: THUMB,
+      height: THUMB,
+      borderRadius: "50%",
+      backgroundColor: "#ffffff",
+      borderWidth: 3,
+      borderStyle: "solid",
+      borderColor: "var(--thumb)",
+      boxSizing: "border-box",
+      cursor: "grab",
+    },
+    "::-moz-range-thumb": {
+      pointerEvents: "auto",
+      width: THUMB,
+      height: THUMB,
+      borderRadius: "50%",
+      backgroundColor: "#ffffff",
+      borderWidth: 3,
+      borderStyle: "solid",
+      borderColor: "var(--thumb)",
+      boxSizing: "border-box",
+      cursor: "grab",
+    },
+    "::-webkit-slider-runnable-track": { backgroundColor: "transparent" },
+    "::-moz-range-track": { backgroundColor: "transparent" },
   },
+  infoWrap: { position: "relative", display: "inline-flex" },
+  infoBtn: {
+    width: 20,
+    height: 20,
+    padding: 0,
+    borderRadius: 10,
+    borderWidth: 1,
+    borderStyle: "solid",
+    borderColor: "#5a6fae",
+    backgroundColor: "transparent",
+    color: "#b8c4e8",
+    fontSize: 12,
+    fontStyle: "italic",
+    fontFamily: "Georgia, serif",
+    cursor: "help",
+    lineHeight: 1,
+  },
+  tip: {
+    position: "absolute",
+    top: 26,
+    zIndex: 20,
+    width: "max-content",
+    maxWidth: "min(240px, 70vw)",
+    padding: "8px 10px",
+    borderRadius: 8,
+    backgroundColor: "#060a18",
+    borderWidth: 1,
+    borderStyle: "solid",
+    borderColor: "#5a6fae",
+    color: "#e8ecf8",
+    fontSize: 13,
+    lineHeight: 1.35,
+    fontStyle: "normal",
+    textAlign: "left",
+  },
+  tipLeft: { left: -4 },
+  tipRight: { right: -4 },
 });
+
+/** The "i" button and its one-line bubble. Hover, keyboard focus or tap opens it; Escape or a tap elsewhere closes it. */
+export function Info({ text, align = "left" }: { text: string; align?: "left" | "right" }) {
+  const id = useId();
+  const [open, setOpen] = useState(false);
+  const [pinned, setPinned] = useState(false);
+  const wrap = useRef<HTMLSpanElement>(null);
+
+  useEffect(() => {
+    if (!open) return;
+    const close = () => {
+      setOpen(false);
+      setPinned(false);
+    };
+    const onDown = (ev: PointerEvent) => {
+      if (!wrap.current?.contains(ev.target as Node)) close();
+    };
+    const onKey = (ev: KeyboardEvent) => {
+      if (ev.key === "Escape") close();
+    };
+    document.addEventListener("pointerdown", onDown);
+    document.addEventListener("keydown", onKey);
+    return () => {
+      document.removeEventListener("pointerdown", onDown);
+      document.removeEventListener("keydown", onKey);
+    };
+  }, [open]);
+
+  return (
+    <span ref={wrap} {...stylex.props(styles.infoWrap)}>
+      <button
+        type="button"
+        aria-label="More info"
+        aria-describedby={id}
+        aria-expanded={open}
+        {...stylex.props(styles.infoBtn)}
+        onPointerEnter={(ev) => ev.pointerType === "mouse" && setOpen(true)}
+        onPointerLeave={(ev) => ev.pointerType === "mouse" && !pinned && setOpen(false)}
+        onFocus={(ev) => ev.currentTarget.matches(":focus-visible") && setOpen(true)}
+        onBlur={() => {
+          setOpen(false);
+          setPinned(false);
+        }}
+        onClick={() => {
+          const next = !pinned;
+          setPinned(next);
+          setOpen(next);
+        }}
+      >
+        i
+      </button>
+      <span
+        id={id}
+        role="tooltip"
+        hidden={!open}
+        {...stylex.props(styles.tip, align === "left" ? styles.tipLeft : styles.tipRight)}
+      >
+        {text}
+      </span>
+    </span>
+  );
+}
+
+/** A control with its "i" next to it. */
+export function WithInfo({
+  info,
+  align,
+  children,
+}: {
+  info: string;
+  align?: "left" | "right";
+  children: ReactNode;
+}) {
+  return (
+    <span {...stylex.props(styles.cell)}>
+      {children}
+      <Info text={info} align={align} />
+    </span>
+  );
+}
+
+interface Props {
+  modulator: Modulator;
+  /** Called after any LFO or row change so the Lab can persist it. */
+  onChange: () => void;
+}
 
 interface Sample {
   t: number;
@@ -170,21 +319,24 @@ function LfoCard({ modulator, index, onChange }: Props & { index: number }) {
         LFO {index + 1} <span style={{ color: "#9fb0d8" }}>{period} s per cycle</span>
       </div>
       <canvas ref={canvas} width={260} height={48} {...stylex.props(styles.trace)} />
-      <input
-        type="range"
-        aria-label={`LFO ${index + 1} period`}
-        min={MIN_PERIOD}
-        max={MAX_PERIOD}
-        step={1}
-        value={period}
-        style={{ width: "100%" }}
-        onChange={(ev) => {
-          const v = Number(ev.target.value);
-          modulator.setPeriod(index, v);
-          setPeriod(modulator.bank.lfos[index]?.period ?? v);
-          onChange();
-        }}
-      />
+      <div {...stylex.props(styles.inline)}>
+        <input
+          type="range"
+          aria-label={`LFO ${index + 1} period`}
+          min={MIN_PERIOD}
+          max={MAX_PERIOD}
+          step={1}
+          value={period}
+          style={{ flexGrow: 1, minWidth: 0 }}
+          onChange={(ev) => {
+            const v = Number(ev.target.value);
+            modulator.setPeriod(index, v);
+            setPeriod(modulator.bank.lfos[index]?.period ?? v);
+            onChange();
+          }}
+        />
+        <Info text="How long one full rise and fall takes, 8 s to 120 s." align="right" />
+      </div>
       <div {...stylex.props(styles.toggles)}>
         {(["sine", "smooth-random"] as const).map((s) => (
           <button
@@ -200,15 +352,13 @@ function LfoCard({ modulator, index, onChange }: Props & { index: number }) {
             {s === "sine" ? "Sine" : "Smooth random"}
           </button>
         ))}
+        <Info
+          text="Sine rises and falls evenly. Smooth random wanders and never repeats."
+          align="right"
+        />
       </div>
     </div>
   );
-}
-
-interface Props {
-  modulator: Modulator;
-  /** Called after any LFO or assignment change so the Lab can persist it. */
-  onChange: () => void;
 }
 
 export function LfoPanel(props: Props) {
@@ -221,63 +371,120 @@ export function LfoPanel(props: Props) {
   );
 }
 
-/** LFO picker, depth slider and live level bar for one loop row. */
-export function RowLfo({ id, modulator, onChange }: Props & { id: string }) {
-  const [a, setA] = useState(() => modulator.assignmentOf(id));
+const pos = (v: number) => `calc(${THUMB / 2}px + (100% - ${THUMB}px) * ${v})`;
+
+/**
+ * The one volume control for a row. No LFO: a single volume slider. With an LFO: a range slider,
+ * right thumb = loudest, left thumb = quietest, and the LFO-colored fill ends at the live level.
+ * Also renders the LFO picker for loop rows. `onVolume` receives the maximum volume.
+ */
+export function RowVolume({
+  id,
+  name,
+  withLfo,
+  modulator,
+  onVolume,
+  onChange,
+}: Props & {
+  id: string;
+  name: string;
+  withLfo: boolean;
+  onVolume: (max: number) => void;
+}) {
+  const [row, setRow] = useState<RowSetting>(() => modulator.rowOf(id));
   const fill = useRef<HTMLDivElement>(null);
-  const dot = useRef<HTMLDivElement>(null);
-  const color = a.lfo === 0 ? NEUTRAL : (modulator.bank.lfos[a.lfo - 1]?.color ?? NEUTRAL);
+  const color = row.lfo === 0 ? NEUTRAL : (modulator.bank.lfos[row.lfo - 1]?.color ?? NEUTRAL);
+  const ranged = row.lfo !== 0;
 
   useFrame(() => {
-    if (fill.current) fill.current.style.width = `${modulator.gainOf(id) * 100}%`;
-    if (dot.current) {
-      const v = a.lfo === 0 ? null : (modulator.values[a.lfo - 1] ?? 1);
-      dot.current.style.display = v === null ? "none" : "block";
-      if (v !== null) dot.current.style.left = `${v * 100}%`;
-    }
+    if (fill.current) fill.current.style.width = pos(modulator.levelOf(id));
   });
 
-  const update = (next: typeof a) => {
-    setA(next);
-    modulator.assign(id, next);
+  const update = (next: RowSetting) => {
+    setRow(next);
+    modulator.setRow(id, next);
+    onVolume(next.max);
     onChange();
   };
 
+  const thumbVars = { "--thumb": color } as CSSProperties;
+
   return (
-    <div {...stylex.props(styles.rowLfo)}>
-      <label>
-        LFO{" "}
-        <select
-          {...stylex.props(styles.select)}
-          value={a.lfo}
-          onChange={(ev) => update({ ...a, lfo: Number(ev.target.value) as LfoChoice })}
-        >
-          <option value={0}>None</option>
-          <option value={1}>1</option>
-          <option value={2}>2</option>
-          <option value={3}>3</option>
-        </select>
-      </label>
-      <label>
-        Depth{" "}
-        <input
-          type="range"
-          min={0}
-          max={1}
-          step={0.01}
-          value={a.depth}
-          disabled={a.lfo === 0}
-          onChange={(ev) => update({ ...a, depth: Number(ev.target.value) })}
+    <>
+      <span {...stylex.props(styles.cell, styles.volume)}>
+        <span {...stylex.props(styles.slider)}>
+          <span {...stylex.props(styles.bar)} />
+          {ranged && (
+            <span
+              {...stylex.props(styles.band)}
+              style={{
+                left: pos(row.min),
+                width: `calc((100% - ${THUMB}px) * ${row.max - row.min})`,
+                backgroundColor: color,
+              }}
+            />
+          )}
+          <span
+            ref={fill}
+            {...stylex.props(styles.fill)}
+            style={{ width: pos(row.max), backgroundColor: color, opacity: ranged ? 0.9 : 0.45 }}
+          />
+          {ranged && (
+            <input
+              type="range"
+              aria-label={`${name} minimum volume`}
+              min={0}
+              max={1}
+              step={0.01}
+              value={row.min}
+              {...stylex.props(styles.range)}
+              style={{ ...thumbVars, zIndex: row.min > 0.5 ? 3 : 1 }}
+              onChange={(ev) => update({ ...row, min: Math.min(Number(ev.target.value), row.max) })}
+            />
+          )}
+          <input
+            type="range"
+            aria-label={ranged ? `${name} maximum volume` : `${name} volume`}
+            min={0}
+            max={1}
+            step={0.01}
+            value={row.max}
+            {...stylex.props(styles.range)}
+            style={{ ...thumbVars, zIndex: 2 }}
+            onChange={(ev) => update({ ...row, max: Math.max(Number(ev.target.value), row.min) })}
+          />
+        </span>
+        <Info
+          text={
+            ranged
+              ? "Right thumb: the loudest this sound gets. Left thumb: the quietest it gets as the LFO swings. The colored fill shows the level right now."
+              : "How loud this sound is."
+          }
         />
-      </label>
-      <div {...stylex.props(styles.track)} aria-hidden="true">
-        <div
-          ref={fill}
-          {...stylex.props(styles.fill)}
-          style={{ backgroundColor: color, opacity: a.lfo === 0 ? 0.35 : 0.85 }}
-        />
-        <div ref={dot} {...stylex.props(styles.dot)} />
-      </div>
-    </div>
+      </span>
+      {withLfo && (
+        <WithInfo info="Which slow wave moves this sound's volume between its minimum and maximum.">
+          <label>
+            LFO{" "}
+            <select
+              {...stylex.props(styles.select)}
+              aria-label={`${name} LFO`}
+              value={row.lfo}
+              onChange={(ev) => {
+                const lfo = Number(ev.target.value) as LfoChoice;
+                // Leave room to swing: if the thumbs are stacked, start the minimum below the maximum.
+                const min = lfo !== 0 && row.min >= row.max ? row.max * 0.4 : row.min;
+                update({ ...row, lfo, min });
+              }}
+            >
+              <option value={0}>None</option>
+              <option value={1}>1</option>
+              <option value={2}>2</option>
+              <option value={3}>3</option>
+            </select>
+          </label>
+        </WithInfo>
+      )}
+    </>
   );
 }

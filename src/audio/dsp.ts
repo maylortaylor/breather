@@ -17,6 +17,9 @@ export function createRng(seed: number): Rng {
 
 const between = (rng: Rng, lo: number, hi: number) => lo + rng() * (hi - lo);
 
+/** Slider position (0 to 1) to gain. Squared so the low end has fine control. */
+export const sliderToGain = (value: number): number => value * value;
+
 export type NoiseKind = "white" | "pink" | "brown";
 
 const MIN_LOOP_SEC = 10;

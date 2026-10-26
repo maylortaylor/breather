@@ -14,6 +14,7 @@ import {
   midiToHz,
   MOODS,
   nextChordIndex,
+  sliderToGain,
   whalePlan,
 } from "./dsp";
 
@@ -373,5 +374,13 @@ describe("music helpers", () => {
       expect(next).toBeLessThan(4);
       cur = next;
     }
+  });
+});
+
+describe("sliderToGain", () => {
+  it("squares the slider so the quiet end has fine control", () => {
+    expect(sliderToGain(0)).toBe(0);
+    expect(sliderToGain(0.5)).toBe(0.25);
+    expect(sliderToGain(1)).toBe(1);
   });
 });

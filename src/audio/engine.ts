@@ -1,4 +1,4 @@
-import { createRng, makeImpulse } from "./dsp";
+import { createRng, makeImpulse, sliderToGain } from "./dsp";
 
 const MASTER_CAP = 0.8;
 const REVERB_SECONDS = 4;
@@ -21,9 +21,6 @@ export interface Engine {
   /** Per-sound level match, multiplied into the layer gain. */
   setTrim(name: string, trim: number): void;
 }
-
-/** Slider position (0 to 1) to gain. Squared so the low end has fine control. */
-export const sliderToGain = (value: number): number => value * value;
 
 /** Create the one shared context. Must be called from a user gesture (the Begin click). */
 export function createEngine(): Engine {
