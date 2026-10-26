@@ -30,3 +30,10 @@ npm run dev
 ```
 - Clear site data, load `/breather/`, follow the card, tap Begin.
 - Matt checks: the Sleep mix starts softly, with no burst, and the copy reads right.
+
+## Comments
+- Added `src/audio/session.ts` (in the spec module map) for the Begin gesture: it makes and resumes the context inside the tap, builds the modulator and mixer, and applies the restored mix over a 3 s fade. Statuses go to `store.audio`.
+- Added `src/test-setup.ts`: tests skip the StyleX plugin, so the setup file stubs `@stylexjs/stylex` under jsdom.
+- `breather.state` does not store a mix yet, so Begin starts Sleep until a preset id is saved; then it passes the saved state to `restoreLaunch`.
+- `src/Palette.tsx` is reachable only in dev at `/breather/#palette`.
+- The resting screen is a placeholder ("Breathe.") until tickets 19 and 20.
