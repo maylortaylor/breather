@@ -61,6 +61,11 @@ export function beginAudio(
   }
 }
 
+/** The running session, or null before Begin or when sound is unavailable. */
+export function getSession(): AudioSession | null {
+  return current;
+}
+
 /** Test hook: forget the session. */
 export function resetSession(): void {
   current = null;
