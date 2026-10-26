@@ -1,5 +1,5 @@
 Type: grilling
-Status: open
+Status: claimed
 Blocked by: none
 
 # What do the built-in presets contain, and what does the metronome do in seconds mode?
