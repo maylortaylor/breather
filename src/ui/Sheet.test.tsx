@@ -110,6 +110,67 @@ describe("opening", () => {
   });
 });
 
+describe("Settings button", () => {
+  const button = () => screen.getByRole("button", { name: "Settings" });
+
+  it("is on screen while the sheet is closed, collapsed, and not before resting", () => {
+    render(<Sheet />);
+    expect(button().getAttribute("aria-expanded")).toBe("false");
+    expect(button().hasAttribute("aria-controls")).toBe(false);
+    cleanup();
+    store.set({ screen: "begin" });
+    render(<Sheet />);
+    expect(screen.queryByRole("button", { name: "Settings" })).toBeNull();
+  });
+
+  it("toggles the sheet and keeps aria-expanded in step", () => {
+    render(<Sheet />);
+    fireEvent.click(button());
+    expect(store.get().sheet.open).toBe(true);
+    expect(button().getAttribute("aria-expanded")).toBe("true");
+    const sheet = document.querySelector("[data-sheet]")!;
+    expect(button().getAttribute("aria-controls")).toBe(sheet.id);
+    fireEvent.click(button());
+    expect(store.get().sheet.open).toBe(false);
+    expect(button().getAttribute("aria-expanded")).toBe("false");
+  });
+
+  it("stays on screen when the sheet dissolves, and a press brings the sheet back", () => {
+    render(<Sheet />);
+    fireEvent.click(button());
+    const sheet = document.querySelector<HTMLElement>("[data-sheet]")!;
+    act(() => void vi.advanceTimersByTime(5000));
+    expect(sheet.dataset.dissolved).toBe("true");
+    expect(button()).toBeTruthy();
+    fireEvent.pointerDown(button());
+    expect(sheet.dataset.dissolved).toBe("false");
+  });
+
+  it("a press on it does not also open the sheet as a tap away", () => {
+    render(<Sheet />);
+    tap(button());
+    expect(store.get().sheet.open).toBe(false);
+  });
+
+  it("shows its tooltip after 2500 ms of hover", () => {
+    render(<Sheet />);
+    const tip = screen.getByRole("tooltip", { hidden: true });
+    expect(tip.textContent).toBe("Sounds, tempo and presets");
+    fireEvent.pointerEnter(button(), { pointerType: "mouse" });
+    act(() => void vi.advanceTimersByTime(2500));
+    expect(tip.hidden).toBe(false);
+  });
+
+  it("passes axe closed and open", async () => {
+    vi.useRealTimers();
+    const { unmount } = render(<Sheet />);
+    expect((await axe(document.body)).violations).toEqual([]);
+    unmount();
+    openSheet("sounds");
+    expect((await axe(document.body)).violations).toEqual([]);
+  });
+});
+
 describe("layout", () => {
   it("is a bottom sheet below 900 px (AC2)", () => {
     expect(openSheet().dataset.layout).toBe("sheet");
@@ -227,7 +288,7 @@ describe("tooltip", () => {
   it("shows after 2500 ms of hover on a control (AC8)", () => {
     openSheet("sounds");
     const slider = screen.getByRole("slider", { name: "Master" });
-    const tip = screen.getByRole("tooltip", { hidden: true });
+    const tip = screen.getByText("How loud everything is.", { exact: false });
     fireEvent.pointerEnter(slider, { pointerType: "mouse" });
     act(() => void vi.advanceTimersByTime(2499));
     expect(tip.hidden).toBe(true);

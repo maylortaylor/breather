@@ -10,6 +10,7 @@ import {
 import { store, useStore, type TabName } from "../store";
 import { colors } from "../theme.stylex";
 import { SoundsTab } from "./SoundsTab";
+import { Tip } from "./Tip";
 import {
   classifyGesture,
   createAutoHide,
@@ -58,6 +59,31 @@ const styles = stylex.create({
     width: 380,
     borderTopLeftRadius: 20,
     borderBottomLeftRadius: 20,
+  },
+  // Fixed at bottom centre; above the sheet on phones so it never sits on its content.
+  settingsDock: {
+    position: "fixed",
+    zIndex: 11,
+    insetInline: 0,
+    display: "flex",
+    justifyContent: "center",
+    pointerEvents: "none",
+  },
+  dockClosed: { bottom: "max(16px, env(safe-area-inset-bottom))" },
+  dockOpenSheet: { bottom: "calc(60dvh + 12px)" },
+  settings: {
+    pointerEvents: "auto",
+    minHeight: 44,
+    paddingInline: 24,
+    borderRadius: 999,
+    borderWidth: 2,
+    borderStyle: "solid",
+    borderColor: colors.accentBreath,
+    backgroundColor: colors.tabBreath,
+    color: colors.tabInk,
+    fontFamily: "inherit",
+    fontSize: 16,
+    cursor: "pointer",
   },
   breath: { backgroundColor: colors.tabBreath },
   sounds: { backgroundColor: colors.tabSounds },
@@ -115,6 +141,7 @@ const ACCENT = {
   session: styles.accentSession,
 };
 
+const SHEET_ID = "sheet-controls";
 const REDUCED_QUERY = "(prefers-reduced-motion: reduce)";
 const WIDE_QUERY = `(min-width: ${WIDE_QUERY_PX}px)`;
 
@@ -247,7 +274,7 @@ export function Sheet() {
     };
   }, [open]);
 
-  if (!resting || !open) return null;
+  if (!resting) return null;
 
   const onTabKey = (ev: ReactKeyboardEvent<HTMLElement>) => {
     const step = ev.key === "ArrowRight" ? 1 : ev.key === "ArrowLeft" ? -1 : 0;
@@ -260,55 +287,78 @@ export function Sheet() {
   };
 
   return (
-    <section
-      ref={rootRef}
-      aria-label="Sound controls"
-      data-sheet
-      data-layout={wide ? "panel" : "sheet"}
-      data-dissolved={dissolved}
-      className="sheet-mask"
-      style={sheetStyle(dissolved, reduced)}
-      {...stylex.props(styles.root, wide ? styles.panel : styles.sheet, FIELD[tab])}
-    >
-      <button
-        type="button"
-        aria-label="Close controls"
-        {...stylex.props(styles.handle)}
-        onClick={() => setOpen(false)}
-      >
-        <span {...stylex.props(styles.grip)} />
-      </button>
-      <div role="tablist" aria-label="Controls" {...stylex.props(styles.tabs)}>
-        {TABS.map((t) => (
-          <button
-            key={t.name}
-            id={`tab-${t.name}`}
-            type="button"
-            role="tab"
-            aria-selected={t.name === tab}
-            aria-controls={`panel-${t.name}`}
-            tabIndex={t.name === tab ? 0 : -1}
-            {...stylex.props(
-              styles.tab,
-              TAB_FIELD[t.name],
-              t.name === tab && styles.tabOn,
-              t.name === tab && ACCENT[t.name]
-            )}
-            onClick={() => setTab(t.name)}
-            onKeyDown={onTabKey}
-          >
-            {t.label}
-          </button>
-        ))}
-      </div>
+    <>
       <div
-        id={`panel-${tab}`}
-        role="tabpanel"
-        aria-labelledby={`tab-${tab}`}
-        {...stylex.props(styles.body)}
+        {...stylex.props(
+          styles.settingsDock,
+          open && !wide ? styles.dockOpenSheet : styles.dockClosed
+        )}
       >
-        {BODIES[tab]}
+        <Tip text="Sounds, tempo and presets">
+          <button
+            type="button"
+            aria-expanded={open}
+            aria-controls={open ? SHEET_ID : undefined}
+            {...stylex.props(styles.settings)}
+            onClick={() => setOpen(!open)}
+          >
+            Settings
+          </button>
+        </Tip>
       </div>
-    </section>
+      {open && (
+        <section
+          id={SHEET_ID}
+          ref={rootRef}
+          aria-label="Sound controls"
+          data-sheet
+          data-layout={wide ? "panel" : "sheet"}
+          data-dissolved={dissolved}
+          className="sheet-mask"
+          style={sheetStyle(dissolved, reduced)}
+          {...stylex.props(styles.root, wide ? styles.panel : styles.sheet, FIELD[tab])}
+        >
+          <button
+            type="button"
+            aria-label="Close controls"
+            {...stylex.props(styles.handle)}
+            onClick={() => setOpen(false)}
+          >
+            <span {...stylex.props(styles.grip)} />
+          </button>
+          <div role="tablist" aria-label="Controls" {...stylex.props(styles.tabs)}>
+            {TABS.map((t) => (
+              <button
+                key={t.name}
+                id={`tab-${t.name}`}
+                type="button"
+                role="tab"
+                aria-selected={t.name === tab}
+                aria-controls={`panel-${t.name}`}
+                tabIndex={t.name === tab ? 0 : -1}
+                {...stylex.props(
+                  styles.tab,
+                  TAB_FIELD[t.name],
+                  t.name === tab && styles.tabOn,
+                  t.name === tab && ACCENT[t.name]
+                )}
+                onClick={() => setTab(t.name)}
+                onKeyDown={onTabKey}
+              >
+                {t.label}
+              </button>
+            ))}
+          </div>
+          <div
+            id={`panel-${tab}`}
+            role="tabpanel"
+            aria-labelledby={`tab-${tab}`}
+            {...stylex.props(styles.body)}
+          >
+            {BODIES[tab]}
+          </div>
+        </section>
+      )}
+    </>
   );
 }
