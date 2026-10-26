@@ -92,3 +92,42 @@ export function pickRenderer(
   if (available.canvas && !failed.includes("canvas")) return "canvas";
   return "css";
 }
+
+export type AuroraFrame = AuroraLook & {
+  /** Animation clock in seconds. It advances at `speed`, so slowing down never jumps. */
+  time: number;
+};
+
+export interface AuroraClock {
+  setBreath(v: number): void;
+  setDim(on: boolean): void;
+  /** Advances by `dtSec` and returns what to draw. */
+  step(dtSec: number, reduced: boolean): AuroraFrame;
+}
+
+// Where the aurora rests before the breath guide starts.
+export const IDLE_LEVEL = 0.45;
+
+/** Smooths the breath and the dim switch, and keeps the animation clock. Both renderers use it. */
+export function createAuroraClock(): AuroraClock {
+  let target = IDLE_LEVEL;
+  let level = IDLE_LEVEL;
+  let dimTarget = 0;
+  let dimMix = 0;
+  let time = 0;
+  return {
+    setBreath(v) {
+      target = clamp01(v);
+    },
+    setDim(on) {
+      dimTarget = on ? 1 : 0;
+    },
+    step(dtSec, reduced) {
+      level = approach(level, target, dtSec, 6);
+      dimMix = approach(dimMix, dimTarget, dtSec, 1.5);
+      const look = auroraLook({ level, dim: false, reduced });
+      time += dtSec * look.speed;
+      return { ...look, brightness: look.brightness * (1 - (1 - DIM_FACTOR) * dimMix), time };
+    },
+  };
+}

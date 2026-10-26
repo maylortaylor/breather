@@ -3,6 +3,7 @@ import {
   approach,
   auroraLook,
   breathLevel,
+  createAuroraClock,
   createFrameGate,
   pickRenderer,
   renderRatio,
@@ -138,5 +139,45 @@ describe("pickRenderer", () => {
   it("skips any renderer that already failed", () => {
     expect(pickRenderer({ webgl: true, canvas: true }, ["webgl"])).toBe("canvas");
     expect(pickRenderer({ webgl: true, canvas: true }, ["webgl", "canvas"])).toBe("css");
+  });
+});
+
+describe("createAuroraClock", () => {
+  it("rests at a mid level, then follows the breath", () => {
+    const c = createAuroraClock();
+    const idle = c.step(0, false);
+    c.setBreath(1);
+    let f = idle;
+    for (let i = 0; i < 90; i++) f = c.step(1 / 30, false);
+    expect(f.lift).toBeGreaterThan(0.95);
+    expect(f.brightness).toBeGreaterThan(idle.brightness);
+    c.setBreath(0);
+    for (let i = 0; i < 90; i++) f = c.step(1 / 30, false);
+    expect(f.lift).toBeLessThan(0.05);
+  });
+
+  it("eases into dim mode and ends at half brightness", () => {
+    const c = createAuroraClock();
+    const before = c.step(0, false).brightness;
+    c.setDim(true);
+    const mid = c.step(0.2, false).brightness;
+    let end = mid;
+    for (let i = 0; i < 300; i++) end = c.step(1 / 30, false).brightness;
+    expect(mid).toBeLessThan(before);
+    expect(mid).toBeGreaterThan(end);
+    expect(end / before).toBeCloseTo(0.5, 2);
+  });
+
+  it("advances its clock more slowly under reduced motion", () => {
+    const a = createAuroraClock();
+    const b = createAuroraClock();
+    for (let i = 0; i < 30; i++) {
+      a.step(1 / 30, false);
+      b.step(1 / 30, true);
+    }
+    const ta = a.step(0, false).time;
+    const tb = b.step(0, true).time;
+    expect(ta).toBeCloseTo(1, 6);
+    expect(tb).toBeCloseTo(0.15, 6);
   });
 });

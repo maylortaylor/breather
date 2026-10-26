@@ -58,6 +58,7 @@ export default defineConfig({
       provider: "v8",
       include: [
         "src/background/logic.ts",
+        "src/background/loop.ts",
         "src/breath/phases.ts",
         "src/breath/tempo.ts",
         "src/breath/scheduler.ts",
