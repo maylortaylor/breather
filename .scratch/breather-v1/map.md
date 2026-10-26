@@ -24,6 +24,7 @@ v1 of the app described in [`docs/PLAN.md`](../../docs/PLAN.md), runnable locall
 - Safety: line on the Begin screen, first-run welcome card, tap ring to pause, see [10](issues/10-safety-note.md).
 - Background: aurora borealis first.
 - Session length and cycle count: out of v1.
+- Build: [spec.md](spec.md), build tickets 14 to 32 in `issues/` (Sonnet, one per session).
 
 ## Not yet specified
 - Definition of v1 and first push: [11](issues/11-v1-gate.md)
