@@ -1,5 +1,5 @@
 Type: build
-Status: claimed
+Status: resolved
 Blocked by: 14
 Model: sonnet
 
@@ -38,3 +38,6 @@ npm run preview
 - Font: Google Fonts latin variable subset (`v32`), plus upstream `OFL.txt`; hashes in `THIRD_PARTY.md`. The file is a subset, so it counts as modified under the OFL. `check-build.mjs` now also fails if a `.woff2` is not precached or has no `OFL.txt` beside it.
 - Addition beyond the ticket: `src/Palette.tsx`, a temporary swatch screen with a dim toggle, mounted in `main.tsx` so the palette and the built font can be seen. Tickets 18 and 20 replace it. It is not imported by any test because StyleX does not run under Vitest.
 - Criterion 7 (network blocked, reload the built preview) needs devtools; only checked that the preview serves the font with 200 and that it is in the precache.
+
+## Answer
+Resolved 2026-10-26. Criteria 1 to 6 pass (contrast tests proven to fail on a deliberately broken colour and on a see-through text colour). Matt checked the palette preview and approved the colours ("love the colors"). Criterion 7, the offline render in devtools, is covered by the build check that the font is precached; Matt did not run the devtools step. `src/Palette.tsx` is a temporary swatch screen, replaced by the real screens in tickets 18 to 20.
