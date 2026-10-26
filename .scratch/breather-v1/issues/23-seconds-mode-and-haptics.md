@@ -30,3 +30,7 @@ npm run check
 npm run dev
 ```
 - Matt checks: on an Android phone if one is handy, the pulse is soft and lands on phase changes; otherwise note it as untested on the ticket.
+
+## Comments
+- Seconds-mode timing (`beatSeconds`, the 4/7/8 pattern, the no-jump switch) was already in `beats.ts` and `phases.ts`; this ticket added the switch, the disabled slider with its reason, and the haptics, plus tests that pin the behavior.
+- Haptic pulse (20 ms, `src/breath/haptics.ts`) is untested on a real Android phone. iOS has no `navigator.vibrate`, so it does nothing there.
