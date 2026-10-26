@@ -17,22 +17,21 @@ export const TRIMS: Record<string, number> = {
   pink: 19.3,
   brown: 18.6,
   ocean: 33.1,
-  // Sparse, so its mean sits about 30 dB under each blip. Capped by peak (about -14 dBFS), not
-  // by the -30 dBFS mean target, which would clip.
-  bubbles: 45,
-  "whale-a": 8,
-  "whale-b": 6.5,
-  "whale-c": 20,
+  // Sparse, so its mean sits about 30 dB under each blip. Capped by peak (about -10 dBFS, which is
+  // the +4 dB the listener asked for in mean terms), not by the -30 dBFS mean target, which clips.
+  bubbles: 28,
+  "whale-b": 5.5,
+  "whale-c": 25,
   "pad-dreamy": 2.27,
   "pad-tonal": 1.6,
   "pad-deep": 1.47,
-  "metro-soft-tick": 0.57,
-  "metro-wood-block": 0.55,
-  "metro-bell": 0.54,
-  "metro-heartbeat-thump": 0.64,
-  "phase-inhale-rising-": 0.69,
-  "phase-hold-steady-": 0.7,
-  "phase-exhale-falling-": 0.69,
+  "metro-soft-tick-700-hz": 0.64,
+  "metro-soft-tick-350-hz": 0.7,
+  "metro-wood-block": 0.59,
+  "metro-heartbeat-thump": 0.69,
+  "phase-inhale-rising": 0.69,
+  "phase-hold-steady": 0.7,
+  "phase-exhale-falling": 0.69,
 };
 export const trimOf = (id: string): number => TRIMS[id] ?? 1;
 
@@ -46,7 +45,6 @@ const loops: [string, string, string, (e: Engine, id: string) => Sound][] = [
   ["brown", "Brown noise", "Noise", (e, id) => noiseSound(e, "brown", id)],
   ["ocean", "Ocean waves", "Nature", (e, id) => oceanSound(e, id)],
   ["bubbles", "Underwater bubbles", "Nature", (e, id) => bubblesSound(e, id)],
-  ["whale-a", "Whale A: humpback song", "Nature", (e, id) => whaleSound(e, "A", id)],
   ["whale-b", "Whale B: blue moan", "Nature", (e, id) => whaleSound(e, "B", id)],
   ["whale-c", "Whale C: distant call", "Nature", (e, id) => whaleSound(e, "C", id)],
   ["pad-dreamy", "Pad: Dreamy", "Music", (e, id) => padSound(e, "dreamy", id)],
@@ -54,7 +52,11 @@ const loops: [string, string, string, (e: Engine, id: string) => Sound][] = [
   ["pad-deep", "Pad: Deep", "Music", (e, id) => padSound(e, "deep", id)],
 ];
 
-const slug = (s: string) => s.replace(/[^a-z]+/g, "-");
+const slug = (s: string) =>
+  s
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-|-$/g, "");
 
 export const CATALOG: Entry[] = [
   ...loops.map(([id, label, group, make]): Entry => ({

@@ -27,23 +27,22 @@ function partial(
   osc.stop(at + decay + 0.05);
 }
 
-/** The four swappable beat voices. */
+/** The swappable beat voices. */
 export const METRONOME_VOICES: Record<string, OneShot> = {
-  "soft tick": (e, at, l) => partial(e, l, at, 1400, 1.2, 0.06, { type: "triangle" }),
+  "soft tick (700 Hz)": (e, at, l) => partial(e, l, at, 700, 1.2, 0.06, { type: "triangle" }),
+  "soft tick (350 Hz)": (e, at, l) => partial(e, l, at, 350, 1.2, 0.06, { type: "triangle" }),
   "wood block": (e, at, l) => {
     partial(e, l, at, 880, 1, 0.07);
     partial(e, l, at, 1320, 0.5, 0.05);
-  },
-  bell: (e, at, l) => {
-    partial(e, l, at, 880, 0.9, 1.4, { reverb: 0.3 });
-    partial(e, l, at, 880 * 2.76, 0.27, 0.9);
-    partial(e, l, at, 880 * 5.4, 0.11, 0.4);
   },
   "heartbeat thump": (e, at, l) => {
     partial(e, l, at, 70, 1.3, 0.16, { endHz: 42 });
     partial(e, l, at + 0.2, 62, 0.9, 0.14, { endHz: 38 });
   },
 };
+
+/** The voice the metronome uses until the listener picks another. */
+export const DEFAULT_METRONOME_VOICE = "heartbeat thump";
 
 /** Three phase tones, each recognizable by pitch contour so you hear where you are in the breath. */
 export const PHASE_TONES: Record<string, OneShot> = {

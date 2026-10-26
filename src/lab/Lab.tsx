@@ -3,6 +3,7 @@ import * as stylex from "@stylexjs/stylex";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { CATALOG, ONE_SHOT_LAYER, trimOf, type Entry } from "../audio/catalog";
 import type { Sound } from "../audio/engine";
+import { DEFAULT_METRONOME_VOICE } from "../audio/metronome";
 import { createEngine, DEFAULT_LAYER, type Engine } from "../audio/engine";
 
 type Verdict = "approve" | "reject";
@@ -176,7 +177,10 @@ export function Lab() {
           <h2 {...stylex.props(styles.h2)}>{group}</h2>
           {entries.map((entry) => (
             <div key={entry.id} {...stylex.props(styles.row)}>
-              <span>{entry.label}</span>
+              <span>
+                {entry.label}
+                {"once" in entry && entry.label === DEFAULT_METRONOME_VOICE ? " (default)" : ""}
+              </span>
               {"loop" in entry ? (
                 <button
                   {...stylex.props(styles.btn, playing[entry.id] && styles.on)}
