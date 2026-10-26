@@ -26,7 +26,7 @@ v1 of the app described in [`docs/PLAN.md`](../../docs/PLAN.md), runnable locall
 - UI layout: [05](issues/05-ui-layout.md)
 - Preset contents, half/double buttons, seconds-mode metronome: [06](issues/06-presets-and-controls.md)
 - iOS audio promise: [07](issues/07-ios-audio.md)
-- Sound quality: [08](issues/08-listening-lab.md)
+- Sound quality and volume LFOs: [08](issues/08-listening-lab.md), [12](issues/12-volume-lfos.md)
 - Borrowed code and sample licenses: [09](issues/09-license-provenance.md)
 - Safety note: [10](issues/10-safety-note.md)
 - Definition of v1 and first push: [11](issues/11-v1-gate.md)
@@ -37,3 +37,4 @@ v1 of the app described in [`docs/PLAN.md`](../../docs/PLAN.md), runnable locall
 - More background themes (deep ocean, nebula, bioluminescence).
 - Extra effects such as rain and wind.
 - Native iPhone wrapper.
+- Sound-reactive aurora, unless [13](issues/13-sound-reactive-aurora.md) pulls it in.
