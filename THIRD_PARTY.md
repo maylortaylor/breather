@@ -17,3 +17,8 @@ None. The aurora shader and the noise generators are written from scratch. v1 sh
 ## npm dependencies
 
 Run the license check in the research file (section 5). A generated notices file is linked from the About screen.
+
+| Package | Version | License | Notes |
+|---|---|---|---|
+| [three](https://github.com/mrdoob/three.js) | 0.186.1 (exact pin) | MIT | Copyright 2010-2026 three.js authors. Checked `node_modules/three/LICENSE` on 2026-10-26. Draws the aurora behind `BackgroundRenderer`; loaded lazily, makes no network requests. Only the library is used: the shader is original work |
+| [@types/three](https://github.com/DefinitelyTyped/DefinitelyTyped) | 0.186.0 (exact pin, dev) | MIT | Type declarations only, not shipped |

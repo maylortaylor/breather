@@ -57,6 +57,7 @@ export default defineConfig({
     coverage: {
       provider: "v8",
       include: [
+        "src/background/logic.ts",
         "src/breath/phases.ts",
         "src/breath/tempo.ts",
         "src/breath/scheduler.ts",
