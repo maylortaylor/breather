@@ -118,7 +118,7 @@ A three-phase loop driven by the same clock as the metronome: Inhale for 4 beats
 
 - Text and visuals only in v1. Voice cues are a future audio layer.
 - Phase changes trigger the metronome phase tones (if enabled) and a haptic pulse.
-- A short tips panel can show technique reminders, such as resting the tongue behind the upper front teeth.
+- A short tips panel with technique reminders is deferred past v1 (ticket 10).
 - Phase state lives in one small state machine that the UI, aurora shader, haptics and metronome all subscribe to.
 
 ## Aurora background

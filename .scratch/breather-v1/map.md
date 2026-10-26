@@ -21,16 +21,16 @@ v1 of the app described in [`docs/PLAN.md`](../../docs/PLAN.md), runnable locall
 - UI: resting screen is aurora plus breath ring, controls in a dissolving sheet with 3 tabs, see [05](issues/05-ui-layout.md).
 - Haptics, PWA and dim mode are in v1. iPhone promise: [07](issues/07-ios-audio.md). Licence rules: [09](issues/09-license-provenance.md).
 - Privacy: no analytics, no cookies, CSP enforced, see [04](issues/04-analytics.md).
+- Safety: line on the Begin screen, first-run welcome card, tap ring to pause, see [10](issues/10-safety-note.md).
 - Background: aurora borealis first.
 - Session length and cycle count: out of v1.
 
 ## Not yet specified
-- Safety note: [10](issues/10-safety-note.md)
 - Definition of v1 and first push: [11](issues/11-v1-gate.md)
 
 ## Out of scope
 - Session length or cycle count.
-- Voice cues for the breathing phases.
+- Voice cues for the breathing phases, and a tips panel.
 - More background themes (deep ocean, nebula, bioluminescence) and more breath visuals.
 - Extra effects such as rain and wind.
 - Native iPhone wrapper.
