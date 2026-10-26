@@ -60,6 +60,7 @@ export default defineConfig({
         "src/audio/dsp.ts",
         "src/audio/lfo.ts",
         "src/audio/mixer.ts",
+        "src/audio/session.ts",
         "src/contrast.ts",
         "src/lab/tooltipTimer.ts",
         "src/store.ts",
