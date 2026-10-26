@@ -9,6 +9,7 @@ const FRAME_MS = 33;
 const REDUCED_FRAME_MS = 250;
 const NEUTRAL = "#7f93d0";
 const THUMB = 18;
+const LFO_NAMES = ["teal", "violet", "amber"];
 
 // One shared requestAnimationFrame loop, about 30 fps, idle while the tab is hidden.
 const subscribers = new Set<(now: number) => void>();
@@ -80,17 +81,33 @@ const styles = stylex.create({
     cursor: "pointer",
   },
   smallOn: { backgroundColor: "#2f4a8a", borderColor: "#9db4ff" },
-  select: {
-    backgroundColor: "#1a2547",
-    color: "#e8ecf8",
-    borderWidth: 1,
-    borderStyle: "solid",
-    borderColor: "#3a4c85",
-    borderRadius: 6,
-    paddingBlock: 4,
-    paddingInline: 8,
-    fontSize: 14,
+  dots: { display: "inline-flex", gap: 0 },
+  dotBtn: {
+    width: 34,
+    height: 34,
+    padding: 0,
+    borderWidth: 0,
+    backgroundColor: "transparent",
+    cursor: "pointer",
+    display: "inline-flex",
+    alignItems: "center",
+    justifyContent: "center",
   },
+  dot: {
+    width: 24,
+    height: 24,
+    boxSizing: "border-box",
+    borderRadius: 12,
+    borderWidth: 2,
+    borderStyle: "solid",
+    display: "inline-flex",
+    alignItems: "center",
+    justifyContent: "center",
+    fontSize: 12,
+    fontWeight: 700,
+    opacity: 0.8,
+  },
+  dotOn: { opacity: 1, boxShadow: "0 0 0 2px #0b1020, 0 0 0 4px #ffffff" },
   cell: { display: "inline-flex", alignItems: "center", gap: 6, fontSize: 14, color: "#b8c4e8" },
   volume: { flexGrow: 2, flexBasis: 220, minWidth: 150 },
   slider: { position: "relative", height: 28, flexGrow: 1 },
@@ -463,26 +480,39 @@ export function RowVolume({
         />
       </span>
       {withLfo && (
-        <WithInfo info="Which slow wave moves this sound's volume between its minimum and maximum.">
-          <label>
-            LFO{" "}
-            <select
-              {...stylex.props(styles.select)}
-              aria-label={`${name} LFO`}
-              value={row.lfo}
-              onChange={(ev) => {
-                const lfo = Number(ev.target.value) as LfoChoice;
-                // Leave room to swing: if the thumbs are stacked, start the minimum below the maximum.
-                const min = lfo !== 0 && row.min >= row.max ? row.max * 0.4 : row.min;
-                update({ ...row, lfo, min });
-              }}
-            >
-              <option value={0}>None</option>
-              <option value={1}>1</option>
-              <option value={2}>2</option>
-              <option value={3}>3</option>
-            </select>
-          </label>
+        <WithInfo info="Tap a color to let that slow wave move this sound's volume. Tap it again to stop.">
+          <span role="group" aria-label={`${name} LFO`} {...stylex.props(styles.dots)}>
+            {modulator.bank.lfos.map((lfo, i) => {
+              const choice = (i + 1) as LfoChoice;
+              const active = row.lfo === choice;
+              return (
+                <button
+                  key={choice}
+                  type="button"
+                  aria-pressed={active}
+                  aria-label={`LFO ${choice} (${LFO_NAMES[i]})`}
+                  {...stylex.props(styles.dotBtn)}
+                  onClick={() => {
+                    const next = active ? 0 : choice;
+                    // Leave room to swing: if the thumbs are stacked, start the minimum below the maximum.
+                    const min = next !== 0 && row.min >= row.max ? row.max * 0.4 : row.min;
+                    update({ ...row, lfo: next, min });
+                  }}
+                >
+                  <span
+                    {...stylex.props(styles.dot, active && styles.dotOn)}
+                    style={{
+                      borderColor: lfo.color,
+                      backgroundColor: active ? lfo.color : "transparent",
+                      color: active ? "#0b1020" : lfo.color,
+                    }}
+                  >
+                    {choice}
+                  </span>
+                </button>
+              );
+            })}
+          </span>
         </WithInfo>
       )}
     </>
