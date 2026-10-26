@@ -1,3 +1,12 @@
+/* Nunito (SIL OFL 1.1), self-hosted. Latin subset, one variable file. See THIRD_PARTY.md. */
+@font-face {
+  font-family: "Nunito";
+  font-style: normal;
+  font-weight: 200 1000;
+  font-display: swap;
+  src: url("/fonts/Nunito-latin-variable.woff2") format("woff2");
+}
+
 :root {
   color-scheme: dark;
 }
@@ -6,7 +15,7 @@ body {
   margin: 0;
   background: #0b1020;
   color: #e8ecf8;
-  font-family: system-ui, sans-serif;
+  font-family: "Nunito", system-ui, sans-serif;
 }
 
 .shell {

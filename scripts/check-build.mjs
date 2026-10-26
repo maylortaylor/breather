@@ -62,6 +62,13 @@ if (!existsSync(swPath)) {
   for (const rel of new Set([...referenced, ...built])) {
     if (!precached.has(rel)) failures.push(`asset is not in the service worker precache: ${rel}`);
   }
+  // Fonts load offline from the precache and ship with their licence text (AGENTS.md rule 6).
+  for (const rel of files.filter((f) => f.endsWith(".woff2"))) {
+    if (!precached.has(rel)) failures.push(`font is not in the service worker precache: ${rel}`);
+    if (!existsSync(join(dist, posix.dirname(rel), "OFL.txt"))) {
+      failures.push(`font has no OFL.txt beside it: ${rel}`);
+    }
+  }
   for (const url of precached) {
     if (!existsSync(join(dist, url))) failures.push(`precache entry is missing from dist/: ${url}`);
   }
