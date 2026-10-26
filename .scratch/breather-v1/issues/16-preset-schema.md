@@ -1,5 +1,5 @@
 Type: build
-Status: claimed
+Status: resolved
 Blocked by: 14
 Model: sonnet
 
@@ -34,3 +34,6 @@ npm run check
 - The spec `Mix` has no field for "heartbeat at phase changes only". Sleep and Reset save the heartbeat voice at level 0.3; the phase-change-only mode is for the metronome ticket to decide. Focus saves level 0.
 - Built-in levels are first guesses, to be tuned by ear. Sleep tempo is slider 0 (about 28 s a cycle).
 - `restoreLaunch` returns Sleep's mix, `dim: true`, `presetId: "sleep"` on first launch.
+
+## Answer
+Resolved 2026-10-26. All 8 criteria pass (107 tests, `src/presets.ts` 94 to 100% coverage). There is no UI, so nothing needed Matt's ears or eyes. One fix after review: Sleep and Reset saved the metronome at 0.3, which sits between the two detents, so they now save the exact phase-changes-only detent 0.2 (spec, ticket 21), with a test. Built-in levels are first guesses to tune by ear in ticket 25.
