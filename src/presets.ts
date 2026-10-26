@@ -48,6 +48,8 @@ export const MAX_NAME_LENGTH = 24;
 export const DEFAULT_MASTER = 0.7;
 
 const DEFAULT_VOICE: VoiceId = "metro-heartbeat-thump";
+/** Metronome detent 1: beats sound on phase changes only (spec, ticket 21). */
+const PHASE_ONLY = 0.2;
 
 function deepFreeze<T>(value: T): T {
   if (typeof value === "object" && value !== null) {
@@ -80,7 +82,7 @@ const SLEEP: Preset = {
     },
     lfos: lfos(),
     tempo: 0, // slow end, about 28 s a cycle
-    metronome: { level: 0.3, voice: DEFAULT_VOICE },
+    metronome: { level: PHASE_ONLY, voice: DEFAULT_VOICE },
   },
 };
 
@@ -107,7 +109,7 @@ export const BUILT_INS: readonly Preset[] = deepFreeze([
       sounds: { ocean: { lfo: 1, min: 0.3, max: 0.6 }, "pad-dreamy": steady(0.4) },
       lfos: lfos(),
       tempo: 0.5,
-      metronome: { level: 0.3, voice: DEFAULT_VOICE },
+      metronome: { level: PHASE_ONLY, voice: DEFAULT_VOICE },
     },
   },
 ] satisfies Preset[]);

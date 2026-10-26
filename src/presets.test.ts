@@ -432,3 +432,12 @@ describe("restoreLaunch", () => {
     expect(sleep.mix.tempo).toBe(0);
   });
 });
+
+describe("built-in metronome levels", () => {
+  it("Sleep and Reset sit exactly on the phase-changes-only detent, Focus is off", () => {
+    const byId = Object.fromEntries(BUILT_INS.map((p) => [p.id, p]));
+    expect(byId["sleep"]?.mix.metronome.level).toBe(0.2);
+    expect(byId["reset"]?.mix.metronome.level).toBe(0.2);
+    expect(byId["focus"]?.mix.metronome.level).toBe(0);
+  });
+});
