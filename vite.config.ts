@@ -58,6 +58,7 @@ export default defineConfig({
       include: [
         "src/audio/dsp.ts",
         "src/audio/lfo.ts",
+        "src/contrast.ts",
         "src/lab/tooltipTimer.ts",
         "src/store.ts",
         "src/presets.ts",
