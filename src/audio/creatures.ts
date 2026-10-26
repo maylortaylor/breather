@@ -1,30 +1,24 @@
-import { bubbleParams, createTriggerScheduler, whaleParams, type Rng } from "./dsp";
+import {
+  bubbleParams,
+  createBubbleScheduler,
+  createTriggerScheduler,
+  whalePlan,
+  type TriggerScheduler,
+  type WhaleVariant,
+} from "./dsp";
 import { connectOut, fadeIn, type Engine, type Sound } from "./engine";
 
 const TICK_MS = 50;
 const LOOKAHEAD = 0.2;
 
-/** Run a random-interval trigger on the audio clock, firing once right away so it can be heard. */
-function randomTrigger(
-  engine: Engine,
-  minGap: number,
-  maxGap: number,
-  fire: (at: number) => void
-): Sound {
+/** Drive a scheduler from a short timer. `kickoff` fires once right away so Play is audible. */
+function ticking(make: () => TriggerScheduler, kickoff?: () => void): Sound {
   let timer: ReturnType<typeof setInterval> | null = null;
-  const rng: Rng = Math.random;
   return {
     start() {
       if (timer) return;
-      const scheduler = createTriggerScheduler({
-        rng,
-        now: () => engine.ctx.currentTime,
-        minGap,
-        maxGap,
-        lookahead: LOOKAHEAD,
-        fire,
-      });
-      fire(engine.ctx.currentTime + 0.1);
+      const scheduler = make();
+      kickoff?.();
       timer = setInterval(() => scheduler.tick(), TICK_MS);
     },
     stop() {
@@ -34,14 +28,17 @@ function randomTrigger(
   };
 }
 
-/** Fade a layer bus out so a call already in flight does not play on after Stop. */
+/** Fade a bus out so a sound already in flight does not play on after Stop. */
 function release(ctx: AudioContext, bus: GainNode | null): void {
   if (!bus) return;
   bus.gain.setTargetAtTime(0, ctx.currentTime, 0.08);
   setTimeout(() => bus.disconnect(), 1000);
 }
 
-/** Short sine blips with a quick upward glide and fast decay, lowpassed with a touch of reverb. */
+/**
+ * Irregular sine blips with a quick upward glide: mostly single, sometimes a small cluster, each
+ * with its own size and a slight stereo pan. Lowpassed with a touch of reverb.
+ */
 export function bubblesSound(engine: Engine, layer: string): Sound {
   const { ctx } = engine;
   let out: GainNode | null = null;
@@ -56,11 +53,21 @@ export function bubblesSound(engine: Engine, layer: string): Sound {
     env.gain.setValueAtTime(0.0001, at);
     env.gain.linearRampToValueAtTime(0.5 * p.gain, at + 0.006);
     env.gain.exponentialRampToValueAtTime(0.0001, at + p.decay);
-    osc.connect(env).connect(out);
+    const pan = ctx.createStereoPanner();
+    pan.pan.value = p.pan;
+    osc.connect(env).connect(pan).connect(out);
     osc.start(at);
     osc.stop(at + p.decay + 0.05);
   };
-  const trigger = randomTrigger(engine, 0.25, 2.5, blip);
+  const trigger = ticking(() =>
+    createBubbleScheduler({
+      rng: Math.random,
+      now: () => ctx.currentTime,
+      lookahead: LOOKAHEAD,
+      firstDelay: 0.3,
+      fire: blip,
+    })
+  );
   return {
     start() {
       if (out) return;
@@ -81,55 +88,91 @@ export function bubblesSound(engine: Engine, layer: string): Sound {
   };
 }
 
-/** Sine and triangle voices with a slow glide and vibrato, bandpassed into a long reverb. */
-export function whalesSound(engine: Engine, layer: string): Sound {
+/**
+ * One whale call from a plan: glides between pitches on harmonic partials, an optional sweeping
+ * bandpass formant and lowpass, swelling in and out. Everything feeds the shared reverb.
+ */
+export function whaleSound(engine: Engine, variant: WhaleVariant, layer: string): Sound {
   const { ctx } = engine;
   let out: GainNode | null = null;
   const call = (at: number) => {
     if (!out) return;
-    const p = whaleParams(Math.random);
-    const end = at + p.duration;
+    const plan = whalePlan(variant, Math.random);
+    const end = at + plan.duration;
+
     const env = ctx.createGain();
     env.gain.setValueAtTime(0.0001, at);
-    env.gain.linearRampToValueAtTime(0.45, at + p.duration * 0.3);
+    env.gain.linearRampToValueAtTime(plan.level, at + plan.duration * 0.3);
+    env.gain.setValueAtTime(plan.level, at + plan.duration * 0.6);
     env.gain.linearRampToValueAtTime(0.0001, end);
-    env.connect(out);
+
+    let head: AudioNode = ctx.createGain();
+    const mix = head as GainNode;
+    if (plan.formant) {
+      const band = ctx.createBiquadFilter();
+      band.type = "bandpass";
+      band.Q.value = plan.formant.q;
+      band.frequency.setValueAtTime(plan.formant.fromHz, at);
+      band.frequency.linearRampToValueAtTime(plan.formant.toHz, end);
+      head.connect(band);
+      head = band;
+    }
+    if (plan.lowpassHz) {
+      const lp = ctx.createBiquadFilter();
+      lp.type = "lowpass";
+      lp.frequency.value = plan.lowpassHz;
+      head.connect(lp);
+      head = lp;
+    }
+    head.connect(env).connect(out);
+    // The sends must see the same dark, enveloped signal.
+    const send = ctx.createGain();
+    send.gain.value = plan.reverb;
+    env.connect(send).connect(engine.reverbSend);
 
     const vibrato = ctx.createOscillator();
-    vibrato.frequency.value = p.vibratoHz;
+    vibrato.frequency.value = plan.vibratoHz;
     vibrato.start(at);
-    vibrato.stop(end);
+    vibrato.stop(end + 0.1);
 
-    for (const [type, mult, level] of [
-      ["sine", 1, 1],
-      ["triangle", 2, 0.25],
-    ] as const) {
+    for (const { ratio, amp } of plan.partials) {
       const osc = ctx.createOscillator();
-      osc.type = type;
-      osc.frequency.setValueAtTime(p.startHz * mult, at);
-      osc.frequency.linearRampToValueAtTime(p.endHz * mult, end);
+      osc.type = "sine";
+      let t = at;
+      osc.frequency.setValueAtTime((plan.segments[0]?.startHz ?? 100) * ratio, at);
+      for (const seg of plan.segments) {
+        t += seg.duration;
+        osc.frequency.linearRampToValueAtTime(seg.endHz * ratio, t);
+      }
       const depth = ctx.createGain();
-      depth.gain.value = p.vibratoDepthHz * mult;
+      depth.gain.value = (plan.segments[0]?.startHz ?? 100) * ratio * plan.vibratoDepth;
       vibrato.connect(depth).connect(osc.frequency);
       const g = ctx.createGain();
-      g.gain.value = level;
-      osc.connect(g).connect(env);
+      g.gain.value = amp / plan.partials.length;
+      osc.connect(g).connect(mix);
       osc.start(at);
       osc.stop(end + 0.1);
     }
   };
-  const trigger = randomTrigger(engine, 10, 28, call);
+  const trigger = ticking(
+    () =>
+      createTriggerScheduler({
+        rng: Math.random,
+        now: () => ctx.currentTime,
+        minGap: 15,
+        maxGap: 40,
+        lookahead: LOOKAHEAD,
+        fire: call,
+      }),
+    // First call right away (inside the 2 s audition window), then long random gaps.
+    () => call(ctx.currentTime + 0.3)
+  );
   return {
     start() {
       if (out) return;
       out = ctx.createGain();
       fadeIn(ctx, out);
-      const band = ctx.createBiquadFilter();
-      band.type = "bandpass";
-      band.frequency.value = 320;
-      band.Q.value = 0.7;
-      out.connect(band);
-      connectOut(engine, band, layer, 1.2);
+      connectOut(engine, out, layer);
       trigger.start();
     },
     stop() {

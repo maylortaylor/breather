@@ -195,6 +195,8 @@ export interface BubbleParams {
   endHz: number;
   decay: number;
   gain: number;
+  /** Stereo position, -0.6 to 0.6. */
+  pan: number;
 }
 
 export function bubbleParams(rng: Rng): BubbleParams {
@@ -204,26 +206,131 @@ export function bubbleParams(rng: Rng): BubbleParams {
     endHz: startHz * between(rng, 1.5, 2.5),
     decay: between(rng, 0.06, 0.2),
     gain: between(rng, 0.3, 1),
+    pan: between(rng, -0.6, 0.6),
   };
 }
 
-export interface WhaleParams {
+/** Seconds to the next bubble event: 3 to 14, leaning short with a long tail. */
+export function bubbleGap(rng: Rng): number {
+  return 3 + 11 * Math.pow(rng(), 1.6);
+}
+
+/** Offsets in seconds for one event: usually a single bubble, sometimes a cluster of 2 to 4. */
+export function bubbleCluster(rng: Rng): number[] {
+  if (rng() >= 0.3) return [0];
+  const count = 2 + Math.floor(rng() * 3);
+  const offsets = [0];
+  for (let i = 1; i < count; i++) offsets.push((offsets[i - 1] ?? 0) + between(rng, 0.06, 0.3));
+  return offsets;
+}
+
+export interface BubbleSchedulerOptions {
+  rng: Rng;
+  now: () => number;
+  lookahead: number;
+  /** Delay before the first event, so a listener does not wait for a full gap. */
+  firstDelay: number;
+  fire: (at: number) => void;
+}
+
+/** Irregular bubble events with occasional clusters, on an injected clock. */
+export function createBubbleScheduler(opts: BubbleSchedulerOptions): TriggerScheduler {
+  let next = opts.now() + opts.firstDelay;
+  return {
+    tick() {
+      const horizon = opts.now() + opts.lookahead;
+      while (next < horizon) {
+        for (const offset of bubbleCluster(opts.rng)) opts.fire(next + offset);
+        next += bubbleGap(opts.rng);
+      }
+    },
+    reset() {
+      next = opts.now() + opts.firstDelay;
+    },
+  };
+}
+
+export type WhaleVariant = "A" | "B" | "C";
+
+export interface WhaleSegment {
   startHz: number;
   endHz: number;
   duration: number;
-  vibratoHz: number;
-  vibratoDepthHz: number;
 }
 
-export function whaleParams(rng: Rng): WhaleParams {
-  const startHz = between(rng, 120, 300);
-  return {
-    startHz,
-    endHz: startHz * between(rng, 0.75, 1.6),
-    duration: between(rng, 3, 9),
-    vibratoHz: between(rng, 3, 6),
-    vibratoDepthHz: startHz * between(rng, 0.02, 0.06),
+export interface WhalePlan {
+  /** Contiguous pitch glides. Each starts where the last one ended. */
+  segments: WhaleSegment[];
+  duration: number;
+  /** Harmonic partials as a ratio to the fundamental and a relative amplitude. */
+  partials: { ratio: number; amp: number }[];
+  /** Bandpass formant that sweeps over the call, or null for none. */
+  formant: { fromHz: number; toHz: number; q: number } | null;
+  lowpassHz: number | null;
+  vibratoHz: number;
+  vibratoDepth: number;
+  /** Output level before the layer slider. */
+  level: number;
+  /** Send to the shared reverb. */
+  reverb: number;
+}
+
+function humpbackSegments(rng: Rng): WhaleSegment[] {
+  const count = 3 + Math.floor(rng() * 4);
+  const segments: WhaleSegment[] = [];
+  let hz = between(rng, 150, 600);
+  for (let i = 0; i < count; i++) {
+    const next = between(rng, 150, 900);
+    segments.push({ startHz: hz, endHz: next, duration: between(rng, 2, 6) });
+    hz = next;
+  }
+  return segments;
+}
+
+/** Variant A is a humpback-style song, B a deep blue-whale moan, C a distant, dark A. */
+export function whalePlan(variant: WhaleVariant, rng: Rng): WhalePlan {
+  if (variant === "B") {
+    const from = between(rng, 30, 80);
+    const to = between(rng, 20, 80);
+    const duration = between(rng, 8, 16);
+    return {
+      segments: [{ startHz: from, endHz: to, duration }],
+      duration,
+      // The octave carries the call on phone speakers, which cannot reproduce 20 to 80 Hz.
+      partials: [
+        { ratio: 1, amp: 1 },
+        { ratio: 2, amp: 0.8 },
+        { ratio: 3, amp: 0.25 },
+      ],
+      formant: null,
+      lowpassHz: 500,
+      vibratoHz: 0.4,
+      vibratoDepth: 0.01,
+      level: 0.5,
+      reverb: 0.8,
+    };
+  }
+  const segments = humpbackSegments(rng);
+  const duration = segments.reduce((a, g) => a + g.duration, 0);
+  const low = rng() < 0.5;
+  const base: WhalePlan = {
+    segments,
+    duration,
+    partials: [
+      { ratio: 1, amp: 1 },
+      { ratio: 2, amp: 0.5 },
+      { ratio: 3, amp: 0.3 },
+      { ratio: 4, amp: 0.12 },
+    ],
+    formant: { fromHz: low ? 500 : 1400, toHz: low ? 1400 : 500, q: 1.5 },
+    lowpassHz: null,
+    vibratoHz: between(rng, 3, 5),
+    vibratoDepth: 0.012,
+    level: 0.9,
+    reverb: 1,
   };
+  if (variant === "A") return base;
+  return { ...base, lowpassHz: 1200, level: 0.2, reverb: 1.8 };
 }
 
 export const midiToHz = (note: number): number => 440 * Math.pow(2, (note - 69) / 12);

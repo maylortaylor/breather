@@ -29,35 +29,35 @@ function partial(
 
 /** The four swappable beat voices. */
 export const METRONOME_VOICES: Record<string, OneShot> = {
-  "soft tick": (e, at, l) => partial(e, l, at, 1400, 0.35, 0.035, { type: "triangle" }),
+  "soft tick": (e, at, l) => partial(e, l, at, 1400, 1.2, 0.06, { type: "triangle" }),
   "wood block": (e, at, l) => {
-    partial(e, l, at, 880, 0.5, 0.07);
-    partial(e, l, at, 1320, 0.25, 0.05);
+    partial(e, l, at, 880, 1, 0.07);
+    partial(e, l, at, 1320, 0.5, 0.05);
   },
   bell: (e, at, l) => {
-    partial(e, l, at, 880, 0.4, 1.4, { reverb: 0.3 });
-    partial(e, l, at, 880 * 2.76, 0.12, 0.9);
-    partial(e, l, at, 880 * 5.4, 0.05, 0.4);
+    partial(e, l, at, 880, 0.9, 1.4, { reverb: 0.3 });
+    partial(e, l, at, 880 * 2.76, 0.27, 0.9);
+    partial(e, l, at, 880 * 5.4, 0.11, 0.4);
   },
   "heartbeat thump": (e, at, l) => {
-    partial(e, l, at, 70, 0.9, 0.16, { endHz: 42 });
-    partial(e, l, at + 0.2, 62, 0.6, 0.14, { endHz: 38 });
+    partial(e, l, at, 70, 1.3, 0.16, { endHz: 42 });
+    partial(e, l, at + 0.2, 62, 0.9, 0.14, { endHz: 38 });
   },
 };
 
 /** Three phase tones, each recognizable by pitch contour so you hear where you are in the breath. */
 export const PHASE_TONES: Record<string, OneShot> = {
   "inhale (rising)": (e, at, l) => {
-    partial(e, l, at, 392, 0.4, 1.2, { endHz: 523, reverb: 0.3 });
-    partial(e, l, at, 784, 0.08, 0.9, { endHz: 1046 });
+    partial(e, l, at, 392, 0.9, 1.2, { endHz: 523, reverb: 0.3 });
+    partial(e, l, at, 784, 0.18, 0.9, { endHz: 1046 });
   },
   "hold (steady)": (e, at, l) => {
-    partial(e, l, at, 440, 0.35, 1.4, { reverb: 0.3 });
-    partial(e, l, at, 660, 0.12, 1, { type: "triangle" });
+    partial(e, l, at, 440, 0.8, 1.4, { reverb: 0.3 });
+    partial(e, l, at, 660, 0.27, 1, { type: "triangle" });
   },
   "exhale (falling)": (e, at, l) => {
-    partial(e, l, at, 523, 0.4, 1.6, { endHz: 330, reverb: 0.3 });
-    partial(e, l, at, 1046, 0.08, 1, { endHz: 660 });
+    partial(e, l, at, 523, 0.9, 1.6, { endHz: 330, reverb: 0.3 });
+    partial(e, l, at, 1046, 0.18, 1, { endHz: 660 });
   },
 };
 

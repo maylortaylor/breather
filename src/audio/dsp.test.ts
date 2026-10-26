@@ -1,6 +1,9 @@
 import { describe, expect, it } from "vite-plus/test";
 import {
+  bubbleCluster,
+  bubbleGap,
   bubbleParams,
+  createBubbleScheduler,
   chordHz,
   createRng,
   createTriggerScheduler,
@@ -11,7 +14,7 @@ import {
   midiToHz,
   MOODS,
   nextChordIndex,
-  whaleParams,
+  whalePlan,
 } from "./dsp";
 
 const SR = 8000;
@@ -186,11 +189,13 @@ describe("createTriggerScheduler", () => {
   });
 });
 
-describe("bubbleParams and whaleParams", () => {
-  it("bubbles glide upward, are short and stay in a watery range", () => {
+describe("bubbles", () => {
+  it("each bubble glides upward, is short, varies in size and pans slightly", () => {
     const rng = createRng(9);
+    const starts = new Set<number>();
     for (let i = 0; i < 200; i++) {
       const b = bubbleParams(rng);
+      starts.add(Math.round(b.startHz));
       expect(b.endHz).toBeGreaterThan(b.startHz);
       expect(b.startHz).toBeGreaterThanOrEqual(300);
       expect(b.endHz).toBeLessThanOrEqual(2400);
@@ -198,22 +203,139 @@ describe("bubbleParams and whaleParams", () => {
       expect(b.decay).toBeLessThan(0.3);
       expect(b.gain).toBeGreaterThan(0);
       expect(b.gain).toBeLessThanOrEqual(1);
+      expect(Math.abs(b.pan)).toBeLessThanOrEqual(0.6);
+    }
+    expect(starts.size).toBeGreaterThan(150);
+  });
+
+  it("gaps stay in 3 to 14 s and skew toward the short end", () => {
+    const rng = createRng(12);
+    const gaps = Array.from({ length: 2000 }, () => bubbleGap(rng));
+    expect(Math.min(...gaps)).toBeGreaterThanOrEqual(3);
+    expect(Math.max(...gaps)).toBeLessThanOrEqual(14);
+    const mean = gaps.reduce((a, g) => a + g, 0) / gaps.length;
+    expect(mean).toBeGreaterThan(5);
+    expect(mean).toBeLessThan(8.5);
+    expect(new Set(gaps.map((g) => Math.round(g * 10))).size).toBeGreaterThan(60);
+  });
+
+  it("a cluster is one bubble, or 2 to 4 within a second", () => {
+    expect(bubbleCluster(() => 0.9)).toEqual([0]);
+    const forced = bubbleCluster(() => 0.1);
+    expect(forced.length).toBeGreaterThanOrEqual(2);
+    expect(forced[0]).toBe(0);
+    const rng = createRng(2);
+    const sizes = new Set<number>();
+    for (let i = 0; i < 500; i++) {
+      const c = bubbleCluster(rng);
+      sizes.add(c.length);
+      expect(c.length).toBeGreaterThanOrEqual(1);
+      expect(c.length).toBeLessThanOrEqual(4);
+      expect(c[c.length - 1] ?? 0).toBeLessThan(1);
+      expect([...c].sort((x, y) => x - y)).toEqual(c);
+    }
+    expect([...sizes].sort((a, b) => a - b)).toEqual([1, 2, 3, 4]);
+  });
+
+  it("scheduler keeps events 3 s or more apart, mixes singles and clusters, never double-fires", () => {
+    let t = 0;
+    const fired: number[] = [];
+    const s = createBubbleScheduler({
+      rng: createRng(21),
+      now: () => t,
+      lookahead: 0.5,
+      firstDelay: 0.3,
+      fire: (at) => fired.push(at),
+    });
+    for (t = 0; t < 3000; t += 0.1) s.tick();
+    expect(fired[0]).toBeCloseTo(0.3, 6);
+    expect([...fired].sort((a, b) => a - b)).toEqual(fired);
+    // Group bubbles within 1.5 s into events.
+    const events: number[][] = [];
+    for (const f of fired) {
+      const last = events[events.length - 1];
+      if (last && f - (last[last.length - 1] ?? 0) < 1.5) last.push(f);
+      else events.push([f]);
+    }
+    for (let i = 1; i < events.length; i++) {
+      expect((events[i]?.[0] ?? 0) - (events[i - 1]?.[0] ?? 0)).toBeGreaterThanOrEqual(3);
+    }
+    expect(events.filter((e) => e.length === 1).length).toBeGreaterThan(20);
+    expect(events.filter((e) => e.length >= 2).length).toBeGreaterThan(5);
+    expect(events.length).toBeLessThan(3000 / 3);
+  });
+
+  it("scheduler reset restarts from now", () => {
+    let t = 0;
+    const fired: number[] = [];
+    const s = createBubbleScheduler({
+      rng: createRng(4),
+      now: () => t,
+      lookahead: 0.2,
+      firstDelay: 0.3,
+      fire: (at) => fired.push(at),
+    });
+    t = 100;
+    s.reset();
+    fired.length = 0;
+    s.tick();
+    expect(fired).toEqual([]);
+    t = 100.2;
+    s.tick();
+    expect(fired[0]).toBeCloseTo(100.3, 6);
+  });
+});
+
+describe("whalePlan", () => {
+  const rng = createRng(31);
+
+  it("A: humpback song of 3 to 6 contiguous 2 to 6 s glides between 150 and 900 Hz", () => {
+    for (let i = 0; i < 100; i++) {
+      const p = whalePlan("A", rng);
+      expect(p.segments.length).toBeGreaterThanOrEqual(3);
+      expect(p.segments.length).toBeLessThanOrEqual(6);
+      p.segments.forEach((seg, j) => {
+        expect(seg.duration).toBeGreaterThanOrEqual(2);
+        expect(seg.duration).toBeLessThanOrEqual(6);
+        for (const hz of [seg.startHz, seg.endHz]) {
+          expect(hz).toBeGreaterThanOrEqual(150);
+          expect(hz).toBeLessThanOrEqual(900);
+        }
+        if (j > 0) expect(seg.startHz).toBe(p.segments[j - 1]?.endHz);
+      });
+      expect(p.duration).toBeCloseTo(
+        p.segments.reduce((a, g) => a + g.duration, 0),
+        9
+      );
+      expect(p.partials.length).toBeGreaterThanOrEqual(3);
+      expect(p.partials[0]).toEqual({ ratio: 1, amp: 1 });
+      expect(p.formant).not.toBeNull();
+      expect(p.lowpassHz).toBeNull();
     }
   });
 
-  it("whales are low, long and slowly modulated", () => {
-    const rng = createRng(4);
-    for (let i = 0; i < 200; i++) {
-      const w = whaleParams(rng);
-      expect(w.startHz).toBeGreaterThanOrEqual(80);
-      expect(w.startHz).toBeLessThanOrEqual(400);
-      expect(w.endHz).toBeGreaterThanOrEqual(80);
-      expect(w.endHz).toBeLessThanOrEqual(500);
-      expect(w.duration).toBeGreaterThanOrEqual(3);
-      expect(w.duration).toBeLessThanOrEqual(9);
-      expect(w.vibratoHz).toBeLessThan(8);
-      expect(w.vibratoDepthHz).toBeLessThan(w.startHz * 0.1);
+  it("B: blue moan has a 20 to 80 Hz fundamental doubled an octave up, and is very slow", () => {
+    for (let i = 0; i < 100; i++) {
+      const p = whalePlan("B", rng);
+      expect(p.duration).toBeGreaterThanOrEqual(8);
+      for (const seg of p.segments) {
+        expect(seg.startHz).toBeGreaterThanOrEqual(20);
+        expect(seg.startHz).toBeLessThanOrEqual(80);
+        expect(seg.endHz).toBeGreaterThanOrEqual(20);
+        expect(seg.endHz).toBeLessThanOrEqual(80);
+      }
+      const octave = p.partials.find((q) => q.ratio === 2);
+      expect(octave?.amp).toBeGreaterThanOrEqual(0.6);
     }
+  });
+
+  it("C: distant call is a quieter, darker, wetter A", () => {
+    const a = whalePlan("A", createRng(5));
+    const c = whalePlan("C", createRng(5));
+    expect(c.segments).toEqual(a.segments);
+    expect(c.lowpassHz).toBe(1200);
+    expect(c.level).toBeLessThan(a.level);
+    expect(c.reverb).toBeGreaterThan(a.reverb);
   });
 });
 

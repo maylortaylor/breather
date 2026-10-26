@@ -1,11 +1,12 @@
 // Throwaway page for ticket 08: audition every synthesized sound and approve or reject it.
 import * as stylex from "@stylexjs/stylex";
 import { useEffect, useMemo, useRef, useState } from "react";
-import { CATALOG, type Entry } from "../audio/catalog";
+import { CATALOG, ONE_SHOT_LAYER, type Entry } from "../audio/catalog";
 import type { Sound } from "../audio/engine";
 import { createEngine, DEFAULT_LAYER, type Engine } from "../audio/engine";
 
 type Verdict = "approve" | "reject";
+const ONE_SHOTS = new Set(CATALOG.filter((e) => "once" in e).map((e) => e.id));
 const STORAGE_KEY = "breather.lab.verdicts.v1";
 
 const styles = stylex.create({
@@ -93,7 +94,8 @@ export function Lab() {
     }
   }, [verdicts]);
 
-  const volumeOf = (id: string) => volumes[id] ?? DEFAULT_LAYER;
+  const volumeOf = (id: string) =>
+    volumes[id] ?? (ONE_SHOTS.has(id) ? ONE_SHOT_LAYER : DEFAULT_LAYER);
 
   function begin() {
     const e = createEngine();
