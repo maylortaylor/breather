@@ -1,5 +1,5 @@
 Type: build
-Status: claimed
+Status: resolved
 Blocked by: none
 Model: sonnet
 
@@ -39,3 +39,6 @@ npm run dev
 - The store holds every key in the spec except `mix`; it arrives with the preset schema (ticket 16). Saved under `breather.state`: `welcomeSeen`, `dim`, `secondsMode`, `master`, `presetId`.
 - `vitest-axe` pulls in `axe-core` (MPL-2.0). It is a devDependency and never ships in `dist/`.
 - The Lab entry is `lab.html` plus `src/lab/main.tsx`. Vite builds only `index.html`, so the Lab stays out of `dist/`.
+
+## Answer
+Resolved with Matt on 2026-10-26. All 9 criteria pass (70 tests, store 92 to 97% coverage). Matt checked the dev-only Lab page and re-listened to every sound: all approved except whale C, which he rejected on this pass (removed in the next commit). Left over from the fix: the dev server must be restarted after any `node_modules` reinstall.
