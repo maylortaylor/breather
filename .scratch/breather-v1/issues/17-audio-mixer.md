@@ -1,5 +1,5 @@
 Type: build
-Status: claimed
+Status: resolved
 Blocked by: 16
 Model: sonnet
 
@@ -35,3 +35,6 @@ npm run dev
 - `Engine` gained `removeWetMod`, `silenceLayer` and an optional `glideSec` on `setLayer` (linear ramp, lands exactly on target). Sound synthesis, `TRIMS` and `MASTER_CAP` are untouched.
 - Beyond the wet list, stopped pad voices and shimmer notes, bubble blips and whale call chains now disconnect when they end. Whale calls were never in the wet list.
 - `Mixer.stopAll(fadeSec)` and removed sounds ramp the layer to silence, then call `Sound.stop()` 50 ms after the ramp. That `stop()` keeps its own short fade.
+
+## Answer
+Resolved 2026-10-26. Criteria 1 to 5 and 7 pass (148 tests, mixer 88% coverage, wet lists empty after 100 bubbles, 100 pads and 300 phase tones). Matt checked criterion 6 by ear in the Lab: ocean and whale B play and stop with no click and no loudness change, the 3 pads blend together, and quick start and stop leaves nothing stuck. The mixer is not wired into the app yet; ticket 18 onward uses it.
