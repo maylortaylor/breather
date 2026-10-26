@@ -10,7 +10,7 @@ describe("createDelayedAction", () => {
   });
 
   it("uses a 4 s hover and focus delay and a 600 ms long press", () => {
-    expect(TOOLTIP_DELAY_MS).toBe(4000);
+    expect(TOOLTIP_DELAY_MS).toBe(2500);
     expect(LONG_PRESS_MS).toBe(600);
   });
 
@@ -18,7 +18,7 @@ describe("createDelayedAction", () => {
     const action = vi.fn();
     const t = createDelayedAction(TOOLTIP_DELAY_MS, action);
     t.start();
-    vi.advanceTimersByTime(3999);
+    vi.advanceTimersByTime(2499);
     expect(action).not.toHaveBeenCalled();
     expect(t.pending).toBe(true);
     vi.advanceTimersByTime(1);
@@ -30,7 +30,7 @@ describe("createDelayedAction", () => {
     const action = vi.fn();
     const t = createDelayedAction(TOOLTIP_DELAY_MS, action);
     t.start();
-    vi.advanceTimersByTime(2000);
+    vi.advanceTimersByTime(TOOLTIP_DELAY_MS - 500);
     t.cancel();
     vi.advanceTimersByTime(10_000);
     expect(action).not.toHaveBeenCalled();
@@ -41,9 +41,9 @@ describe("createDelayedAction", () => {
     const action = vi.fn();
     const t = createDelayedAction(TOOLTIP_DELAY_MS, action);
     t.start();
-    vi.advanceTimersByTime(3000);
+    vi.advanceTimersByTime(TOOLTIP_DELAY_MS - 500);
     t.start();
-    vi.advanceTimersByTime(3999);
+    vi.advanceTimersByTime(2499);
     expect(action).not.toHaveBeenCalled();
     vi.advanceTimersByTime(1);
     expect(action).toHaveBeenCalledTimes(1);

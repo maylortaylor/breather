@@ -1,5 +1,5 @@
 /** How long a pointer or keyboard focus must rest on a control before its tooltip appears. */
-export const TOOLTIP_DELAY_MS = 4000;
+export const TOOLTIP_DELAY_MS = 2500;
 /** How long a finger must stay down to show the tooltip on touch screens. */
 export const LONG_PRESS_MS = 600;
 
