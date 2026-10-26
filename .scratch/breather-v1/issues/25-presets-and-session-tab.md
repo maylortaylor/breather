@@ -1,5 +1,5 @@
 Type: build
-Status: claimed
+Status: resolved
 Blocked by: 22, 24
 Model: sonnet
 
@@ -39,3 +39,6 @@ npm run dev
 - A modified user preset offers "Update <name>" beside "Save as new"; a built-in offers "Save as new" alone.
 - "How it works" sets `reviewWelcome` in the store. The Gate shows the card, and "Got it" returns to the resting screen with the mix untouched.
 - Dim mode now themes the whole shell (`App.tsx`), not just the aurora.
+
+## Answer
+Resolved 2026-10-26. All 9 criteria pass (413 tests, 97% lines). Matt checked it in the browser and approved: the crossfades between Sleep, Reset and Focus, Save as new, dim mode, and the "How it works" link. Built-in preset levels are unchanged first guesses; Matt raised no change. A modified user preset also offers "Update <name>" next to "Save as new".
