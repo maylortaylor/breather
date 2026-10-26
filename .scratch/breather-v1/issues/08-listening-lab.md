@@ -74,3 +74,10 @@ Every sound was driven in real Chrome through an analyser on the output: all 17 
 - Bubbles: keep, but less often and more random.
 - Whales: rejected. Retry as three variants (humpback song, deep moan, distant call) to pick from.
 - Metronome voices, phase tones and test tone: silent to the ear. Cause: one-shots used the loop layer default and landed near -45 dBFS. Retry with their own level.
+
+### Matt's second listen, 2026-10-25
+- Approved: whale B (deep moan, "love"), whale C (distant call), wood block ("love"), heartbeat thump, phase tones ("fine for now").
+- Heartbeat thump is the default metronome voice.
+- Rejected and removed: whale A (humpback song), bell.
+- Soft tick: too high. Retry as two rows, 700 Hz and 350 Hz.
+- Bubbles: approved in character, slightly louder (+4 dB over the level-match target).
