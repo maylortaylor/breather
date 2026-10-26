@@ -1,5 +1,5 @@
 Type: build
-Status: claimed
+Status: resolved
 Blocked by: 15, 17
 Model: sonnet
 
@@ -37,3 +37,6 @@ npm run dev
 - `breather.state` does not store a mix yet, so Begin starts Sleep until a preset id is saved; then it passes the saved state to `restoreLaunch`.
 - `src/Palette.tsx` is reachable only in dev at `/breather/#palette`.
 - The resting screen is a placeholder ("Breathe.") until tickets 19 and 20.
+
+## Answer
+Resolved 2026-10-26. All 7 criteria pass (161 tests, 97% statements). Matt checked it in the browser: the welcome card, "Got it", reload straight to Begin, and the copy all look good. The resting screen is a placeholder until tickets 19 and 20.
