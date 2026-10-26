@@ -17,3 +17,7 @@ Add a bank of 3 slow LFOs to the Listening Lab that any sound can follow, and ju
 
 ## How to resolve
 Build it in the Lab on `prototype/listening-lab` (Sonnet). Matt listens, then the verdict and any tuning go under `## Answer`.
+
+## Comments
+- Built in `5cdc49c`: `src/audio/lfo.ts` (tested, 46 tests total, 84% branch coverage), `modulation.ts`, `Lfo.tsx`. Defaults: LFO 1 teal 20 s sine, LFO 2 violet 45 s sine, LFO 3 amber 90 s smooth random. The reverb send follows the modulation.
+- Known gap for the app build: each Play of a sound with reverb leaves a send gain node registered. Clean it up on stop.
