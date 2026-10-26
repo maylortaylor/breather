@@ -15,12 +15,13 @@ export default defineConfig({
   },
   lint: {
     ignorePatterns: ["dist/**", "coverage/**"],
+    plugins: ["react", "typescript"],
     options: { typeAware: true, typeCheck: true },
     rules: {
       "no-console": "error",
       "typescript/no-explicit-any": "error",
-      "react/rules-of-hooks": "error",
-      "react/exhaustive-deps": "error",
+      "react-hooks/rules-of-hooks": "error",
+      "react-hooks/exhaustive-deps": "error",
     },
   },
 });
