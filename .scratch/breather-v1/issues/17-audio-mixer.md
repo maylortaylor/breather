@@ -29,3 +29,9 @@ npm run check
 npm run dev
 ```
 - Matt checks: in the Lab, play ocean and whale B for a minute each, stop them, and confirm no click on stop and no change in loudness from before.
+
+## Comments
+- `createMixer` is not wired into the app yet; the Lab still drives sounds directly, through the same engine. Wiring is for the ticket that builds the Sounds tab and session.
+- `Engine` gained `removeWetMod`, `silenceLayer` and an optional `glideSec` on `setLayer` (linear ramp, lands exactly on target). Sound synthesis, `TRIMS` and `MASTER_CAP` are untouched.
+- Beyond the wet list, stopped pad voices and shimmer notes, bubble blips and whale call chains now disconnect when they end. Whale calls were never in the wet list.
+- `Mixer.stopAll(fadeSec)` and removed sounds ramp the layer to silence, then call `Sound.stop()` 50 ms after the ramp. That `stop()` keeps its own short fade.
