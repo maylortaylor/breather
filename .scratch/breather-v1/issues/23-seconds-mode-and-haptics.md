@@ -1,5 +1,5 @@
 Type: build
-Status: claimed
+Status: resolved
 Blocked by: 22
 Model: sonnet
 
@@ -34,3 +34,6 @@ npm run dev
 ## Comments
 - Seconds-mode timing (`beatSeconds`, the 4/7/8 pattern, the no-jump switch) was already in `beats.ts` and `phases.ts`; this ticket added the switch, the disabled slider with its reason, and the haptics, plus tests that pin the behavior.
 - Haptic pulse (20 ms, `src/breath/haptics.ts`) is untested on a real Android phone. iOS has no `navigator.vibrate`, so it does nothing there.
+
+## Answer
+Resolved 2026-10-26. All 8 criteria pass (397 tests). Matt checked seconds mode in the browser and approved: the 4, 7, 8 breath, the once-a-second tick, the greyed tempo slider with its tooltip, and switching back without a jump. The haptic pulse is untested on a real Android phone; it is feature-detected and silent on iPhone.
