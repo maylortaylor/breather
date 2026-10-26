@@ -30,3 +30,9 @@ npm run check:build
 npm run preview
 ```
 - Open `http://localhost:4173/breather/`, use the app, then go offline in devtools and reload.
+
+## Comments
+- Built 2026-10-26. CSP lives in `scripts/buildRules.ts` (`CSP`), added by a build-only Vite plugin in `vite.config.ts`. Rules are pure functions tested in `src/buildRules.test.ts`; `scripts/check-build.mjs` calls them.
+- CSP: `default-src 'self'; media-src 'self' blob:; worker-src 'self'; manifest-src 'self'; object-src 'none'; base-uri 'self'; form-action 'self'`. `media-src blob:` is for ticket 29 (spec question 3). No `unsafe-*`, no outside host. The built bundle has no `eval` or `new Function`, and `index.html` has no inline script or style attribute.
+- The icons are placeholders from `scripts/make-icons.mjs` (no dependency). Matt swaps in a real pack later: keep the names `icon-192.png`, `icon-512.png`, `icon-maskable-512.png`, `apple-touch-icon.png`. The maskable icon is now a separate file instead of `purpose: "any maskable"` on the 512.
+- Unverified without a browser: criteria 6 (no CSP violation in the console) and 7 (offline reload).
