@@ -1,5 +1,5 @@
 Type: build
-Status: claimed
+Status: resolved
 Blocked by: 18
 Model: sonnet
 
@@ -35,3 +35,6 @@ npm run dev
 - Built on build/19-phase-machine-and-ring (3 commits). Ring is a React component plus a `createRing()` BreathVisual; the machine lives in `Breath` until ticket 21 shares it with the scheduler.
 - Added `getSession()` to `src/audio/session.ts` so the ring reads `ctx.currentTime`.
 - Not checked in a real browser from this session (no browser extension); the CSS custom properties are confirmed in the built CSS.
+
+## Answer
+Resolved 2026-10-26. All 8 criteria pass (193 tests, 97% statements). Matt checked it in the browser: the ring, countdown, pause and resume, and the phase words all look good. Carry forward: ticket 21 must share the phase machine with the beat scheduler (the `Breath` component holds it today), and `beatsBetween` is only valid for windows after the last start, resume or tempo change.
