@@ -3,6 +3,7 @@
 import { CATALOG, ONE_SHOT_LAYER, trimOf } from "../audio/catalog";
 import type { Engine } from "../audio/engine";
 import type { Phase, PhaseMachine } from "./phases";
+import { createHaptics, vibrateFromNavigator, type Vibrate } from "./haptics";
 import { createBeatScheduler } from "./scheduler";
 import { beatSeconds, metronomeGains } from "./tempo";
 import type { AppState, Store } from "../store";
@@ -33,6 +34,10 @@ export interface BeatsDeps {
   engine: Engine;
   store: Pick<Store<AppState>, "get" | "subscribe">;
   every?: (fn: () => void, ms: number) => () => void;
+  /** The phase-change pulse. Defaults to `navigator.vibrate`; null when the device has none. */
+  vibrate?: Vibrate | null;
+  /** Runs a function after a delay; returns a canceller. Defaults to `setTimeout`. */
+  later?: (fn: () => void, ms: number) => () => void;
 }
 
 const defaultEvery = (fn: () => void, ms: number) => {
@@ -41,12 +46,19 @@ const defaultEvery = (fn: () => void, ms: number) => {
 };
 
 /** Starts the 25 ms timer. Returns a function that stops it and drops the store subscription. */
+const defaultLater = (fn: () => void, ms: number) => {
+  const handle = setTimeout(fn, ms);
+  return () => clearTimeout(handle);
+};
+
 export function startBeats({
   machine,
   clock,
   engine,
   store,
   every = defaultEvery,
+  vibrate = vibrateFromNavigator(),
+  later = defaultLater,
 }: BeatsDeps): () => void {
   for (const id of [...PHASE_LAYERS, ...VOICE_LAYERS]) engine.setLayer(id, ONE_SHOT_LAYER);
 
@@ -61,10 +73,18 @@ export function startBeats({
     }
   };
 
+  const haptics = createHaptics({
+    vibrate,
+    now: clock,
+    later,
+    isPaused: () => store.get().paused,
+  });
+
   const scheduler = createBeatScheduler({
     now: clock,
     machine,
     onBeat(beat) {
+      haptics.onBeat(beat);
       const { level, voice } = store.get().mix.metronome;
       const g = metronomeGains(level);
       if (beat.phaseStart) {
@@ -97,6 +117,7 @@ export function startBeats({
     if (next.paused !== last.paused) {
       // The ring's tap moves the machine; the scheduler only needs to forget its horizon.
       scheduler.reset();
+      if (next.paused) haptics.cancel();
       if (next.paused) for (const id of PHASE_LAYERS) engine.silenceLayer(id, PAUSE_FADE_SEC);
       else applyGains(RESUME_GLIDE_SEC);
     }
@@ -108,5 +129,6 @@ export function startBeats({
   return () => {
     stopTimer();
     unsubscribe();
+    haptics.cancel();
   };
 }

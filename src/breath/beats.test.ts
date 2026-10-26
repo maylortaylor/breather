@@ -145,3 +145,157 @@ describe("startBeats", () => {
     expect(setBeat).not.toHaveBeenCalled();
   });
 });
+
+// A rig with a stub vibrate and a timer queue driven by the same fake clock as the beats.
+function rig(opts: { vibrate?: boolean; tempo?: number } = {}) {
+  const fake = createFakeEngine();
+  let t = 0;
+  const pulses: number[] = [];
+  const jobs: { at: number; fn: () => void; live: boolean }[] = [];
+  const store = createStore<AppState>({
+    ...DEFAULT_STATE,
+    mix: { ...DEFAULT_STATE.mix, tempo: opts.tempo ?? 0.5 },
+  });
+  const machine = createPhaseMachine(1);
+  machine.start(0);
+  let tick: () => void = () => {};
+  const stop = startBeats({
+    machine,
+    clock: () => t,
+    engine: fake.engine,
+    store,
+    every: (fn) => {
+      tick = fn;
+      return () => {};
+    },
+    vibrate: opts.vibrate === false ? null : () => void pulses.push(Math.round(t * 1000) / 1000),
+    later(fn, ms) {
+      const job = { at: t + ms / 1000, fn, live: true };
+      jobs.push(job);
+      return () => void (job.live = false);
+    },
+  });
+  const run = (to: number) => {
+    while (t < to) {
+      tick();
+      t = Math.round((t + 0.025) * 1000) / 1000;
+      for (const job of jobs) {
+        if (job.live && job.at <= t + 1e-9) {
+          job.live = false;
+          job.fn();
+        }
+      }
+    }
+  };
+  return { store, machine, pulses, run, stop, now: () => t };
+}
+
+describe("seconds mode", () => {
+  it("runs inhale, hold and exhale for 4, 7 and 8 s whatever the tempo says", () => {
+    for (const tempo of [0, 0.5, 1]) {
+      const s = rig({ tempo });
+      s.store.set({ secondsMode: true });
+      const starts = s.machine
+        .beatsBetween(0, 19)
+        .filter((b) => b.phaseStart)
+        .map((b) => [b.phase, Math.round(b.at * 1000) / 1000]);
+      expect(starts).toEqual([
+        ["inhale", 0],
+        ["hold", 4],
+        ["exhale", 11],
+      ]);
+      expect(s.machine.beatsBetween(0, 19)).toHaveLength(19);
+    }
+  });
+
+  it("returns to the slider tempo without moving the ring", () => {
+    const s = rig({ tempo: 1 });
+    s.store.set({ secondsMode: true });
+    s.run(2.5);
+    const before = s.machine.stateAt(s.now());
+    s.store.set({ secondsMode: false });
+    const after = s.machine.stateAt(s.now());
+    expect(after.beat).toBe(before.beat);
+    expect(after.phase).toBe(before.phase);
+    expect(after.progress).toBeCloseTo(before.progress, 9);
+    // Slider at 1 is 80 BPM: 0.75 s a beat from here.
+    const [a, b] = s.machine.beatsBetween(s.now(), s.now() + 3);
+    expect(b!.at - a!.at).toBeCloseTo(0.75, 9);
+  });
+
+  it("ticks once a second at the same detent level", () => {
+    const fake = createFakeEngine();
+    let t = 0;
+    const store = createStore<AppState>({
+      ...DEFAULT_STATE,
+      secondsMode: true,
+      mix: { ...DEFAULT_STATE.mix, tempo: 1, metronome: { level: 0.4, voice: "metro-wood-block" } },
+    });
+    const machine = createPhaseMachine(1);
+    machine.start(0);
+    let tick: () => void = () => {};
+    startBeats({
+      machine,
+      clock: () => t,
+      engine: fake.engine,
+      store,
+      every: (fn) => {
+        tick = fn;
+        return () => {};
+      },
+      vibrate: null,
+    });
+    while (t < 3.01) {
+      tick();
+      t = Math.round((t + 0.025) * 1000) / 1000;
+    }
+    // Beats 1, 2 and 3 are plain ticks; beat 0 is the inhale tone. Tempo 1 would have given 4+.
+    expect(fed(fake, "metro-wood-block")).toBe(3 * 2);
+  });
+});
+
+describe("haptics", () => {
+  it("pulses once per phase change over a cycle, on the beat", () => {
+    const s = rig();
+    s.run(19.2);
+    expect(s.pulses).toHaveLength(4); // inhale, hold, exhale, then the next inhale at 19 s
+    expect(s.pulses[0]).toBeCloseTo(0, 1);
+    expect(s.pulses[1]).toBeCloseTo(4, 1);
+    expect(s.pulses[2]).toBeCloseTo(11, 1);
+    expect(s.pulses[3]).toBeCloseTo(19, 1);
+  });
+
+  it("follows seconds mode: phase changes land at 4 and 11 s", () => {
+    const s = rig({ tempo: 1 });
+    s.store.set({ secondsMode: true });
+    s.run(12);
+    expect(s.pulses.slice(0, 3).map(Math.round)).toEqual([0, 4, 11]);
+  });
+
+  it("stays quiet while paused, and when the guide resumes it pulses again", () => {
+    const s = rig();
+    s.run(3.9);
+    s.machine.pause(s.now());
+    s.store.set({ paused: true });
+    s.run(15);
+    expect(s.pulses).toHaveLength(1);
+    s.machine.resume(s.now());
+    s.store.set({ paused: false });
+    s.run(16);
+    expect(s.pulses).toHaveLength(2);
+  });
+
+  it("does nothing, and shows nothing, when vibrate is absent", () => {
+    const s = rig({ vibrate: false });
+    expect(() => s.run(12)).not.toThrow();
+    expect(s.pulses).toHaveLength(0);
+  });
+
+  it("drops queued pulses when torn down", () => {
+    const s = rig();
+    s.run(3.95);
+    s.stop();
+    s.run(5);
+    expect(s.pulses).toHaveLength(1);
+  });
+});
