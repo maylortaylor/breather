@@ -90,7 +90,7 @@ export function whalesSound(engine: Engine, layer: string): Sound {
     const end = at + p.duration;
     const env = ctx.createGain();
     env.gain.setValueAtTime(0.0001, at);
-    env.gain.linearRampToValueAtTime(0.7, at + p.duration * 0.3);
+    env.gain.linearRampToValueAtTime(0.45, at + p.duration * 0.3);
     env.gain.linearRampToValueAtTime(0.0001, end);
     env.connect(out);
 

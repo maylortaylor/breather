@@ -83,6 +83,7 @@ export function Lab() {
   const [playing, setPlaying] = useState<Record<string, boolean>>({});
   const [verdicts, setVerdicts] = useState<Record<string, Verdict>>(loadVerdicts);
   const sounds = useRef(new Map<string, Sound>());
+  const running = useRef(new Set<string>());
 
   useEffect(() => {
     try {
@@ -109,9 +110,15 @@ export function Lab() {
       sounds.current.set(entry.id, sound);
       engine.setLayer(entry.id, volumeOf(entry.id));
     }
-    if (playing[entry.id]) sound.stop();
-    else sound.start();
-    setPlaying({ ...playing, [entry.id]: !playing[entry.id] });
+    const on = !running.current.has(entry.id);
+    if (on) {
+      sound.start();
+      running.current.add(entry.id);
+    } else {
+      sound.stop();
+      running.current.delete(entry.id);
+    }
+    setPlaying((cur) => ({ ...cur, [entry.id]: on }));
   }
 
   function setVerdict(id: string, v: Verdict) {
@@ -194,7 +201,7 @@ export function Lab() {
                 value={volumeOf(entry.id)}
                 onChange={(ev) => {
                   const v = Number(ev.target.value);
-                  setVolumes({ ...volumes, [entry.id]: v });
+                  setVolumes((cur) => ({ ...cur, [entry.id]: v }));
                   engine?.setLayer(entry.id, v);
                 }}
               />
