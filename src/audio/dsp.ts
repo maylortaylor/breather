@@ -32,7 +32,7 @@ export function makeNoise(
   sampleRate: number,
   seconds: number,
   rng: Rng
-): Float32Array {
+): Float32Array<ArrayBuffer> {
   if (seconds < MIN_LOOP_SEC) throw new Error(`noise loop must be at least ${MIN_LOOP_SEC} s`);
   const n = Math.round(sampleRate * seconds);
   const fade = Math.round(sampleRate * LOOP_FADE_SEC);
@@ -90,7 +90,7 @@ export function makeImpulse(
   seconds: number,
   decay: number,
   rng: Rng
-): [Float32Array, Float32Array] {
+): [Float32Array<ArrayBuffer>, Float32Array<ArrayBuffer>] {
   const n = Math.round(sampleRate * seconds);
   const make = () => {
     const ch = new Float32Array(n);
