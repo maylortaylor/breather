@@ -2,6 +2,7 @@ import { Component, type ErrorInfo, type ReactNode } from "react";
 import { Background } from "./background/Background";
 import { Breath } from "./breath/Ring";
 import { Gate, SoundNote } from "./ui/Gate";
+import { Sheet } from "./ui/Sheet";
 import { useStore } from "./store";
 
 type BoundaryProps = { children: ReactNode; onReload: () => void };
@@ -43,13 +44,16 @@ export function App({ children, onReload = () => window.location.reload() }: App
   );
 }
 
-/** The Begin gate, then the resting screen: the ring and its phase word (the sheet lands in 20). */
+/** The Begin gate, then the resting screen: the ring and its phase word and the controls sheet. */
 export function Screens() {
   const resting = useStore((s) => s.screen === "resting");
   return resting ? (
-    <Breath>
-      <SoundNote />
-    </Breath>
+    <>
+      <Breath>
+        <SoundNote />
+      </Breath>
+      <Sheet />
+    </>
   ) : (
     <Gate />
   );

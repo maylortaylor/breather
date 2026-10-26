@@ -94,6 +94,8 @@ const styles = stylex.create({
     alignItems: "center",
     justifyContent: "center",
     gap: 28,
+    // A swipe up on the resting screen opens the sheet, so the page must not claim it as a pan.
+    touchAction: "none",
     textAlign: "center",
     color: colors.text,
   },
