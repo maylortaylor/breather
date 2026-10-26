@@ -10,6 +10,7 @@ import {
 import { store, useStore, type TabName } from "../store";
 import { colors } from "../theme.stylex";
 import { BreathTab } from "./BreathTab";
+import { SessionTab } from "./SessionTab";
 import { SoundsTab } from "./SoundsTab";
 import { Tip } from "./Tip";
 import {
@@ -26,11 +27,10 @@ const TABS: { name: TabName; label: string }[] = [
   { name: "session", label: "Session" },
 ];
 
-// Tickets 22 and 25 fill the other two bodies.
 const BODIES: Record<TabName, ReactNode> = {
   breath: <BreathTab />,
   sounds: <SoundsTab />,
-  session: null,
+  session: <SessionTab />,
 };
 
 const styles = stylex.create({
