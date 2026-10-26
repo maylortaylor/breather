@@ -133,33 +133,132 @@ const plain = stylex.create({
   wrap: { display: "flex", alignItems: "center", gap: 12, color: colors.tabInk, fontSize: 16 },
   label: { minWidth: 64 },
   input: { flexGrow: 1, minWidth: 0, height: 28, margin: 0, accentColor: colors.thumb },
+  detentWrap: { alignItems: "flex-start" },
+  track: {
+    position: "relative",
+    flexGrow: 1,
+    minWidth: 0,
+    display: "flex",
+    flexDirection: "column",
+  },
+  marks: { position: "relative", height: 34 },
+  mark: {
+    position: "absolute",
+    top: 0,
+    width: 2,
+    height: 8,
+    marginLeft: -1,
+    backgroundColor: colors.tabInk,
+  },
+  markLabel: {
+    position: "absolute",
+    top: 10,
+    transform: "translateX(-50%)",
+    fontSize: 12,
+    whiteSpace: "nowrap",
+    color: colors.textMuted,
+  },
+  ends: { display: "flex", justifyContent: "space-between", fontSize: 13, color: colors.textMuted },
 });
 
-/** One plain volume slider (0..1). The row slider above is for sounds that can have an LFO. */
+/** Detents for a plain slider: where to draw marks and how values stick to them. */
+export interface Detent {
+  marks: readonly { at: number; label?: string }[];
+  /** Applied to every value from a drag or key, so the slider moves in stops. */
+  live?: (value: number) => number;
+  /** Applied once when a pointer drag ends. */
+  release?: (value: number) => number;
+  /** Replaces the native arrow-key step. */
+  step?: (value: number, dir: 1 | -1) => number;
+}
+
+const KEY_DIR: Record<string, 1 | -1 | undefined> = {
+  ArrowRight: 1,
+  ArrowUp: 1,
+  ArrowLeft: -1,
+  ArrowDown: -1,
+};
+
+const markPos = (v: number) => `calc(${THUMB / 2}px + (100% - ${THUMB}px) * ${v})`;
+
+/** One plain slider (0..1), optionally with detent marks, end labels and a spoken value. */
 export function Slider({
   label,
   value,
   onChange,
   tip,
+  detent,
+  ends,
+  valueText,
 }: {
   label: string;
   value: number;
   onChange: (value: number) => void;
   tip: string;
+  detent?: Detent;
+  /** Visible words under the left and right ends. */
+  ends?: [string, string];
+  /** Replaces the number a screen reader hears. */
+  valueText?: string;
 }) {
+  const decorated = Boolean(detent || ends);
+  const input = (
+    <input
+      type="range"
+      min={0}
+      max={1}
+      step={0.01}
+      value={value}
+      aria-valuetext={valueText}
+      {...stylex.props(plain.input)}
+      onChange={(ev) => {
+        const v = Number(ev.target.value);
+        onChange(detent?.live ? detent.live(v) : v);
+      }}
+      onKeyDown={(ev) => {
+        const dir = KEY_DIR[ev.key];
+        if (!detent?.step || !dir) return;
+        ev.preventDefault();
+        onChange(detent.step(value, dir));
+      }}
+      onPointerUp={(ev) => {
+        if (!detent?.release) return;
+        const v = detent.release(Number(ev.currentTarget.value));
+        if (v !== value) onChange(v);
+      }}
+    />
+  );
   return (
     <Tip text={tip} grow="fill">
-      <label {...stylex.props(plain.wrap)}>
+      <label {...stylex.props(plain.wrap, decorated && plain.detentWrap)}>
         <span {...stylex.props(plain.label)}>{label}</span>
-        <input
-          type="range"
-          min={0}
-          max={1}
-          step={0.01}
-          value={value}
-          {...stylex.props(plain.input)}
-          onChange={(ev) => onChange(Number(ev.target.value))}
-        />
+        {decorated ? (
+          <span {...stylex.props(plain.track)}>
+            {input}
+            {detent && (
+              <span aria-hidden="true" {...stylex.props(plain.marks)}>
+                {detent.marks.map((m) => (
+                  <span key={m.at}>
+                    <span {...stylex.props(plain.mark)} style={{ left: markPos(m.at) }} />
+                    {m.label && (
+                      <span {...stylex.props(plain.markLabel)} style={{ left: markPos(m.at) }}>
+                        {m.label}
+                      </span>
+                    )}
+                  </span>
+                ))}
+              </span>
+            )}
+            {ends && (
+              <span aria-hidden="true" {...stylex.props(plain.ends)}>
+                <span>{ends[0]}</span>
+                <span>{ends[1]}</span>
+              </span>
+            )}
+          </span>
+        ) : (
+          input
+        )}
       </label>
     </Tip>
   );
