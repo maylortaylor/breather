@@ -14,7 +14,7 @@ v1 of the app described in [`docs/PLAN.md`](../../docs/PLAN.md), runnable locall
 - Metronome: one slider with detents for off, phase-change only, all beats quiet, louder.
 - Sound set: all synthesized, no samples; approved list in [08](issues/08-listening-lab.md).
 - Volume LFOs: 3 colour-coded slow waves, min/max range slider, see [12](issues/12-volume-lfos.md).
-- Sleep timer 30 / 60 / 90 min with a long fade-out. Presets built-in plus user-saved.
+- Sleep timer 30 / 60 / 90 min with a long fade-out. Presets: Sleep, Focus, Reset plus 10 user ones, see [06](issues/06-presets-and-controls.md).
 - Commit identity: GitHub noreply email, see [03](issues/03-commit-identity.md).
 - Hosting: `roboborealis.com/breather/`, Caddy proxy to GitHub Pages, see [01](issues/01-hosting-and-owner.md).
 - Stack: Vite+, React 19, three.js, StyleX, hand-rolled store, Vitest, see [02](issues/02-stack-and-tests.md).
@@ -25,7 +25,6 @@ v1 of the app described in [`docs/PLAN.md`](../../docs/PLAN.md), runnable locall
 
 ## Not yet specified
 - Analytics: [04](issues/04-analytics.md)
-- Preset contents, half/double buttons, seconds-mode metronome: [06](issues/06-presets-and-controls.md)
 - iOS audio promise: [07](issues/07-ios-audio.md)
 - Borrowed code and sample licenses: [09](issues/09-license-provenance.md)
 - Safety note: [10](issues/10-safety-note.md)

@@ -10,3 +10,5 @@ Vocabulary for breather. Use these terms, not synonyms. Source: [`docs/PLAN.md`]
 - **Preset**: a saved set of levels, tempo, metronome level, sound choice, music mood and dim mode.
 - **Theme**: a background look driven by the breath; the first is the aurora borealis.
 - **Listening Lab**: a plain audition page with one play button and one slider per sound, used to approve or reject each synthesized sound before the main UI exists.
+- **Seconds mode**: breath phases run a fixed 4, 7 and 8 seconds; the metronome ticks once a second and the tempo slider is disabled.
+- **Built-in preset**: one of Sleep, Focus or Reset; read-only, so changing one offers "Save as new".
