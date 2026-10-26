@@ -4,11 +4,14 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { CATALOG, ONE_SHOT_LAYER, trimOf, type Entry } from "../audio/catalog";
 import type { Sound } from "../audio/engine";
 import { DEFAULT_METRONOME_VOICE } from "../audio/metronome";
+import { createModulator, type ModSnapshot } from "../audio/modulation";
+import { LfoPanel, RowLfo } from "./Lfo";
 import { createEngine, DEFAULT_LAYER, type Engine } from "../audio/engine";
 
 type Verdict = "approve" | "reject";
 const ONE_SHOTS = new Set(CATALOG.filter((e) => "once" in e).map((e) => e.id));
 const STORAGE_KEY = "breather.lab.verdicts.v1";
+const LFO_KEY = "breather.lab.lfo.v1";
 
 const styles = stylex.create({
   page: {
@@ -78,6 +81,26 @@ function loadVerdicts(): Record<string, Verdict> {
   }
 }
 
+function loadLfo(): Partial<ModSnapshot> {
+  try {
+    const raw = localStorage.getItem(LFO_KEY);
+    return raw ? (JSON.parse(raw) as Partial<ModSnapshot>) : {};
+  } catch {
+    return {};
+  }
+}
+
+// One modulator for the page: it owns the LFO bank and the 50 ms update timer.
+const modulator = createModulator(loadLfo());
+
+function saveLfo() {
+  try {
+    localStorage.setItem(LFO_KEY, JSON.stringify(modulator.snapshot()));
+  } catch {
+    // Storage blocked: the LFO setup just will not persist.
+  }
+}
+
 export function Lab() {
   const [engine, setEngine] = useState<Engine | null>(null);
   const [master, setMaster] = useState(0.7);
@@ -106,6 +129,7 @@ export function Lab() {
       e.setTrim(entry.id, trimOf(entry.id));
       e.setLayer(entry.id, volumeOf(entry.id));
     }
+    modulator.setEngine(e);
     setEngine(e);
   }
 
@@ -172,6 +196,9 @@ export function Lab() {
         </label>
       )}
 
+      <h2 {...stylex.props(styles.h2)}>LFO bank</h2>
+      <LfoPanel modulator={modulator} onChange={saveLfo} />
+
       {groups.map(([group, entries]) => (
         <section key={group}>
           <h2 {...stylex.props(styles.h2)}>{group}</h2>
@@ -231,6 +258,7 @@ export function Lab() {
                   Reject
                 </button>
               </div>
+              {"loop" in entry && <RowLfo id={entry.id} modulator={modulator} onChange={saveLfo} />}
             </div>
           ))}
         </section>

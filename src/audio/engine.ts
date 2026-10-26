@@ -10,8 +10,12 @@ export interface Engine {
   ctx: AudioContext;
   /** Input of the shared reverb. Feed it through a send gain. */
   reverbSend: GainNode;
-  /** Gain feeding the master for one named layer, created on first use. */
+  /** Where a sound plugs into its named layer (the modulation stage), created on first use. */
   layer(name: string): GainNode;
+  /** Modulation multiplier for a layer, 1 = unchanged. Smoothed, so a 50 ms update rate is click-free. */
+  setMod(name: string, value: number): void;
+  /** Let a layer's reverb send follow the same modulation as its dry signal. */
+  addWetMod(name: string, node: GainNode): void;
   setMaster(value: number): void;
   setLayer(name: string, value: number): void;
   /** Per-sound level match, multiplied into the layer gain. */
@@ -48,19 +52,29 @@ export function createEngine(): Engine {
   reverbReturn.gain.value = 0.4;
   reverbSend.connect(convolver).connect(reverbReturn).connect(master);
 
-  const layers = new Map<string, GainNode>();
+  // layer = sound -> mod (LFO) -> gain (slider x trim) -> master
+  interface Layer {
+    mod: GainNode;
+    gain: GainNode;
+    wets: GainNode[];
+  }
+  const layers = new Map<string, Layer>();
   const trims = new Map<string, number>();
   const levels = new Map<string, number>();
-  const layer = (name: string) => {
-    let node = layers.get(name);
-    if (!node) {
-      node = ctx.createGain();
-      node.gain.value = sliderToGain(DEFAULT_LAYER) * (trims.get(name) ?? 1);
-      node.connect(master);
-      layers.set(name, node);
+  const stage = (name: string): Layer => {
+    let l = layers.get(name);
+    if (!l) {
+      const gain = ctx.createGain();
+      gain.gain.value = sliderToGain(DEFAULT_LAYER) * (trims.get(name) ?? 1);
+      gain.connect(master);
+      const mod = ctx.createGain();
+      mod.connect(gain);
+      l = { mod, gain, wets: [] };
+      layers.set(name, l);
     }
-    return node;
+    return l;
   };
+  const layer = (name: string) => stage(name).mod;
 
   const ramp = (param: AudioParam, value: number) =>
     param.setTargetAtTime(value, ctx.currentTime, 0.02);
@@ -69,14 +83,23 @@ export function createEngine(): Engine {
     ctx,
     reverbSend,
     layer,
+    setMod: (name, value) => {
+      const l = stage(name);
+      const t = ctx.currentTime;
+      l.mod.gain.setTargetAtTime(value, t, 0.05);
+      for (const w of l.wets) w.gain.setTargetAtTime(value, t, 0.05);
+    },
+    addWetMod: (name, node) => {
+      stage(name).wets.push(node);
+    },
     setMaster: (v) => ramp(master.gain, sliderToGain(v) * MASTER_CAP),
     setLayer: (name, v) => {
       levels.set(name, v);
-      ramp(layer(name).gain, sliderToGain(v) * (trims.get(name) ?? 1));
+      ramp(stage(name).gain.gain, sliderToGain(v) * (trims.get(name) ?? 1));
     },
     setTrim: (name, trim) => {
       trims.set(name, trim);
-      ramp(layer(name).gain, sliderToGain(levels.get(name) ?? DEFAULT_LAYER) * trim);
+      ramp(stage(name).gain.gain, sliderToGain(levels.get(name) ?? DEFAULT_LAYER) * trim);
     },
   };
 }
@@ -101,6 +124,8 @@ export function connectOut(engine: Engine, node: AudioNode, layer: string, rever
   if (reverb > 0) {
     const send = engine.ctx.createGain();
     send.gain.value = reverb;
-    node.connect(send).connect(engine.reverbSend);
+    const wet = engine.ctx.createGain();
+    node.connect(send).connect(wet).connect(engine.reverbSend);
+    engine.addWetMod(layer, wet);
   }
 }
