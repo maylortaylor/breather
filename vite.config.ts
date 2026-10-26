@@ -58,6 +58,8 @@ export default defineConfig({
       provider: "v8",
       include: [
         "src/breath/phases.ts",
+        "src/breath/tempo.ts",
+        "src/breath/scheduler.ts",
         "src/audio/dsp.ts",
         "src/audio/lfo.ts",
         "src/audio/mixer.ts",
