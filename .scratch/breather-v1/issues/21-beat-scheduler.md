@@ -1,5 +1,5 @@
 Type: build
-Status: open
+Status: claimed
 Blocked by: 19
 Model: sonnet
 
