@@ -41,5 +41,5 @@ export const CATALOG: Entry[] = [
     group: "Phase tones",
     once,
   })),
-  { id: "test-tone", label: "Test tone (440 Hz)", group: "Engine", once: TEST_TONE },
+  { id: "test-tone", label: "Test tone (quiet)", group: "Engine", once: TEST_TONE },
 ];

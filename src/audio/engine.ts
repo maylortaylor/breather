@@ -2,6 +2,9 @@ import { createRng, makeImpulse } from "./dsp";
 
 const MASTER_CAP = 0.8;
 const REVERB_SECONDS = 4;
+/** Default slider position for every layer. */
+export const DEFAULT_LAYER = 0.3;
+export const FADE_IN_SEC = 1.5;
 
 export interface Engine {
   ctx: AudioContext;
@@ -22,12 +25,12 @@ export function createEngine(): Engine {
 
   // layers -> master -> limiter -> output
   const master = ctx.createGain();
-  master.gain.value = sliderToGain(0.7) * MASTER_CAP;
+  master.gain.value = sliderToGain(0.5) * MASTER_CAP;
   const limiter = ctx.createDynamicsCompressor();
-  limiter.threshold.value = -6;
-  limiter.knee.value = 0;
-  limiter.ratio.value = 20;
-  limiter.attack.value = 0.003;
+  limiter.threshold.value = -3;
+  limiter.knee.value = 6;
+  limiter.ratio.value = 12;
+  limiter.attack.value = 0.005;
   limiter.release.value = 0.25;
   master.connect(limiter).connect(ctx.destination);
 
@@ -40,7 +43,7 @@ export function createEngine(): Engine {
   convolver.buffer = impulse;
   const reverbSend = ctx.createGain();
   const reverbReturn = ctx.createGain();
-  reverbReturn.gain.value = 0.8;
+  reverbReturn.gain.value = 0.4;
   reverbSend.connect(convolver).connect(reverbReturn).connect(master);
 
   const layers = new Map<string, GainNode>();
@@ -48,7 +51,7 @@ export function createEngine(): Engine {
     let node = layers.get(name);
     if (!node) {
       node = ctx.createGain();
-      node.gain.value = sliderToGain(0.5);
+      node.gain.value = sliderToGain(DEFAULT_LAYER);
       node.connect(master);
       layers.set(name, node);
     }
@@ -71,6 +74,14 @@ export function createEngine(): Engine {
 export interface Sound {
   start(): void;
   stop(): void;
+}
+
+/** Ramp a gain from silence to full over the start fade, so a loop never begins abruptly. */
+export function fadeIn(ctx: AudioContext, gain: GainNode, seconds = FADE_IN_SEC): void {
+  const t = ctx.currentTime;
+  gain.gain.cancelScheduledValues(t);
+  gain.gain.setValueAtTime(0, t);
+  gain.gain.linearRampToValueAtTime(1, t + seconds);
 }
 
 /** Route a node to a layer, plus an optional share to the reverb. */

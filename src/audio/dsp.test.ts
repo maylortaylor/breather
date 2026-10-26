@@ -6,6 +6,8 @@ import {
   createTriggerScheduler,
   makeImpulse,
   makeNoise,
+  makeStereoNoise,
+  TARGET_RMS,
   midiToHz,
   MOODS,
   nextChordIndex,
@@ -16,6 +18,15 @@ const SR = 8000;
 
 function peak(a: Float32Array): number {
   return a.reduce((m, v) => Math.max(m, Math.abs(v)), 0);
+}
+function rmsOf(a: Float32Array): number {
+  return Math.sqrt(a.reduce((s, v) => s + v * v, 0) / a.length);
+}
+/** Mean sample-to-sample change relative to RMS: a cheap measure of high-frequency content. */
+function hfRatio(a: Float32Array): number {
+  let sum = 0;
+  for (let i = 1; i < a.length; i++) sum += Math.abs((a[i] ?? 0) - (a[i - 1] ?? 0));
+  return sum / (a.length - 1) / rmsOf(a);
 }
 function maxStep(a: Float32Array): number {
   let m = 0;
@@ -36,10 +47,12 @@ describe("createRng", () => {
 
 describe("makeNoise", () => {
   for (const kind of ["white", "pink", "brown"] as const) {
-    it(`${kind}: at least 10 s, normalized to a 0.9 peak, within [-1, 1]`, () => {
+    it(`${kind}: at least 10 s, RMS near -24 dBFS, peak at most 0.9`, () => {
       const buf = makeNoise(kind, SR, 10, createRng(1));
       expect(buf.length).toBe(SR * 10);
-      expect(peak(buf)).toBeCloseTo(0.9, 5);
+      expect(TARGET_RMS).toBeCloseTo(0.063, 3);
+      expect(Math.abs(rmsOf(buf) - TARGET_RMS)).toBeLessThan(0.002);
+      expect(peak(buf)).toBeLessThanOrEqual(0.9);
       expect(buf.every((v) => Number.isFinite(v) && v >= -1 && v <= 1)).toBe(true);
     });
   }
@@ -48,13 +61,17 @@ describe("makeNoise", () => {
     expect(() => makeNoise("white", SR, 9, createRng(1))).toThrow(/10/);
   });
 
-  it("brown is smoother than white and pink sits between", () => {
-    const rng = () => createRng(3);
-    const white = maxStep(makeNoise("white", SR, 10, rng()));
-    const pink = maxStep(makeNoise("pink", SR, 10, rng()));
-    const brown = maxStep(makeNoise("brown", SR, 10, rng()));
-    expect(brown).toBeLessThan(pink);
-    expect(pink).toBeLessThan(white);
+  it("brown is smoother than pink, and pink smoother than white", () => {
+    const hf = (k: "white" | "pink" | "brown") => hfRatio(makeNoise(k, 48000, 10, createRng(3)));
+    expect(hf("brown")).toBeLessThan(hf("pink"));
+    expect(hf("pink")).toBeLessThan(hf("white"));
+  });
+
+  it("white is lowpassed: less high-frequency energy than raw white samples", () => {
+    const rng = createRng(3);
+    const raw = Float32Array.from({ length: 48000 * 10 }, () => rng() * 2 - 1);
+    const filtered = makeNoise("white", 48000, 10, createRng(3));
+    expect(hfRatio(filtered)).toBeLessThan(hfRatio(raw) * 0.8);
   });
 
   it("brown has no DC drift (mean close to zero)", () => {
@@ -72,6 +89,18 @@ describe("makeNoise", () => {
   });
 });
 
+describe("makeStereoNoise", () => {
+  it("returns two decorrelated channels of equal length", () => {
+    const [l, r] = makeStereoNoise("pink", SR, 10, createRng(1), createRng(2));
+    expect(l.length).toBe(SR * 10);
+    expect(r.length).toBe(l.length);
+    let dot = 0;
+    for (let i = 0; i < l.length; i++) dot += (l[i] ?? 0) * (r[i] ?? 0);
+    const corr = dot / l.length / (rmsOf(l) * rmsOf(r));
+    expect(Math.abs(corr)).toBeLessThan(0.05);
+  });
+});
+
 describe("makeImpulse", () => {
   it("returns two finite channels that decay", () => {
     const [l, r] = makeImpulse(SR, 3, 2.5, createRng(2));
@@ -84,6 +113,13 @@ describe("makeImpulse", () => {
       expect(rms(ch, 0, SR / 2)).toBeGreaterThan(rms(ch, SR * 2, SR * 2 + SR / 2) * 5);
       expect(peak(ch)).toBeLessThanOrEqual(1);
     }
+  });
+
+  it("is darker in the tail than at the start", () => {
+    const [l] = makeImpulse(48000, 3, 1, createRng(8));
+    const early = l.slice(0, 14400);
+    const late = l.slice(48000 * 2, 48000 * 2 + 14400);
+    expect(hfRatio(late)).toBeLessThan(hfRatio(early) * 0.8);
   });
 
   it("makes the two channels different", () => {

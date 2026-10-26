@@ -1,5 +1,5 @@
 import { chordHz, MOODS, nextChordIndex, type MoodName } from "./dsp";
-import { connectOut, type Engine, type Sound } from "./engine";
+import { connectOut, fadeIn, type Engine, type Sound } from "./engine";
 
 const FADE_SEC = 6;
 const rand = (lo: number, hi: number) => lo + Math.random() * (hi - lo);
@@ -87,6 +87,7 @@ export function padSound(engine: Engine, moodName: MoodName, layer: string): Sou
     start() {
       if (bus) return;
       bus = ctx.createGain();
+      fadeIn(ctx, bus);
       const lowpass = ctx.createBiquadFilter();
       lowpass.type = "lowpass";
       lowpass.frequency.value = mood.cutoffHz;

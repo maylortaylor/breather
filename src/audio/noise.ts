@@ -1,5 +1,5 @@
-import { createRng, makeNoise, type NoiseKind } from "./dsp";
-import { connectOut, type Engine, type Sound } from "./engine";
+import { createRng, makeStereoNoise, type NoiseKind } from "./dsp";
+import { connectOut, fadeIn, type Engine, type Sound } from "./engine";
 
 const LOOP_SECONDS = 12;
 const buffers = new WeakMap<AudioContext, Map<NoiseKind, AudioBuffer>>();
@@ -9,9 +9,11 @@ function noiseBuffer(ctx: AudioContext, kind: NoiseKind): AudioBuffer {
   if (!byKind) buffers.set(ctx, (byKind = new Map()));
   let buf = byKind.get(kind);
   if (!buf) {
-    const data = makeNoise(kind, ctx.sampleRate, LOOP_SECONDS, createRng(Math.random() * 2 ** 32));
-    buf = ctx.createBuffer(1, data.length, ctx.sampleRate);
-    buf.copyToChannel(data, 0);
+    const seed = () => createRng(Math.floor(Math.random() * 2 ** 32));
+    const [left, right] = makeStereoNoise(kind, ctx.sampleRate, LOOP_SECONDS, seed(), seed());
+    buf = ctx.createBuffer(2, left.length, ctx.sampleRate);
+    buf.copyToChannel(left, 0);
+    buf.copyToChannel(right, 1);
     byKind.set(kind, buf);
   }
   return buf;
@@ -42,6 +44,7 @@ export function noiseSound(engine: Engine, kind: NoiseKind, layer: string): Soun
       const fade = ctx.createGain();
       src.connect(fade);
       connectOut(engine, fade, layer);
+      fadeIn(ctx, fade);
       src.start();
       active = { fade, sources: [src] };
     },
@@ -79,10 +82,13 @@ export function oceanSound(engine: Engine, layer: string): Sound {
       const hiss = loopSource(ctx, "white");
       const highpass = ctx.createBiquadFilter();
       highpass.type = "highpass";
-      highpass.frequency.value = 3500;
+      highpass.frequency.value = 2500;
+      const hissCap = ctx.createBiquadFilter();
+      hissCap.type = "lowpass";
+      hissCap.frequency.value = 6000;
       const crest = ctx.createGain();
-      crest.gain.value = 0.03;
-      hiss.connect(highpass).connect(crest).connect(fade);
+      crest.gain.value = 0.015;
+      hiss.connect(highpass).connect(hissCap).connect(crest).connect(fade);
 
       // Main swell LFO and a second, slower-drifting one so the pattern does not repeat exactly.
       const lfo = (hz: number, depth: number, target: AudioParam) => {
@@ -99,9 +105,10 @@ export function oceanSound(engine: Engine, layer: string): Sound {
       lfo(1 / p1, 350, lowpass.frequency);
       lfo(1 / p2, 120, lowpass.frequency);
       lfo(1 / p1, 0.35, swell.gain);
-      lfo(1 / p1, 0.03, crest.gain);
+      lfo(1 / p1, 0.015, crest.gain);
 
       connectOut(engine, fade, layer);
+      fadeIn(ctx, fade);
       body.start();
       hiss.start();
       active = { fade, sources: [body, hiss, ...sources] };

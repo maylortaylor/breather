@@ -1,5 +1,5 @@
 import { bubbleParams, createTriggerScheduler, whaleParams, type Rng } from "./dsp";
-import { connectOut, type Engine, type Sound } from "./engine";
+import { connectOut, fadeIn, type Engine, type Sound } from "./engine";
 
 const TICK_MS = 50;
 const LOOKAHEAD = 0.2;
@@ -65,6 +65,7 @@ export function bubblesSound(engine: Engine, layer: string): Sound {
     start() {
       if (out) return;
       out = ctx.createGain();
+      fadeIn(ctx, out);
       const lowpass = ctx.createBiquadFilter();
       lowpass.type = "lowpass";
       lowpass.frequency.value = 3200;
@@ -122,6 +123,7 @@ export function whalesSound(engine: Engine, layer: string): Sound {
     start() {
       if (out) return;
       out = ctx.createGain();
+      fadeIn(ctx, out);
       const band = ctx.createBiquadFilter();
       band.type = "bandpass";
       band.frequency.value = 320;

@@ -3,7 +3,7 @@ import * as stylex from "@stylexjs/stylex";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { CATALOG, type Entry } from "../audio/catalog";
 import type { Sound } from "../audio/engine";
-import { createEngine, type Engine } from "../audio/engine";
+import { createEngine, DEFAULT_LAYER, type Engine } from "../audio/engine";
 
 type Verdict = "approve" | "reject";
 const STORAGE_KEY = "breather.lab.verdicts.v1";
@@ -78,7 +78,7 @@ function loadVerdicts(): Record<string, Verdict> {
 
 export function Lab() {
   const [engine, setEngine] = useState<Engine | null>(null);
-  const [master, setMaster] = useState(0.7);
+  const [master, setMaster] = useState(0.5);
   const [volumes, setVolumes] = useState<Record<string, number>>({});
   const [playing, setPlaying] = useState<Record<string, boolean>>({});
   const [verdicts, setVerdicts] = useState<Record<string, Verdict>>(loadVerdicts);
@@ -93,7 +93,7 @@ export function Lab() {
     }
   }, [verdicts]);
 
-  const volumeOf = (id: string) => volumes[id] ?? 0.5;
+  const volumeOf = (id: string) => volumes[id] ?? DEFAULT_LAYER;
 
   function begin() {
     const e = createEngine();

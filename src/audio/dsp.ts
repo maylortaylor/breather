@@ -22,6 +22,24 @@ export type NoiseKind = "white" | "pink" | "brown";
 const MIN_LOOP_SEC = 10;
 const LOOP_FADE_SEC = 0.5;
 const NOISE_PEAK = 0.9;
+/** About -24 dBFS. Loudness is set by RMS, so white, pink and brown sit at the same level. */
+export const TARGET_RMS = 0.063;
+/** Gentle top-end roll-off applied at generation. Brown is already dark. */
+const NOISE_LOWPASS_HZ: Record<NoiseKind, number | null> = {
+  white: 7000,
+  pink: 10000,
+  brown: null,
+};
+
+/** One-pole lowpass in place. */
+function lowpass(data: Float32Array, cutoffHz: number, sampleRate: number): void {
+  const a = 1 - Math.exp((-2 * Math.PI * cutoffHz) / sampleRate);
+  let y = 0;
+  for (let i = 0; i < data.length; i++) {
+    y += a * ((data[i] ?? 0) - y);
+    data[i] = y;
+  }
+}
 
 /**
  * One loopable noise buffer. Generates a little more than asked, then equal-power crossfades the
@@ -67,6 +85,9 @@ export function makeNoise(
     }
   }
 
+  const cutoff = NOISE_LOWPASS_HZ[kind];
+  if (cutoff) lowpass(raw, cutoff, sampleRate);
+
   const out = new Float32Array(n);
   for (let i = 0; i < n; i++) {
     if (i < fade) {
@@ -78,13 +99,38 @@ export function makeNoise(
   }
 
   let peak = 0;
-  for (const v of out) peak = Math.max(peak, Math.abs(v));
-  const scale = peak > 0 ? NOISE_PEAK / peak : 1;
+  let sumSq = 0;
+  for (const v of out) {
+    peak = Math.max(peak, Math.abs(v));
+    sumSq += v * v;
+  }
+  const rms = Math.sqrt(sumSq / n);
+  const scale = peak > 0 ? Math.min(TARGET_RMS / rms, NOISE_PEAK / peak) : 1;
   for (let i = 0; i < n; i++) out[i] = (out[i] ?? 0) * scale;
   return out;
 }
 
-/** Stereo reverb impulse: decorrelated noise under a falling power envelope. */
+/** Two independently generated channels, so the left and right ears hear different noise. */
+export function makeStereoNoise(
+  kind: NoiseKind,
+  sampleRate: number,
+  seconds: number,
+  rngLeft: Rng,
+  rngRight: Rng
+): [Float32Array<ArrayBuffer>, Float32Array<ArrayBuffer>] {
+  return [
+    makeNoise(kind, sampleRate, seconds, rngLeft),
+    makeNoise(kind, sampleRate, seconds, rngRight),
+  ];
+}
+
+const IMPULSE_LOWPASS_START_HZ = 8000;
+const IMPULSE_LOWPASS_END_HZ = 1500;
+
+/**
+ * Stereo reverb impulse: decorrelated noise under a falling power envelope, darkened as it decays
+ * (lowpass cutoff slides from 8 kHz to 1.5 kHz) so the tail is not hissy.
+ */
 export function makeImpulse(
   sampleRate: number,
   seconds: number,
@@ -94,7 +140,15 @@ export function makeImpulse(
   const n = Math.round(sampleRate * seconds);
   const make = () => {
     const ch = new Float32Array(n);
-    for (let i = 0; i < n; i++) ch[i] = (rng() * 2 - 1) * Math.pow(1 - i / n, decay);
+    let y = 0;
+    for (let i = 0; i < n; i++) {
+      const t = i / n;
+      const cutoff =
+        IMPULSE_LOWPASS_START_HZ * Math.pow(IMPULSE_LOWPASS_END_HZ / IMPULSE_LOWPASS_START_HZ, t);
+      const a = 1 - Math.exp((-2 * Math.PI * cutoff) / sampleRate);
+      y += a * (rng() * 2 - 1 - y);
+      ch[i] = y * Math.pow(1 - t, decay);
+    }
     return ch;
   };
   return [make(), make()];

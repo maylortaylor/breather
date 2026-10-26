@@ -62,4 +62,4 @@ export const PHASE_TONES: Record<string, OneShot> = {
 };
 
 /** Plain 440 Hz tone for checking that the engine and master volume work. */
-export const TEST_TONE: OneShot = (e, at, l) => partial(e, l, at, 440, 0.4, 0.6);
+export const TEST_TONE: OneShot = (e, at, l) => partial(e, l, at, 440, 0.1, 0.6);
