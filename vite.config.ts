@@ -60,6 +60,7 @@ export default defineConfig({
         "src/breath/phases.ts",
         "src/breath/tempo.ts",
         "src/breath/scheduler.ts",
+        "src/breath/beats.ts",
         "src/audio/dsp.ts",
         "src/audio/lfo.ts",
         "src/audio/mixer.ts",

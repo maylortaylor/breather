@@ -3,6 +3,7 @@ import { useEffect, useRef, useState, type ReactNode } from "react";
 import { getSession } from "../audio/session";
 import { store, useStore } from "../store";
 import { colors } from "../theme.stylex";
+import { startBeats } from "./beats";
 import { createPhaseMachine, type BreathState, type Phase, type PhaseMachine } from "./phases";
 
 export const PHASE_WORDS: Record<Phase, string> = {
@@ -170,6 +171,12 @@ export function Breath({ now, machine, children }: BreathProps) {
   }, [visual, phases, clock]);
 
   useEffect(() => visual.setDim(dim), [visual, dim]);
+
+  // Beats and phase tones need the audio engine; without one the ring still runs silently.
+  useEffect(() => {
+    const engine = getSession()?.engine;
+    return engine ? startBeats({ machine: phases, clock, engine, store }) : undefined;
+  }, [phases, clock]);
 
   const toggle = () => {
     const t = clock();

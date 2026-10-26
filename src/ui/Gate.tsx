@@ -94,8 +94,9 @@ function Welcome() {
 function BeginScreen({ begin }: { begin: BeginFn }) {
   const onBegin = () => {
     // The audio context must be made and resumed inside this tap.
-    begin(launchState(), (audio) => store.set({ audio }));
-    store.set({ screen: "resting" });
+    const launch = launchState();
+    begin(launch, (audio) => store.set({ audio }));
+    store.set({ screen: "resting", mix: launch.mix });
   };
   return (
     <div {...stylex.props(styles.screen)}>

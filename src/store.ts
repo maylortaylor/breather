@@ -1,4 +1,5 @@
 import { useSyncExternalStore } from "react";
+import { DEFAULT_MIX, type Mix } from "./presets";
 
 export type Store<T> = {
   get: () => T;
@@ -63,6 +64,8 @@ export type TabName = "breath" | "sounds" | "session";
 export type AppState = {
   screen: ScreenName;
   audio: AudioStatus;
+  /** The playing mix. Begin loads it; the controls change it. */
+  mix: Mix;
   dim: boolean;
   secondsMode: boolean;
   master: number;
@@ -114,6 +117,7 @@ export function saveState(s: SavedState): void {
 export const DEFAULT_STATE: AppState = {
   screen: "welcome",
   audio: "off",
+  mix: DEFAULT_MIX,
   dim: false,
   secondsMode: false,
   master: 0.7,
