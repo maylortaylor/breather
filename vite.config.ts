@@ -55,7 +55,13 @@ export default defineConfig({
     include: ["src/**/*.test.{ts,tsx}"],
     coverage: {
       provider: "v8",
-      include: ["src/audio/dsp.ts", "src/audio/lfo.ts", "src/lab/tooltipTimer.ts", "src/store.ts"],
+      include: [
+        "src/audio/dsp.ts",
+        "src/audio/lfo.ts",
+        "src/lab/tooltipTimer.ts",
+        "src/store.ts",
+        "src/presets.ts",
+      ],
       thresholds: { lines: 75, functions: 75, statements: 75, branches: 75 },
     },
   },
