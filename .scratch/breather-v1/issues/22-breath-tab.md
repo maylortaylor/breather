@@ -1,5 +1,5 @@
 Type: build
-Status: claimed
+Status: resolved
 Blocked by: 20, 21
 Model: sonnet
 
@@ -38,3 +38,6 @@ npm run dev
 - The voice preview plays on its own `metro-preview` layer, so the running beats keep their trims.
 - Seconds mode: the hint reads "Inhale about 4s". Disabling the tempo slider there is ticket 23.
 - Deferred check from ticket 21 (10-minute steady heartbeat above detent 2) is Matt's, in the foreground.
+
+## Answer
+Resolved 2026-10-26. All 8 criteria pass. Matt checked the Breath tab in the browser and approved ("all look good"): the tempo snap, the hint matching the ring, the metronome detents and the voice picker. This also settles the 10-minute steady-beat check deferred from ticket 21. The mix persistence this ticket originally added was dropped in favour of ticket 24's identical change, so one copy of the logic saves both tabs.
