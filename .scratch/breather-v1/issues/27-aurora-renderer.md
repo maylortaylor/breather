@@ -33,3 +33,9 @@ npm run check:build
 npm run dev
 ```
 - Matt checks: watch three cycles on a desktop and a phone; it is calm, the breath sync reads, and the phone stays cool.
+
+## Comments
+- Built on `build/27-aurora-renderer`. three.js loads through a dynamic import, only when WebGL exists, so the Begin screen does not wait for it; the `aurora` chunk is in the PWA precache.
+- The Begin and resting screens each had their own CSS gradient stand-in. Both are removed; the same gradient now sits in `src/background/Background.tsx` as the last-resort layer under the canvas.
+- `src/breath/Ring.tsx` publishes its state each frame through `src/background/feed.ts`, so the aurora reads the same phase machine as the ring.
+- Verified headless in Chrome: WebGL path and canvas fallback both render. Not verified: phone heat and three real cycles by eye (Matt checks).

@@ -69,8 +69,8 @@ vec3 curtain(vec2 uv, float seed, float speed, float base, vec3 tint) {
   float edge = base + uLift * 0.2 + sway * 0.5 * uAmp;
   float d = uv.y - edge;
   float fade = mix(5.5, 2.2, uHeight);
-  float body = smoothstep(-0.015, 0.05, d) * exp(-max(d, 0.0) * fade);
-  float rays = 0.5 + 0.5 * fbm(vec2(uv.x * 13.0 + seed * 3.0 + t * 0.7, d * 1.2 - t * 0.12));
+  float body = smoothstep(-0.06, 0.1, d) * exp(-max(d, 0.0) * fade);
+  float rays = 0.62 + 0.38 * fbm(vec2(uv.x * 11.0 + seed * 3.0 + t * 0.7, d * 1.2 - t * 0.12));
   return tint * body * rays;
 }
 
@@ -84,7 +84,7 @@ void main() {
   aurora += curtain(uv, 1.0, 0.8, 0.34, vec3(0.10, 0.80, 0.50));
   aurora += curtain(uv, 2.3, 0.6, 0.42, vec3(0.08, 0.60, 0.72));
   aurora += curtain(uv, 3.7, 0.5, 0.50, vec3(0.50, 0.30, 0.85)) * 0.8;
-  aurora *= uBright * 1.15;
+  aurora *= uBright * 0.85;
 
   // Faint stars on a cell grid, hidden where the aurora is bright.
   vec2 cell = uv * 70.0;

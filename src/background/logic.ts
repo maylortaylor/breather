@@ -56,7 +56,7 @@ const MIN_RATIO = 0.3;
 /** Pixel ratio to render at. The aurora is soft, so it can run well under native resolution. */
 export function renderRatio({ dpr, cores, memory }: DeviceHints): number {
   const weak = (cores ?? 8) <= 4 || (memory ?? 8) <= 2;
-  return Math.max(MIN_RATIO, Math.min(dpr, 2) * (weak ? 0.35 : 0.6));
+  return Math.max(MIN_RATIO, Math.min(dpr, 2) * (weak ? 0.45 : 0.75));
 }
 
 export interface FrameGate {
