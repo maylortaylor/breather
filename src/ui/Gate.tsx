@@ -77,7 +77,7 @@ function Welcome() {
         <ol {...stylex.props(styles.steps)}>
           <li>Tap Begin to start the sound.</li>
           <li>Follow the ring: breathe in for 4, hold for 7, out for 8.</li>
-          <li>Swipe up, or tap the screen, for sounds, tempo and presets.</li>
+          <li>Tap the Settings button for sounds, tempo and presets.</li>
         </ol>
         <p {...stylex.props(styles.muted)}>{SAFETY_LINE}</p>
         <p {...stylex.props(styles.muted)}>{STORAGE_LINE}</p>

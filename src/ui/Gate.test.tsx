@@ -26,7 +26,7 @@ describe("welcome card", () => {
     expect(steps).toEqual([
       "Tap Begin to start the sound.",
       "Follow the ring: breathe in for 4, hold for 7, out for 8.",
-      "Swipe up, or tap the screen, for sounds, tempo and presets.",
+      "Tap the Settings button for sounds, tempo and presets.",
     ]);
     expect(screen.getByText(SAFETY_LINE)).toBeTruthy();
     expect(screen.getByText("Your mix stays on this device. No cookies, no tracking.")).toBe(
