@@ -1,5 +1,5 @@
 Type: grilling
-Status: open
+Status: claimed
 Blocked by: none
 
 # What safety note does the breath guide show, and where?
