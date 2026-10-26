@@ -30,3 +30,9 @@ npm run check
 npm run dev
 ```
 - Matt checks: build a mix of brown noise, ocean on LFO 3 and a pad; it sounds the same as the approved Lab version.
+
+## Comments
+- Mix persistence was missing: `breather.state` held no `mix`. `saveState` now stores the mix once it differs from the default, and `loadState` parses it with `parseMix`. Begin (`Gate.tsx`) restores a saved mix even with no preset id. The default mix is not stored, so first launch still starts Sleep.
+- `AudioSession` now exposes `modulator`, so the rows read and edit the same LFO state the mixer drives. With no session the tab uses a standalone modulator and still saves the mix.
+- `RowVolume` gained two optional props, `lfoColors` and `digitInk`. The tab passes the deepened theme LFO colours and the normal text colour for the button numbers (violet on the surface card is 4.36:1, under AA for text).
+- AC7 headroom is an estimate: `mixRmsDb` sums each loop's -30 dBFS trimmed level as uncorrelated power. Three pads plus three loops at default come to about -22 dBFS RMS, 4 dB inside the 18 dB line. It is not a measurement of real output.
