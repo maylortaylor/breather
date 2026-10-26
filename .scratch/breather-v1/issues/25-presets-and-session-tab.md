@@ -31,3 +31,11 @@ npm run check
 npm run dev
 ```
 - Matt checks: switch Sleep to Reset to Focus; each crossfade is smooth, with no click and no jump in loudness. Tune built-in levels by ear and note any change here.
+
+## Comments
+
+- Built in `src/ui/SessionTab.tsx` with pure rules in `src/ui/sessionLogic.ts` and storage in `src/presetStore.ts`. Built-in levels are untouched first guesses.
+- New sounds fade in over the engine's own 1.5 s start fade; the mixer's `fadeSec` (3 s on a switch) covers glides and fade-outs.
+- A modified user preset offers "Update <name>" beside "Save as new"; a built-in offers "Save as new" alone.
+- "How it works" sets `reviewWelcome` in the store. The Gate shows the card, and "Got it" returns to the resting screen with the mix untouched.
+- Dim mode now themes the whole shell (`App.tsx`), not just the aurora.
