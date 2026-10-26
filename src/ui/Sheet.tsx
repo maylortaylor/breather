@@ -9,6 +9,7 @@ import {
 } from "react";
 import { store, useStore, type TabName } from "../store";
 import { colors } from "../theme.stylex";
+import { BreathTab } from "./BreathTab";
 import { SoundsTab } from "./SoundsTab";
 import { Tip } from "./Tip";
 import {
@@ -27,7 +28,7 @@ const TABS: { name: TabName; label: string }[] = [
 
 // Tickets 22 and 25 fill the other two bodies.
 const BODIES: Record<TabName, ReactNode> = {
-  breath: null,
+  breath: <BreathTab />,
   sounds: <SoundsTab />,
   session: null,
 };
