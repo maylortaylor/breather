@@ -1,6 +1,6 @@
 import { createRng, makeImpulse, sliderToGain } from "./dsp";
 
-const MASTER_CAP = 0.4;
+const MASTER_CAP = 0.3;
 const REVERB_SECONDS = 4;
 /** Default slider position for every layer. */
 export const DEFAULT_LAYER = 0.3;
