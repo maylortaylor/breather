@@ -45,7 +45,7 @@ Interfaces (TypeScript sketches; names are binding, internals are not):
 type SoundSetting = { lfo: 0 | 1 | 2 | 3; min: number; max: number }; // level is max when lfo is 0
 type LfoSetting = { period: number; shape: "sine" | "smooth-random" }; // period 8..120 s
 type Mix = {
-  sounds: Partial<Record<LoopId, SoundSetting>>; // LoopId: the 10 loop ids in catalog.ts
+  sounds: Partial<Record<LoopId, SoundSetting>>; // LoopId: the 9 loop ids in catalog.ts
   lfos: [LfoSetting, LfoSetting, LfoSetting];
   tempo: number; // slider 0..1, 0.5 is 60 BPM
   metronome: { level: number; voice: VoiceId }; // VoiceId: a metro-* id in catalog.ts
