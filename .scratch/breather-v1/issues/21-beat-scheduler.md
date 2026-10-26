@@ -30,3 +30,11 @@ npm run check
 npm run dev
 ```
 - Matt checks: with the metronome at D2 for 10 minutes in the foreground, the beat stays steady and phase tones land on phase changes.
+
+## Comments
+
+- Loudness: no sound, TRIMS or MASTER_CAP was retuned. `metronomeGains` is a multiplier on the Lab-approved layer trim (`trimOf(id) * gain`, set with `setTrim`). Detent values: phase tone 0.6 at D1 and D2, rising to 1 at level 1; other beats 0.12 at D2 (about -18 dB), rising to 1. Tune by ear.
+- Spec mismatch: the spec says the store holds `mix`, but the store had no `mix` yet. This ticket adds `mix` (default `DEFAULT_MIX`) and the Begin tap copies the launch mix into it, so tempo and the metronome come from the store.
+- Structure: `src/breath/beats.ts` owns the 25 ms timer and the store subscription; `Breath` starts it in one effect. The ring's tap still pauses the machine; `beats.ts` reacts to `paused` by resetting the scheduler and fading the three phase layers over 0.3 s.
+- `scheduler.reset()` keeps a floor at the old horizon, so a tempo change or resume neither repeats a beat that was already handed out nor drops one.
+- With the default metronome level the Sleep preset (D1) beats on phase changes only.
