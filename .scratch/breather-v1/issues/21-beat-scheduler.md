@@ -1,5 +1,5 @@
 Type: build
-Status: claimed
+Status: resolved
 Blocked by: 19
 Model: sonnet
 
@@ -38,3 +38,6 @@ npm run dev
 - Structure: `src/breath/beats.ts` owns the 25 ms timer and the store subscription; `Breath` starts it in one effect. The ring's tap still pauses the machine; `beats.ts` reacts to `paused` by resetting the scheduler and fading the three phase layers over 0.3 s.
 - `scheduler.reset()` keeps a floor at the old horizon, so a tempo change or resume neither repeats a beat that was already handed out nor drops one.
 - With the default metronome level the Sleep preset (D1) beats on phase changes only.
+
+## Answer
+Resolved 2026-10-26. All 8 criteria pass (225 tests, 97% lines). Matt listened to the phase tones on each phase change and approved. Deferred to ticket 22: the 10-minute steady-beat check with the heartbeat on every beat (criterion 5 beyond phase tones), because the metronome and tempo sliders do not exist until then. Phase-tone gain is 0.6 at detents 1 and 2, rising to 1; other-beat gain is 0.12 at detent 2, rising to 1.
