@@ -1,0 +1,7 @@
+#!/usr/bin/env bash
+# Full check and tests before any push. Enabled by:
+#   git config core.hooksPath .githooks
+set -euo pipefail
+
+node_modules/.bin/vp check
+node_modules/.bin/vp test run

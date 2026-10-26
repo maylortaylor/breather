@@ -37,6 +37,9 @@ export default defineConfig({
     printWidth: 100,
     ignorePatterns: [".scratch/**", "docs/**", "*.md", "dist/**", "coverage/**"],
   },
+  staged: {
+    "*.{ts,tsx,js,mjs,json,css,html}": "vp check --fix",
+  },
   lint: {
     ignorePatterns: ["dist/**", "coverage/**"],
     plugins: ["react", "typescript"],
