@@ -67,7 +67,11 @@ function launchState(): LaunchState {
 export type BeginFn = (launch: LaunchState, onStatus: (s: AudioStatus) => void) => unknown;
 
 function Welcome() {
-  const gotIt = () => store.set({ welcomeSeen: true, screen: "begin" });
+  const gotIt = () =>
+    // A review from the Session tab goes back to the resting screen; the mix is untouched.
+    store.get().reviewWelcome
+      ? store.set({ reviewWelcome: false })
+      : store.set({ welcomeSeen: true, screen: "begin" });
   return (
     <div {...stylex.props(styles.screen)}>
       <section aria-labelledby="welcome-title" {...stylex.props(styles.card)}>
@@ -113,8 +117,9 @@ function BeginScreen({ begin }: { begin: BeginFn }) {
 export function Gate({ begin = beginAudio }: { begin?: BeginFn }) {
   const screen = useStore((s) => s.screen);
   const seen = useStore((s) => s.welcomeSeen);
-  if (screen === "resting") return null;
-  return seen ? <BeginScreen begin={begin} /> : <Welcome />;
+  const review = useStore((s) => s.reviewWelcome);
+  if (screen === "resting" && !review) return null;
+  return seen && !review ? <BeginScreen begin={begin} /> : <Welcome />;
 }
 
 export function SoundNote() {

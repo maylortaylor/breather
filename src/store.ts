@@ -74,6 +74,8 @@ export type AppState = {
   sleep: { minutes: number; endsAt: number } | null;
   sheet: { open: boolean; tab: TabName };
   welcomeSeen: boolean;
+  /** The Session tab's "How it works" shows the welcome card again; never stored. */
+  reviewWelcome: boolean;
 };
 
 // The subset that survives a reload, under `breather.state`.
@@ -127,6 +129,7 @@ export const DEFAULT_STATE: AppState = {
   sleep: null,
   sheet: { open: false, tab: "breath" },
   welcomeSeen: false,
+  reviewWelcome: false,
 };
 
 export const store = createStore<AppState>({ ...DEFAULT_STATE, ...loadState() });
