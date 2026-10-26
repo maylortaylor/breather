@@ -1,5 +1,5 @@
 Type: prototype
-Status: claimed
+Status: resolved
 Blocked by: 02
 
 # Do the synthesized sounds hold up to the ear?
@@ -81,3 +81,23 @@ Every sound was driven in real Chrome through an analyser on the output: all 17 
 - Rejected and removed: whale A (humpback song), bell.
 - Soft tick: too high. Retry as two rows, 700 Hz and 350 Hz.
 - Bubbles: approved in character, slightly louder (+4 dB over the level-match target).
+
+## Answer
+Resolved with Matt on 2026-10-25 after three listening rounds. Built on `prototype/listening-lab`, last sound commit `dada29a`.
+
+| Sound | Verdict |
+|---|---|
+| White, pink, brown noise | Keep |
+| Ocean waves | Keep |
+| Underwater bubbles | Keep: 3 to 14 s irregular gaps, 30% clusters, peak about -10 dBFS |
+| Whale B (blue moan), whale C (distant call) | Keep |
+| Whale A (humpback song) | Dropped |
+| Pads: Dreamy, Tonal, Deep | Keep, for now |
+| Metronome: heartbeat thump (default), wood block, soft tick 700 Hz, soft tick 350 Hz | Keep |
+| Bell | Dropped for now |
+| Phase tones: inhale, hold, exhale | Keep, for now |
+
+- Levels: every loop is trimmed to about -30 dBFS RMS and every one-shot to about -14 dBFS peak at default sliders (`TRIMS` in `src/audio/catalog.ts`).
+- Spikes from ADR-0003 all passed: Oxfmt and Oxlint options, StyleX #1918 did not reproduce, vite-plugin-pwa registers at `/breather/`.
+- No CC0 samples are needed. Every sound stays synthesized.
+- The branch stays open for ticket 12. Whether it merges or gets rebuilt from build tickets is decided when 12 resolves.

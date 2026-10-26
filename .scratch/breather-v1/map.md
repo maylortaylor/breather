@@ -12,7 +12,7 @@ v1 of the app described in [`docs/PLAN.md`](../../docs/PLAN.md), runnable locall
 - Breathing timing: 4-7-8 in beats by default, with a seconds toggle.
 - Tempo: slow-to-fast slider, no BPM numbers, detent at center = 60 BPM, range 40 to 80, about 28 s per cycle at the slow end.
 - Metronome: one slider with detents for off, phase-change only, all beats quiet, louder.
-- Sound source: oscillators and generated noise only. Samples only after user review.
+- Sound set: all synthesized, no samples; approved list in [08](issues/08-listening-lab.md).
 - Sleep timer 30 / 60 / 90 min with a long fade-out. Presets built-in plus user-saved.
 - Commit identity: GitHub noreply email, see [03](issues/03-commit-identity.md).
 - Hosting: `roboborealis.com/breather/`, Caddy proxy to GitHub Pages, see [01](issues/01-hosting-and-owner.md).
@@ -26,7 +26,7 @@ v1 of the app described in [`docs/PLAN.md`](../../docs/PLAN.md), runnable locall
 - UI layout: [05](issues/05-ui-layout.md)
 - Preset contents, half/double buttons, seconds-mode metronome: [06](issues/06-presets-and-controls.md)
 - iOS audio promise: [07](issues/07-ios-audio.md)
-- Sound quality and volume LFOs: [08](issues/08-listening-lab.md), [12](issues/12-volume-lfos.md)
+- Volume LFOs: [12](issues/12-volume-lfos.md)
 - Borrowed code and sample licenses: [09](issues/09-license-provenance.md)
 - Safety note: [10](issues/10-safety-note.md)
 - Definition of v1 and first push: [11](issues/11-v1-gate.md)
