@@ -59,8 +59,9 @@ const styles = stylex.create({
 /** What Begin starts: the stored mix, or Sleep on first launch. */
 function launchState(): LaunchState {
   const saved = loadState();
-  // "Got it" saves welcomeSeen alone; only a saved preset id means a mix was chosen before.
-  return restoreLaunch(saved.presetId === undefined ? null : { version: 1, ...saved });
+  // "Got it" saves welcomeSeen alone; only a saved preset id or mix means one was chosen before.
+  const chosen = saved.presetId !== undefined || saved.mix !== undefined;
+  return restoreLaunch(chosen ? { version: 1, ...saved } : null);
 }
 
 export type BeginFn = (launch: LaunchState, onStatus: (s: AudioStatus) => void) => unknown;

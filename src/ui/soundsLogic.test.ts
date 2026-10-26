@@ -1,11 +1,10 @@
 import { describe, expect, it } from "vitest";
 import { DEFAULT_LAYER } from "../audio/engine";
-import { BUILT_INS, type Mix } from "../presets";
+import { BUILT_INS, persistableMix, type Mix } from "../presets";
 import {
   CLIP_SAFE_RMS_DB,
   chipGroups,
   mixRmsDb,
-  persistableMix,
   playingIds,
   setSound,
   toggleSound,

@@ -2,7 +2,7 @@
 import { DEFAULT_LAYER } from "../audio/engine";
 import { sliderToGain } from "../audio/dsp";
 import { CATALOG } from "../audio/catalog";
-import { DEFAULT_MIX, LOOP_IDS, type LoopId, type Mix, type SoundSetting } from "../presets";
+import { LOOP_IDS, type LoopId, type Mix, type SoundSetting } from "../presets";
 
 export interface Chip {
   id: LoopId;
@@ -62,11 +62,4 @@ export function mixRmsDb(sounds: Mix["sounds"]): number {
     power += 10 ** (LOOP_RMS_DB / 10) * ratio * ratio;
   }
   return power === 0 ? -Infinity : 10 * Math.log10(power);
-}
-
-const sameMix = (a: Mix, b: Mix) => JSON.stringify(a) === JSON.stringify(b);
-
-/** The mix to store, or undefined while it still equals the default (Sleep). */
-export function persistableMix(mix: Mix): Mix | undefined {
-  return sameMix(mix, DEFAULT_MIX) ? undefined : mix;
 }

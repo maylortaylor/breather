@@ -146,7 +146,7 @@ function parseLfo(raw: unknown, fallback: LfoSetting): LfoSetting {
   return { period, shape };
 }
 
-function parseMix(raw: unknown): Mix {
+export function parseMix(raw: unknown): Mix {
   const src = isRecord(raw) ? raw : {};
   const sounds: Mix["sounds"] = {};
   if (isRecord(src.sounds)) {
@@ -255,6 +255,11 @@ function canonical(value: unknown): string {
 /** True when any saved field differs. Master volume and the timer are not saved fields. */
 export function isModified(preset: Preset, mix: Mix, dim: boolean): boolean {
   return preset.dim !== dim || canonical(preset.mix) !== canonical(mix);
+}
+
+/** The mix to store, or undefined while it still equals the default, so a first launch gets Sleep. */
+export function persistableMix(mix: Mix): Mix | undefined {
+  return canonical(mix) === canonical(DEFAULT_MIX) ? undefined : mix;
 }
 
 export type EditResult =

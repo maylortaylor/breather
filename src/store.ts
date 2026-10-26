@@ -1,5 +1,5 @@
 import { useSyncExternalStore } from "react";
-import { DEFAULT_MIX, type Mix } from "./presets";
+import { DEFAULT_MIX, parseMix, persistableMix, type Mix } from "./presets";
 
 export type Store<T> = {
   get: () => T;
@@ -78,13 +78,17 @@ export type AppState = {
 
 // The subset that survives a reload, under `breather.state`.
 // Master volume is never stored: every launch starts at the default (spec "State").
-export type SavedState = Pick<AppState, "welcomeSeen" | "dim" | "secondsMode" | "presetId">;
+// `mix` is stored only once it differs from the default, so a first launch still gets Sleep.
+export type SavedState = Pick<AppState, "welcomeSeen" | "dim" | "secondsMode" | "presetId"> & {
+  mix?: Mix;
+};
 
 const SAVED_TYPES: { [K in keyof SavedState]: (v: unknown) => boolean } = {
   welcomeSeen: (v) => typeof v === "boolean",
   dim: (v) => typeof v === "boolean",
   secondsMode: (v) => typeof v === "boolean",
   presetId: (v) => typeof v === "string",
+  mix: (v) => typeof v === "object" && v !== null && !Array.isArray(v),
 };
 
 const savedState = persist<Partial<SavedState>>("state");
@@ -95,7 +99,7 @@ export function loadState(): Partial<SavedState> {
   if (typeof raw === "object" && raw !== null) {
     for (const [k, ok] of Object.entries(SAVED_TYPES)) {
       const v = (raw as Record<string, unknown>)[k];
-      if (ok(v)) out[k] = v;
+      if (ok(v)) out[k] = k === "mix" ? parseMix(v) : v;
     }
   }
   return out as Partial<SavedState>;
@@ -107,6 +111,7 @@ export function saveState(s: SavedState): void {
     dim: s.dim,
     secondsMode: s.secondsMode,
     presetId: s.presetId,
+    ...(s.mix && persistableMix(s.mix) ? { mix: s.mix } : {}),
   });
 }
 

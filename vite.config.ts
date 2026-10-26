@@ -69,6 +69,7 @@ export default defineConfig({
         "src/audio/session.ts",
         "src/contrast.ts",
         "src/ui/sheetLogic.ts",
+        "src/ui/soundsLogic.ts",
         "src/ui/tooltipTimer.ts",
         "src/store.ts",
         "src/presets.ts",

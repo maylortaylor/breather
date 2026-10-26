@@ -1,7 +1,7 @@
 // The Begin gesture: creates the one audio context inside the tap, resumes it, and starts the mix.
 import { createEngine, DEFAULT_LAYER, type Engine } from "./engine";
 import { createMixer, type Mixer } from "./mixer";
-import { createModulator } from "./modulation";
+import { createModulator, type Modulator } from "./modulation";
 import type { LaunchState } from "../presets";
 import type { AudioStatus } from "../store";
 
@@ -17,6 +17,8 @@ export interface SessionDeps {
 export interface AudioSession {
   mixer: Mixer;
   engine: Engine;
+  /** The LFO bank and per-sound rows the mixer drives; the Sounds tab reads and edits them. */
+  modulator: Modulator;
 }
 
 const defaultDeps = (onStatus: (s: AudioStatus) => void): SessionDeps => ({
@@ -52,7 +54,7 @@ export function beginAudio(
     const mixer = createMixer(engine, modulator);
     engine.setMaster(launch.master);
     mixer.apply(launch.mix, { fadeSec: BEGIN_FADE_SEC });
-    current = { mixer, engine };
+    current = { mixer, engine, modulator };
     deps.onStatus("running");
     return current;
   } catch {

@@ -1,4 +1,5 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
+import { DEFAULT_MIX } from "./presets";
 import { createStore, loadState, persist, saveState } from "./store";
 
 afterEach(() => vi.unstubAllGlobals());
@@ -132,5 +133,36 @@ describe("master volume", () => {
     expect(loadState()).toEqual({ dim: true });
     saveState({ welcomeSeen: true, dim: true, secondsMode: false, presetId: "calm" });
     expect(ls.getItem("breather.state")).not.toContain("master");
+  });
+});
+
+describe("saved mix", () => {
+  it("is left out while it equals the default, so first launch keeps Sleep", () => {
+    const ls = memoryStorage();
+    vi.stubGlobal("localStorage", ls);
+    saveState({
+      welcomeSeen: true,
+      dim: false,
+      secondsMode: false,
+      presetId: null,
+      mix: DEFAULT_MIX,
+    });
+    expect(ls.getItem("breather.state")).not.toContain('"mix"');
+  });
+
+  it("round-trips an edited mix and clamps what it reads back", () => {
+    const ls = memoryStorage();
+    vi.stubGlobal("localStorage", ls);
+    const mix = { ...DEFAULT_MIX, sounds: { white: { lfo: 2 as const, min: 0, max: 0.5 } } };
+    saveState({ welcomeSeen: true, dim: false, secondsMode: false, presetId: null, mix });
+    expect(loadState().mix?.sounds).toEqual({ white: { lfo: 2, min: 0, max: 0.5 } });
+    ls.setItem(
+      "breather.state",
+      JSON.stringify({
+        version: 1,
+        value: { mix: { sounds: { white: { lfo: 9, min: 5, max: 2 }, nope: {} } } },
+      })
+    );
+    expect(loadState().mix?.sounds).toEqual({ white: { lfo: 0, min: 1, max: 1 } });
   });
 });
