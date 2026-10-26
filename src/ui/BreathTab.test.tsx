@@ -6,7 +6,7 @@ import { createFakeEngine, type FakeEngine } from "../audio/fakeAudio";
 import { startBeats } from "../breath/beats";
 import { createPhaseMachine } from "../breath/phases";
 import { D1, D2 } from "../breath/tempo";
-import { DEFAULT_STATE, store } from "../store";
+import { DEFAULT_STATE, loadState, store } from "../store";
 import { BreathTab } from "./BreathTab";
 
 let fake: FakeEngine | null = null;
@@ -194,5 +194,52 @@ describe("the running guide", () => {
     const voiceTrim = trims.find(([id]) => id === "metro-heartbeat-thump");
     expect(voiceTrim?.[1]).toBeGreaterThan(0.69 * 0.99);
     stop();
+  });
+});
+
+describe("seconds mode", () => {
+  const secondsSwitch = () =>
+    screen.getByRole("switch", { name: /seconds mode/i }) as HTMLInputElement;
+
+  it("is off by default and flips the store when toggled (AC1)", () => {
+    render(<BreathTab />);
+    expect(secondsSwitch().checked).toBe(false);
+    expect(tempo().disabled).toBe(false);
+    fireEvent.click(secondsSwitch());
+    expect(store.get().secondsMode).toBe(true);
+    expect(secondsSwitch().checked).toBe(true);
+    expect(screen.getByText("Inhale about 4s")).toBeTruthy();
+  });
+
+  it("disables the tempo slider and says why, in the tooltip and to screen readers (AC3)", () => {
+    store.set({ secondsMode: true });
+    render(<BreathTab />);
+    expect(tempo().disabled).toBe(true);
+    const why = document.getElementById(tempo().getAttribute("aria-describedby")!)!;
+    expect(why.getAttribute("role")).toBe("tooltip");
+    expect(why.textContent).toMatch(/off because seconds mode is on/i);
+    expect(metronome().disabled).toBe(false);
+  });
+
+  it("brings the tempo slider back when the mode goes off (AC4)", () => {
+    store.set({ secondsMode: true });
+    render(<BreathTab />);
+    fireEvent.click(secondsSwitch());
+    expect(store.get().secondsMode).toBe(false);
+    expect(tempo().disabled).toBe(false);
+    const why = document.getElementById(tempo().getAttribute("aria-describedby")!)!;
+    expect(why.textContent).not.toMatch(/seconds mode is on/i);
+  });
+
+  it("persists across a reload (AC5)", () => {
+    render(<BreathTab />);
+    fireEvent.click(secondsSwitch());
+    expect(loadState().secondsMode).toBe(true);
+  });
+
+  it("passes vitest-axe with the mode on", async () => {
+    store.set({ secondsMode: true });
+    const { container } = render(<BreathTab />);
+    expect((await axe(container)).violations).toEqual([]);
   });
 });

@@ -52,6 +52,7 @@ const METRONOME_DETENT: Detent = {
 const setTempo = (tempo: number) => store.set((s) => ({ mix: { ...s.mix, tempo } }));
 const setLevel = (level: number) =>
   store.set((s) => ({ mix: { ...s.mix, metronome: { ...s.mix.metronome, level } } }));
+const setSecondsMode = (secondsMode: boolean) => store.set({ secondsMode });
 const setVoice = (voice: Mix["metronome"]["voice"]) => {
   store.set((s) => ({ mix: { ...s.mix, metronome: { ...s.mix.metronome, voice } } }));
   const engine = getSession()?.engine;
@@ -81,6 +82,15 @@ const styles = stylex.create({
   },
   voiceOn: { borderColor: colors.accentBreath },
   radio: { margin: 0, accentColor: colors.thumb },
+  switchRow: {
+    display: "inline-flex",
+    alignItems: "center",
+    gap: 10,
+    minHeight: 44,
+    fontSize: 16,
+    cursor: "pointer",
+  },
+  switch: { width: 20, height: 20, margin: 0, accentColor: colors.thumb },
 });
 
 /** The Breath tab: tempo, metronome level and the beat voice. */
@@ -98,8 +108,25 @@ export function BreathTab() {
         detent={TEMPO_DETENT}
         ends={["Slow", "Fast"]}
         valueText={tempoText(tempo)}
-        tip="How fast the breath cycle runs. The mark in the middle is the resting pace."
+        disabled={secondsMode}
+        tip={
+          secondsMode
+            ? "The tempo is off because seconds mode is on."
+            : "How fast the breath cycle runs. The mark in the middle is the resting pace."
+        }
       />
+      <Tip text="Breathe a steady 4, 7 and 8 seconds, and tick once a second, whatever the tempo.">
+        <label {...stylex.props(styles.switchRow)}>
+          <input
+            type="checkbox"
+            role="switch"
+            checked={secondsMode}
+            {...stylex.props(styles.switch)}
+            onChange={(ev) => setSecondsMode(ev.target.checked)}
+          />
+          Seconds mode
+        </label>
+      </Tip>
       <p {...stylex.props(styles.hint)}>{inhaleHint(tempo, secondsMode)}</p>
       <Slider
         label="Metronome"

@@ -190,6 +190,7 @@ export function Slider({
   detent,
   ends,
   valueText,
+  disabled,
 }: {
   label: string;
   value: number;
@@ -200,6 +201,7 @@ export function Slider({
   ends?: [string, string];
   /** Replaces the number a screen reader hears. */
   valueText?: string;
+  disabled?: boolean;
 }) {
   const decorated = Boolean(detent || ends);
   const input = (
@@ -209,6 +211,7 @@ export function Slider({
       max={1}
       step={0.01}
       value={value}
+      disabled={disabled}
       aria-valuetext={valueText}
       {...stylex.props(plain.input)}
       onChange={(ev) => {
