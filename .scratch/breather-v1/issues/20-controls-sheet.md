@@ -31,3 +31,12 @@ npm run check
 npm run dev
 ```
 - Matt checks: on a phone width and a desktop width, the dissolve looks like a dandelion blown away, and nothing feels busy.
+
+## Comments
+- Built in `build/20-controls-sheet`. Pure rules sit in `src/ui/sheetLogic.ts` (auto-hide with an injected `after`, tap and swipe classifier, width rule, sheet style) under the coverage gate. `Sheet.tsx` is the component; `SoundsTab.tsx` holds only the master slider until ticket 24.
+- `Tip`, `RowVolume` and `useFrame` moved to `src/ui/Tip.tsx` and `Slider.tsx`; `tooltipTimer.ts` and its test moved to `src/ui/`. The Tip colours now use palette tokens.
+- Deviation: ticket 14 persisted `master` in `breather.state`, which contradicts AC7 and the spec. Removed it from `SavedState`; an old stored value is ignored.
+- Deviation: keyboard focus holds the sheet open only when the last input was a key. A mouse click leaves focus on a button, which would stop the dissolve on desktop.
+- The dissolve mask is CSS only: three tiled dot grids whose holes grow with the registered property `--cut`. No image, so the CSP stays `default-src 'self'`. Not yet seen in a real browser.
+- Added: the Up arrow opens the sheet, so a keyboard user can reach it. Escape and the handle close it. `touch-action: none` on the resting screen so a swipe up reaches pointer events.
+- Tabs 22 and 25 replace `null` in the `BODIES` map in `Sheet.tsx`.
