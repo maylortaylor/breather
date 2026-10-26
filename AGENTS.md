@@ -28,7 +28,7 @@ Opus plans, Sonnet builds. Planning, grilling, wayfinding and review run on Opus
 
 ## Testing
 
-Risk-weighted. Pure logic gets Vitest unit tests, written test-first: the lookahead scheduler, the tempo mapping (halves mapped separately, center fixed at 60 BPM) and the phase state machine. Presentational UI gets a smoke test at most. Tests assert values and behavior, never just existence. The runner is confirmed by the stack ticket (`02-stack-and-tests`).
+Risk-weighted. Pure logic gets Vitest unit tests, written test-first: the lookahead scheduler, the tempo mapping (halves mapped separately, center fixed at 60 BPM) and the phase state machine. Presentational UI gets a smoke test at most. Tests assert values and behavior, never just existence. Vitest, React Testing Library and `vitest-axe`. Test-first with a 75% coverage gate on pure logic: the scheduler, tempo mapping, phase machine, preset save and load, and detent snapping. Keep components few; a new file earns its place. Stack details in [ADR-0003](docs/adr/0003-stack-and-tests.md).
 
 ## Slash commands
 

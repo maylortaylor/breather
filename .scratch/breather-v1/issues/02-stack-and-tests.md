@@ -1,5 +1,5 @@
 Type: grilling
-Status: open
+Status: resolved
 Blocked by: 01
 
 # What stack and test runner does breather use?
@@ -14,3 +14,10 @@ Choose Vite + React + TypeScript versus plain TypeScript, confirm Vitest, and pi
 
 ## How to resolve
 Type `/grill-with-docs`. Produces an ADR in `docs/adr/` (stack, test runner, Node pin). Update the `AGENTS.md` testing section to match.
+
+## Answer
+Decided with Matt on 2026-10-25, recorded in [ADR-0003](../../../docs/adr/0003-stack-and-tests.md).
+- Vite+ pinned as a devDependency, React 19, strict TS, npm, Node 24. Oxlint and Oxfmt with the standard style rules.
+- Raw Web Audio. three.js plus a canvas fallback behind `BackgroundRenderer`. Hand-rolled store with `useSyncExternalStore`.
+- StyleX behind a build check for stylex #1918, CSS Modules as fallback. vite-plugin-pwa with `base: "/breather/"`.
+- Vitest, Testing Library, `vitest-axe`. Test-first with a 75% gate on pure logic only. Keep components few.
