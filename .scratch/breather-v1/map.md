@@ -18,13 +18,13 @@ v1 of the app described in [`docs/PLAN.md`](../../docs/PLAN.md), runnable locall
 - Commit identity: GitHub noreply email, see [03](issues/03-commit-identity.md).
 - Hosting: `roboborealis.com/breather/`, Caddy proxy to GitHub Pages, see [01](issues/01-hosting-and-owner.md).
 - Stack: Vite+, React 19, three.js, StyleX, hand-rolled store, Vitest, see [02](issues/02-stack-and-tests.md).
+- UI: resting screen is aurora plus breath ring, controls in a dissolving sheet with 3 tabs, see [05](issues/05-ui-layout.md).
 - Haptics, PWA and dim mode are in v1.
 - Background: aurora borealis first.
 - Session length and cycle count: out of v1.
 
 ## Not yet specified
 - Analytics: [04](issues/04-analytics.md)
-- UI layout: [05](issues/05-ui-layout.md)
 - Preset contents, half/double buttons, seconds-mode metronome: [06](issues/06-presets-and-controls.md)
 - iOS audio promise: [07](issues/07-ios-audio.md)
 - Borrowed code and sample licenses: [09](issues/09-license-provenance.md)
@@ -34,7 +34,7 @@ v1 of the app described in [`docs/PLAN.md`](../../docs/PLAN.md), runnable locall
 ## Out of scope
 - Session length or cycle count.
 - Voice cues for the breathing phases.
-- More background themes (deep ocean, nebula, bioluminescence).
+- More background themes (deep ocean, nebula, bioluminescence) and more breath visuals.
 - Extra effects such as rain and wind.
 - Native iPhone wrapper.
 - Sound-reactive aurora, unless [13](issues/13-sound-reactive-aurora.md) pulls it in.

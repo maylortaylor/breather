@@ -4,3 +4,4 @@ Rules: only MIT-compatible code, CC0 audio, and no CC BY-NC shader code (Shadert
 
 | Component | Source | License |
 |---|---|---|
+| Nunito (variable font, planned) | https://fonts.google.com/specimen/Nunito | SIL OFL 1.1 |
