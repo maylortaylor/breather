@@ -1,4 +1,6 @@
 import { Component, type ErrorInfo, type ReactNode } from "react";
+import { Gate, SoundNote } from "./ui/Gate";
+import { useStore } from "./store";
 
 type BoundaryProps = { children: ReactNode; onReload: () => void };
 
@@ -35,5 +37,18 @@ export function App({ children, onReload = () => window.location.reload() }: App
     <ErrorBoundary onReload={onReload}>
       <main className="shell">{children}</main>
     </ErrorBoundary>
+  );
+}
+
+/** The Begin gate, then a placeholder resting screen until the ring and sheet land (tickets 19, 20). */
+export function Screens() {
+  const resting = useStore((s) => s.screen === "resting");
+  return resting ? (
+    <>
+      <p>Breathe.</p>
+      <SoundNote />
+    </>
+  ) : (
+    <Gate />
   );
 }
