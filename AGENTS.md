@@ -18,6 +18,7 @@ Triage roles are in [`docs/agents/triage-labels.md`](docs/agents/triage-labels.m
 - **Never commit `.env*`.** Only `.env.example` is tracked.
 - **Never add a git remote or push** until the v1 gate ticket (`.scratch/breather-v1/issues/11-v1-gate.md`) resolves.
 - **Never use `:latest`** on any image or tool version.
+- **Never add analytics, a tracker, a network dependency or an API key** unless a new ADR allows it (ticket 04, temporary).
 - **Never put personal or client info in a ticket.** The repo goes public at v1, and so does every grill transcript in `.scratch/`.
 - **Never take shader or noise code without a license check.** Only MIT-compatible code and CC0 audio. See `THIRD_PARTY.md`.
 - **Never build inside a wayfinder map.** Maps plan; build tickets execute.

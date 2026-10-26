@@ -20,11 +20,11 @@ v1 of the app described in [`docs/PLAN.md`](../../docs/PLAN.md), runnable locall
 - Stack: Vite+, React 19, three.js, StyleX, hand-rolled store, Vitest, see [02](issues/02-stack-and-tests.md).
 - UI: resting screen is aurora plus breath ring, controls in a dissolving sheet with 3 tabs, see [05](issues/05-ui-layout.md).
 - Haptics, PWA and dim mode are in v1. iPhone promise: [07](issues/07-ios-audio.md). Licence rules: [09](issues/09-license-provenance.md).
+- Privacy: no analytics, no cookies, CSP enforced, see [04](issues/04-analytics.md).
 - Background: aurora borealis first.
 - Session length and cycle count: out of v1.
 
 ## Not yet specified
-- Analytics: [04](issues/04-analytics.md)
 - Safety note: [10](issues/10-safety-note.md)
 - Definition of v1 and first push: [11](issues/11-v1-gate.md)
 
