@@ -5,7 +5,7 @@ import {
   whalePlan,
   type TriggerScheduler,
 } from "./dsp";
-import { connectOut, fadeIn, type Engine, type Sound } from "./engine";
+import { connectOut, fadeIn, type Disposer, type Engine, type Sound } from "./engine";
 
 const TICK_MS = 50;
 const LOOKAHEAD = 0.2;
@@ -28,10 +28,13 @@ function ticking(make: () => TriggerScheduler, kickoff?: () => void): Sound {
 }
 
 /** Fade a bus out so a sound already in flight does not play on after Stop. */
-function release(ctx: AudioContext, bus: GainNode | null): void {
+function release(ctx: AudioContext, bus: GainNode | null, dispose: Disposer | null): void {
   if (!bus) return;
   bus.gain.setTargetAtTime(0, ctx.currentTime, 0.08);
-  setTimeout(() => bus.disconnect(), 1000);
+  setTimeout(() => {
+    bus.disconnect();
+    dispose?.();
+  }, 1000);
 }
 
 /**
@@ -41,6 +44,7 @@ function release(ctx: AudioContext, bus: GainNode | null): void {
 export function bubblesSound(engine: Engine, layer: string): Sound {
   const { ctx } = engine;
   let out: GainNode | null = null;
+  let disposeOut: Disposer | null = null;
   const blip = (at: number) => {
     if (!out) return;
     const p = bubbleParams(Math.random);
@@ -57,6 +61,7 @@ export function bubblesSound(engine: Engine, layer: string): Sound {
     osc.connect(env).connect(pan).connect(out);
     osc.start(at);
     osc.stop(at + p.decay + 0.05);
+    osc.onended = () => pan.disconnect();
   };
   const trigger = ticking(() =>
     createBubbleScheduler({
@@ -76,13 +81,14 @@ export function bubblesSound(engine: Engine, layer: string): Sound {
       lowpass.type = "lowpass";
       lowpass.frequency.value = 3200;
       out.connect(lowpass);
-      connectOut(engine, lowpass, layer, 0.3);
+      disposeOut = connectOut(engine, lowpass, layer, 0.3);
       trigger.start();
     },
     stop() {
       trigger.stop();
-      release(ctx, out);
+      release(ctx, out, disposeOut);
       out = null;
+      disposeOut = null;
     },
   };
 }
@@ -94,6 +100,7 @@ export function bubblesSound(engine: Engine, layer: string): Sound {
 export function whaleSound(engine: Engine, layer: string): Sound {
   const { ctx } = engine;
   let out: GainNode | null = null;
+  let disposeOut: Disposer | null = null;
   const call = (at: number) => {
     if (!out) return;
     const plan = whalePlan(Math.random);
@@ -120,6 +127,11 @@ export function whaleSound(engine: Engine, layer: string): Sound {
     vibrato.frequency.value = plan.vibratoHz;
     vibrato.start(at);
     vibrato.stop(end + 0.1);
+    // The call is silent by `end`; unhook its envelope and send so nothing lingers on the reverb.
+    vibrato.onended = () => {
+      env.disconnect();
+      send.disconnect();
+    };
 
     for (const { ratio, amp } of plan.partials) {
       const osc = ctx.createOscillator();
@@ -158,13 +170,14 @@ export function whaleSound(engine: Engine, layer: string): Sound {
       if (out) return;
       out = ctx.createGain();
       fadeIn(ctx, out);
-      connectOut(engine, out, layer);
+      disposeOut = connectOut(engine, out, layer);
       trigger.start();
     },
     stop() {
       trigger.stop();
-      release(ctx, out);
+      release(ctx, out, disposeOut);
       out = null;
+      disposeOut = null;
     },
   };
 }

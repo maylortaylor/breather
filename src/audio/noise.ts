@@ -1,5 +1,5 @@
 import { createRng, makeStereoNoise, type NoiseKind } from "./dsp";
-import { connectOut, fadeIn, type Engine, type Sound } from "./engine";
+import { connectOut, fadeIn, type Disposer, type Engine, type Sound } from "./engine";
 
 const LOOP_SECONDS = 12;
 const buffers = new WeakMap<AudioContext, Map<NoiseKind, AudioBuffer>>();
@@ -26,16 +26,24 @@ function loopSource(ctx: AudioContext, kind: NoiseKind): AudioBufferSourceNode {
   return src;
 }
 
-/** Stop a set of nodes after a short fade so stopping never clicks. */
-function fadeAndStop(ctx: AudioContext, fade: GainNode, sources: AudioScheduledSourceNode[]): void {
+interface Active {
+  fade: GainNode;
+  sources: AudioScheduledSourceNode[];
+  dispose: Disposer;
+}
+
+/** Stop a set of nodes after a short fade so stopping never clicks, then release the output. */
+function fadeAndStop(ctx: AudioContext, { fade, sources, dispose }: Active): void {
   const t = ctx.currentTime;
   fade.gain.cancelScheduledValues(t);
   fade.gain.setTargetAtTime(0, t, 0.05);
   for (const s of sources) s.stop(t + 0.4);
+  if (sources[0]) sources[0].onended = dispose;
+  else dispose();
 }
 
 export function noiseSound(engine: Engine, kind: NoiseKind, layer: string): Sound {
-  let active: { fade: GainNode; sources: AudioScheduledSourceNode[] } | null = null;
+  let active: Active | null = null;
   return {
     start() {
       if (active) return;
@@ -43,14 +51,14 @@ export function noiseSound(engine: Engine, kind: NoiseKind, layer: string): Soun
       const src = loopSource(ctx, kind);
       const fade = ctx.createGain();
       src.connect(fade);
-      connectOut(engine, fade, layer);
+      const dispose = connectOut(engine, fade, layer);
       fadeIn(ctx, fade);
       src.start();
-      active = { fade, sources: [src] };
+      active = { fade, sources: [src], dispose };
     },
     stop() {
       if (!active) return;
-      fadeAndStop(engine.ctx, active.fade, active.sources);
+      fadeAndStop(engine.ctx, active);
       active = null;
     },
   };
@@ -61,7 +69,7 @@ export function noiseSound(engine: Engine, kind: NoiseKind, layer: string): Soun
  * swell), plus a faint highpassed hiss that only opens near the crest.
  */
 export function oceanSound(engine: Engine, layer: string): Sound {
-  let active: { fade: GainNode; sources: AudioScheduledSourceNode[] } | null = null;
+  let active: Active | null = null;
   return {
     start() {
       if (active) return;
@@ -107,15 +115,15 @@ export function oceanSound(engine: Engine, layer: string): Sound {
       lfo(1 / p1, 0.35, swell.gain);
       lfo(1 / p1, 0.015, crest.gain);
 
-      connectOut(engine, fade, layer);
+      const dispose = connectOut(engine, fade, layer);
       fadeIn(ctx, fade);
       body.start();
       hiss.start();
-      active = { fade, sources: [body, hiss, ...sources] };
+      active = { fade, sources: [body, hiss, ...sources], dispose };
     },
     stop() {
       if (!active) return;
-      fadeAndStop(engine.ctx, active.fade, active.sources);
+      fadeAndStop(engine.ctx, active);
       active = null;
     },
   };

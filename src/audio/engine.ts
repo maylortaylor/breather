@@ -16,8 +16,13 @@ export interface Engine {
   setMod(name: string, value: number): void;
   /** Let a layer's reverb send follow the same modulation as its dry signal. */
   addWetMod(name: string, node: GainNode): void;
+  /** Drop a wet node registered with `addWetMod`, so the list never outgrows the sounds playing. */
+  removeWetMod(name: string, node: GainNode): void;
   setMaster(value: number): void;
-  setLayer(name: string, value: number): void;
+  /** Set a layer's slider level. With `glideSec` the gain ramps there linearly instead of snapping. */
+  setLayer(name: string, value: number, glideSec?: number): void;
+  /** Ramp a layer to exact silence over `seconds`, so a sound can stop without a cut. */
+  silenceLayer(name: string, seconds: number): void;
   /** Per-sound level match, multiplied into the layer gain. */
   setTrim(name: string, trim: number): void;
 }
@@ -76,6 +81,13 @@ export function createEngine(): Engine {
   const ramp = (param: AudioParam, value: number) =>
     param.setTargetAtTime(value, ctx.currentTime, 0.02);
 
+  const glide = (param: AudioParam, value: number, seconds: number) => {
+    const t = ctx.currentTime;
+    param.cancelScheduledValues(t);
+    param.setValueAtTime(param.value, t);
+    param.linearRampToValueAtTime(value, t + seconds);
+  };
+
   return {
     ctx,
     reverbSend,
@@ -89,11 +101,20 @@ export function createEngine(): Engine {
     addWetMod: (name, node) => {
       stage(name).wets.push(node);
     },
-    setMaster: (v) => ramp(master.gain, sliderToGain(v) * MASTER_CAP),
-    setLayer: (name, v) => {
-      levels.set(name, v);
-      ramp(stage(name).gain.gain, sliderToGain(v) * (trims.get(name) ?? 1));
+    removeWetMod: (name, node) => {
+      const l = stage(name);
+      const i = l.wets.indexOf(node);
+      if (i >= 0) l.wets.splice(i, 1);
     },
+    setMaster: (v) => ramp(master.gain, sliderToGain(v) * MASTER_CAP),
+    setLayer: (name, v, glideSec) => {
+      levels.set(name, v);
+      const target = sliderToGain(v) * (trims.get(name) ?? 1);
+      const param = stage(name).gain.gain;
+      if (glideSec === undefined || glideSec <= 0) return ramp(param, target);
+      glide(param, target, glideSec);
+    },
+    silenceLayer: (name, seconds) => glide(stage(name).gain.gain, 0, seconds),
     setTrim: (name, trim) => {
       trims.set(name, trim);
       ramp(stage(name).gain.gain, sliderToGain(levels.get(name) ?? DEFAULT_LAYER) * trim);
@@ -115,14 +136,43 @@ export function fadeIn(ctx: AudioContext, gain: GainNode, seconds = FADE_IN_SEC)
   gain.gain.linearRampToValueAtTime(1, t + seconds);
 }
 
-/** Route a node to a layer, plus an optional share to the reverb. */
-export function connectOut(engine: Engine, node: AudioNode, layer: string, reverb = 0): void {
-  node.connect(engine.layer(layer));
+/** Releases what one `connectOut` made: its layer link, send and wet nodes, and wet-list entry. */
+export type Disposer = () => void;
+
+const quietly = (fn: () => void) => {
+  try {
+    fn();
+  } catch {
+    // Already disconnected: nothing left to release.
+  }
+};
+
+/**
+ * Route a node to a layer, plus an optional share to the reverb. The disposer releases every node
+ * the call made; call it when the sound has stopped or the one-shot has ended.
+ */
+export function connectOut(engine: Engine, node: AudioNode, layer: string, reverb = 0): Disposer {
+  const target = engine.layer(layer);
+  node.connect(target);
+  let send: GainNode | null = null;
+  let wet: GainNode | null = null;
   if (reverb > 0) {
-    const send = engine.ctx.createGain();
+    send = engine.ctx.createGain();
     send.gain.value = reverb;
-    const wet = engine.ctx.createGain();
+    wet = engine.ctx.createGain();
     node.connect(send).connect(wet).connect(engine.reverbSend);
     engine.addWetMod(layer, wet);
   }
+  let done = false;
+  return () => {
+    if (done) return;
+    done = true;
+    quietly(() => node.disconnect(target));
+    if (send && wet) {
+      engine.removeWetMod(layer, wet);
+      quietly(() => node.disconnect(send));
+      quietly(() => send.disconnect());
+      quietly(() => wet.disconnect());
+    }
+  };
 }

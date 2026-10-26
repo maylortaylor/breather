@@ -22,7 +22,8 @@ function partial(
   env.gain.linearRampToValueAtTime(peak, at + 0.004);
   env.gain.exponentialRampToValueAtTime(0.0001, at + decay);
   osc.connect(env);
-  connectOut(engine, env, layer, opts.reverb ?? 0);
+  // Release the send and wet nodes once the tone has ended, or the wet list grows every beat.
+  osc.onended = connectOut(engine, env, layer, opts.reverb ?? 0);
   osc.start(at);
   osc.stop(at + decay + 0.05);
 }

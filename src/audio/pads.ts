@@ -1,5 +1,5 @@
 import { chordHz, MOODS, nextChordIndex, type MoodName } from "./dsp";
-import { connectOut, fadeIn, type Engine, type Sound } from "./engine";
+import { connectOut, fadeIn, type Disposer, type Engine, type Sound } from "./engine";
 
 const FADE_SEC = 6;
 const rand = (lo: number, hi: number) => lo + Math.random() * (hi - lo);
@@ -17,6 +17,7 @@ export function padSound(engine: Engine, moodName: MoodName, layer: string): Sou
   const mood = MOODS[moodName];
   const { ctx } = engine;
   let bus: GainNode | null = null;
+  let disposeOut: Disposer | null = null;
   let voices: Voice[] = [];
   let chordIndex = 0;
   let changeTimer: ReturnType<typeof setTimeout> | null = null;
@@ -46,6 +47,8 @@ export function padSound(engine: Engine, moodName: MoodName, layer: string): Sou
         osc.start(now);
         return osc;
       });
+      // A voice that has faded out and stopped must not stay wired into the bus.
+      oscs[0]!.onended = () => gain.disconnect();
       return { gain, oscs };
     });
   }
@@ -77,6 +80,7 @@ export function padSound(engine: Engine, moodName: MoodName, layer: string): Sou
         osc.connect(env).connect(bus);
         osc.start(t);
         osc.stop(t + 6.1);
+        osc.onended = () => env.disconnect();
         scheduleShimmer();
       },
       rand(5, 14) * 1000
@@ -92,7 +96,7 @@ export function padSound(engine: Engine, moodName: MoodName, layer: string): Sou
       lowpass.type = "lowpass";
       lowpass.frequency.value = mood.cutoffHz;
       bus.connect(lowpass);
-      connectOut(engine, lowpass, layer, 0.6);
+      disposeOut = connectOut(engine, lowpass, layer, 0.6);
       chordIndex = Math.floor(Math.random() * mood.chords.length);
       playChord(chordIndex);
       scheduleChange();
@@ -104,9 +108,14 @@ export function padSound(engine: Engine, moodName: MoodName, layer: string): Sou
       if (shimmerTimer) clearTimeout(shimmerTimer);
       const now = ctx.currentTime;
       const closing = bus;
+      const dispose = disposeOut;
+      disposeOut = null;
       closing.gain.setTargetAtTime(0, now, 0.4);
       for (const v of voices) for (const o of v.oscs) o.stop(now + 2.5);
-      setTimeout(() => closing.disconnect(), 2600);
+      setTimeout(() => {
+        closing.disconnect();
+        dispose?.();
+      }, 2600);
       voices = [];
       bus = null;
     },
