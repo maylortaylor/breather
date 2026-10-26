@@ -1,5 +1,5 @@
 Type: grilling
-Status: open
+Status: claimed
 Blocked by: none
 
 # Does breather collect any analytics?
