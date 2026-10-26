@@ -185,15 +185,22 @@ export function RowVolume({
   modulator,
   onVolume,
   onChange,
+  lfoColors,
+  digitInk,
 }: Props & {
   id: string;
   name: string;
   withLfo: boolean;
   onVolume: (max: number) => void;
+  /** Overrides the bank's LFO colours, e.g. with the theme's deepened ones. */
+  lfoColors?: readonly string[];
+  /** Colour of an unselected LFO button's number, when the LFO colour is too faint for text. */
+  digitInk?: string;
 }) {
+  const colorOf = (i: number) => lfoColors?.[i] ?? modulator.bank.lfos[i]?.color ?? NEUTRAL;
   const [row, setRow] = useState<RowSetting>(() => modulator.rowOf(id));
   const fill = useRef<HTMLDivElement>(null);
-  const color = row.lfo === 0 ? NEUTRAL : (modulator.bank.lfos[row.lfo - 1]?.color ?? NEUTRAL);
+  const color = row.lfo === 0 ? NEUTRAL : colorOf(row.lfo - 1);
   const ranged = row.lfo !== 0;
 
   useFrame(() => {
@@ -265,7 +272,7 @@ export function RowVolume({
       {withLfo && (
         <Tip text="Tap a color to let that slow wave move this sound's volume. Tap it again to stop.">
           <span role="group" aria-label={`${name} LFO`} {...stylex.props(styles.dots)}>
-            {modulator.bank.lfos.map((lfo, i) => {
+            {modulator.bank.lfos.map((_lfo, i) => {
               const choice = (i + 1) as LfoChoice;
               const active = row.lfo === choice;
               return (
@@ -285,9 +292,9 @@ export function RowVolume({
                   <span
                     {...stylex.props(styles.dot, active && styles.dotOn)}
                     style={{
-                      borderColor: lfo.color,
-                      backgroundColor: active ? lfo.color : "transparent",
-                      color: active ? "#0b1020" : lfo.color,
+                      borderColor: colorOf(i),
+                      backgroundColor: active ? colorOf(i) : "transparent",
+                      color: active ? "#0b1020" : (digitInk ?? colorOf(i)),
                     }}
                   >
                     {choice}

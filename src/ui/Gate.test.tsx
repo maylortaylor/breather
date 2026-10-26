@@ -4,6 +4,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { axe } from "vitest-axe";
 import { Screens } from "../App";
 import { beginAudio, resetSession } from "../audio/session";
+import { DEFAULT_MIX } from "../presets";
 import { DEFAULT_STATE, store } from "../store";
 import { Gate, SAFETY_LINE, STORAGE_LINE } from "./Gate";
 
@@ -89,6 +90,18 @@ describe("Begin screen", () => {
     expect(Object.keys(launch.mix.sounds)).toEqual(["brown", "ocean", "bubbles", "whale-b"]);
     expect(launch.master).toBe(0.7);
     expect(store.get().screen).toBe("resting");
+  });
+
+  it("starts the mix saved by the Sounds tab, even with no preset id", () => {
+    const sounds = { white: { lfo: 2, min: 0.1, max: 0.5 } };
+    localStorage.setItem(
+      "breather.state",
+      JSON.stringify({ version: 1, value: { mix: { ...DEFAULT_MIX, sounds } } })
+    );
+    const begin = vi.fn();
+    render(<Gate begin={begin} />);
+    fireEvent.click(screen.getByRole("button", { name: "Begin" }));
+    expect(begin.mock.calls[0]![0].mix.sounds).toEqual(sounds);
   });
 
   it("without AudioContext shows one calm line and still reaches the resting screen", () => {
