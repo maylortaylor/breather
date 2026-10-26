@@ -40,3 +40,4 @@ npm run dev
 - The dissolve mask is CSS only: three tiled dot grids whose holes grow with the registered property `--cut`. No image, so the CSP stays `default-src 'self'`. Not yet seen in a real browser.
 - Added: the Up arrow opens the sheet, so a keyboard user can reach it. Escape and the handle close it. `touch-action: none` on the resting screen so a swipe up reaches pointer events.
 - Tabs 22 and 25 replace `null` in the `BODIES` map in `Sheet.tsx`.
+- Added a Settings pill at bottom centre (Matt's review: the sheet was undiscoverable). It stays outside the dissolve, toggles the sheet, and sits 12px above the sheet on phones so it never covers content; the gestures, handle and Escape still work.
