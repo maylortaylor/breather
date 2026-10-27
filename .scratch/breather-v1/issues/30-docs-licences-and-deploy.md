@@ -31,3 +31,11 @@ npm run check:build
 gitleaks git . --config .gitleaks.toml
 ```
 - Matt checks: read the README and SECURITY.md once; they say what you want said in public.
+
+## Comments
+- Built on `build/30-docs-licences-deploy`. Licence checker is `license-checker-rseidelsohn` 5.0.1 (BSD-3-Clause, dev; reads `node_modules` locally, no network). Its licence is BSD-3, which is on the allow list but not in the ticket's "MIT/ISC/Apache" hint.
+- `react`, `react-dom` and `@stylexjs/stylex` moved to `dependencies` because they ship in the bundle; otherwise `--production` would miss them.
+- Dev-only allowances (MPL-2.0, BlueOak-1.0.0, MIT-0, CC-BY data) are in AGENTS.md rule 7 and THIRD_PARTY.md. `css-mediaquery` declares a bare "BSD"; its LICENSE is BSD-3-Clause, recorded as an override.
+- `@stylexjs/stylex` ships no licence file, so `notices.txt` says so for that entry.
+- SECURITY.md's 7 day and 30 day response times are placeholders for Matt to confirm.
+- The notices link works in the built app only; the dev server does not serve `notices.txt`.
