@@ -5,7 +5,9 @@ import {
   CLIP_SAFE_RMS_DB,
   chipGroups,
   mixRmsDb,
+  periodText,
   playingIds,
+  setLfo,
   setSound,
   toggleSound,
 } from "./soundsLogic";
@@ -137,5 +139,29 @@ describe("persistableMix", () => {
   it("returns an edited mix", () => {
     const edited = toggleSound(structuredClone(BUILT_INS[0]!.mix), "white");
     expect(persistableMix(edited)).toBe(edited);
+  });
+});
+
+describe("setLfo", () => {
+  it("changes one LFO's period or shape and leaves the others and the sounds alone", () => {
+    const next = setLfo(base, 1, { period: 70 });
+    expect(next.lfos[1]).toEqual({ ...base.lfos[1], period: 70 });
+    expect(next.lfos[0]).toEqual(base.lfos[0]);
+    expect(next.lfos[2]).toEqual(base.lfos[2]);
+    expect(next.sounds).toBe(base.sounds);
+    expect(setLfo(base, 2, { shape: "sine" }).lfos[2].shape).toBe("sine");
+  });
+
+  it("clamps the period to 8..120 s and never mutates the input", () => {
+    const before = JSON.stringify(base);
+    expect(setLfo(base, 0, { period: 1 }).lfos[0].period).toBe(8);
+    expect(setLfo(base, 0, { period: 999 }).lfos[0].period).toBe(120);
+    expect(JSON.stringify(base)).toBe(before);
+  });
+});
+
+describe("periodText", () => {
+  it("speaks the speed in words across the 8..120 s range, never a number", () => {
+    expect([8, 30, 70, 120].map(periodText)).toEqual(["Fast", "Medium", "Slow", "Very slow"]);
   });
 });

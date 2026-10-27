@@ -56,12 +56,16 @@ const chip = (name: string) => screen.getByRole("button", { name });
 describe("chips (AC1)", () => {
   it("groups the 9 loops as Noise, Nature, Music", () => {
     render(<SoundsTab />);
-    const groups = screen.getAllByRole("group").map((g) => [
-      g.querySelector("legend")?.textContent,
-      within(g)
-        .getAllByRole("button")
-        .map((b) => b.textContent),
-    ]);
+    // The LFO panel is a <details>, which also reads as a group; only the chip groups have legends.
+    const groups = screen
+      .getAllByRole("group")
+      .filter((g) => g.querySelector("legend"))
+      .map((g) => [
+        g.querySelector("legend")?.textContent,
+        within(g)
+          .getAllByRole("button")
+          .map((b) => b.textContent),
+      ]);
     expect(groups).toEqual([
       ["Noise", ["White noise", "Pink noise", "Brown noise"]],
       ["Nature", ["Ocean waves", "Underwater bubbles", "Whale B: blue moan"]],
@@ -222,6 +226,61 @@ describe("accessibility (AC8)", () => {
     const ocean = screen.getByRole("group", { name: "Ocean waves LFO" });
     fireEvent.click(within(ocean).getByRole("button", { name: "LFO 2 (violet)" }));
     expect(screen.getAllByRole("listitem")).toHaveLength(2);
+    expect((await axe(container)).violations).toEqual([]);
+  });
+});
+
+describe("LFO panel", () => {
+  const summary = () => screen.getByText("Volume waves (LFOs)");
+  const open = () => {
+    const details = summary().closest("details")!;
+    details.open = true;
+    fireEvent(details, new Event("toggle"));
+  };
+
+  it("is collapsed at the very bottom of the tab, showing nothing until opened", () => {
+    render(<SoundsTab />);
+    const tab = summary().closest("details")!;
+    expect(tab.open).toBe(false);
+    expect(tab.parentElement!.lastElementChild).toBe(tab);
+    expect(screen.queryByLabelText("LFO 1 speed")).toBeNull();
+  });
+
+  it("shows all three LFOs with a trace, a speed and two shapes once opened", () => {
+    render(<SoundsTab />);
+    open();
+    expect(screen.getAllByRole("group", { name: /^LFO \d$/ })).toHaveLength(3);
+    for (const n of [1, 2, 3]) {
+      expect(screen.getByLabelText(`LFO ${n} speed`)).toBeTruthy();
+      expect(screen.getByLabelText(`LFO ${n} Sine`)).toBeTruthy();
+      expect(screen.getByLabelText(`LFO ${n} Smooth random`)).toBeTruthy();
+    }
+  });
+
+  it("a speed change reaches the mix, the running modulator and the saved state", () => {
+    render(<SoundsTab />);
+    open();
+    fireEvent.change(screen.getByLabelText("LFO 2 speed"), { target: { value: "60" } });
+    expect(store.get().mix.lfos[1].period).toBe(60);
+    expect(modulator.bank.lfos[1]!.period).toBe(60);
+    expect(store.get().mix.lfos[0].period).toBe(DEFAULT_MIX.lfos[0].period);
+    expect(JSON.stringify(loadState().mix?.lfos)).toContain('"period":60');
+  });
+
+  it("a shape button sets that LFO's shape and marks itself pressed", () => {
+    render(<SoundsTab />);
+    open();
+    fireEvent.click(screen.getByLabelText("LFO 1 Smooth random"));
+    expect(store.get().mix.lfos[0].shape).toBe("smooth-random");
+    expect(screen.getByLabelText("LFO 1 Smooth random").getAttribute("aria-pressed")).toBe("true");
+    expect(screen.getByLabelText("LFO 1 Sine").getAttribute("aria-pressed")).toBe("false");
+    expect(modulator.bank.lfos[0]!.shape).toBe("smooth-random");
+  });
+
+  it("has no accessibility violations when opened", async () => {
+    vi.useRealTimers(); // axe needs real timers
+    const { container } = render(<SoundsTab />);
+    open();
     expect((await axe(container)).violations).toEqual([]);
   });
 });

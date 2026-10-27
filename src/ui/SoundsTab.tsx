@@ -5,8 +5,9 @@ import { getSession } from "../audio/session";
 import type { LoopId, Mix } from "../presets";
 import { store, useStore } from "../store";
 import { colors } from "../theme.stylex";
+import { LfoPanel } from "./LfoPanel";
 import { RowVolume, Slider } from "./Slider";
-import { chipGroups, playingIds, setSound, toggleSound, volumeText } from "./soundsLogic";
+import { chipGroups, playingIds, setLfo, setSound, toggleSound, volumeText } from "./soundsLogic";
 import { Tip } from "./Tip";
 
 /** Seconds a tap on a chip or a button takes to land. Slider drags glide a touch shorter. */
@@ -95,6 +96,15 @@ export function SoundsTab() {
     commit(setSound(store.get().mix, id, row), EDIT_FADE_SEC);
   };
 
+  const lfoChanged = (index: 0 | 1 | 2, patch: Parameters<typeof setLfo>[2]) => {
+    const next = setLfo(store.get().mix, index, patch);
+    // The mixer pushes periods and shapes to the running bank; a standalone modulator is set here.
+    const lfo = next.lfos[index];
+    modulator.setPeriod(index, lfo.period);
+    modulator.setShape(index, lfo.shape);
+    commit(next, EDIT_FADE_SEC);
+  };
+
   const rows = playingIds(mix);
   return (
     <div {...stylex.props(styles.tab)}>
@@ -146,6 +156,7 @@ export function SoundsTab() {
           ))}
         </ul>
       )}
+      <LfoPanel modulator={modulator} lfos={mix.lfos} onChange={lfoChanged} />
     </div>
   );
 }
