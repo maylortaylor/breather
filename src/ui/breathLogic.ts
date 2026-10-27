@@ -62,6 +62,14 @@ export function metronomeText(level: number): string {
   return "All beats, louder";
 }
 
+/** The phase volume as a phrase for screen readers. */
+export function phaseVolumeText(v: number): string {
+  if (v <= 0) return "Off";
+  if (v < 0.4) return "Quiet";
+  return v < 0.9 ? "Medium" : "Loud";
+}
+export const PHASE_VOLUME_TEXTS = ["Off", "Quiet", "Medium", "Loud"] as const;
+
 export const PHASE_SOUNDS: { id: PhaseSoundId; label: string }[] = [
   { id: "tones", label: "Rising tones" },
   { id: "bowl", label: "Singing bowl" },

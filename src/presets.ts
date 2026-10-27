@@ -32,7 +32,13 @@ export type Mix = {
   sounds: Partial<Record<LoopId, SoundSetting>>;
   lfos: [LfoSetting, LfoSetting, LfoSetting];
   tempo: number; // slider 0..1, 0.5 is 60 BPM
-  metronome: { level: number; voice: VoiceId; phaseSound: PhaseSoundId };
+  metronome: {
+    level: number;
+    voice: VoiceId;
+    phaseSound: PhaseSoundId;
+    /** Volume of the phase-change tone alone, 0..1. 0.7 leaves it as the metronome slider sets it. */
+    phaseVolume: number;
+  };
 };
 export type Preset = {
   id: string;
@@ -58,6 +64,7 @@ export const DEFAULT_MASTER = 0.7;
 
 const DEFAULT_VOICE: VoiceId = "metro-heartbeat-thump";
 const DEFAULT_PHASE_SOUND: PhaseSoundId = "tones";
+export const DEFAULT_PHASE_VOLUME = 0.7;
 /** Metronome detent 1: beats sound on phase changes only (spec, ticket 21). */
 const PHASE_ONLY = 0.2;
 
@@ -96,6 +103,7 @@ const SLEEP: Preset = {
       level: PHASE_ONLY,
       voice: DEFAULT_VOICE,
       phaseSound: DEFAULT_PHASE_SOUND,
+      phaseVolume: DEFAULT_PHASE_VOLUME,
     },
   },
 };
@@ -115,6 +123,7 @@ export const BUILT_INS: readonly Preset[] = deepFreeze([
         level: 0,
         voice: "metro-soft-tick-700-hz",
         phaseSound: DEFAULT_PHASE_SOUND,
+        phaseVolume: DEFAULT_PHASE_VOLUME,
       },
     },
   },
@@ -131,6 +140,7 @@ export const BUILT_INS: readonly Preset[] = deepFreeze([
         level: PHASE_ONLY,
         voice: DEFAULT_VOICE,
         phaseSound: DEFAULT_PHASE_SOUND,
+        phaseVolume: DEFAULT_PHASE_VOLUME,
       },
     },
   },
@@ -191,7 +201,12 @@ export function parseMix(raw: unknown): Mix {
       parseLfo(rawLfos[2], defaults[2]),
     ],
     tempo: num(src.tempo, 0, 1, 0.5),
-    metronome: { level: num(metro.level, 0, 1, 0), voice, phaseSound },
+    metronome: {
+      level: num(metro.level, 0, 1, 0),
+      voice,
+      phaseSound,
+      phaseVolume: num(metro.phaseVolume, 0, 1, DEFAULT_PHASE_VOLUME),
+    },
   };
 }
 

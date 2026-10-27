@@ -10,6 +10,9 @@ import type { PhaseSoundId } from "../presets";
 import type { AppState, Store } from "../store";
 
 export const TICK_MS = 25;
+/** The phase volume slider position that leaves the tone at the metronome slider's level. */
+const PHASE_VOLUME_UNITY = 0.7;
+const phaseScale = (volume: number) => volume / PHASE_VOLUME_UNITY;
 /** Seconds of beats handed out ahead while the page is hidden. */
 export const HIDDEN_LOOKAHEAD_SEC = 2;
 /** Seconds the ringing phase tones take to fade when the guide pauses. */
@@ -81,9 +84,10 @@ export function startBeats({
   for (const id of [...PHASE_LAYERS, ...VOICE_LAYERS]) engine.setLayer(id, ONE_SHOT_LAYER);
 
   const applyGains = (glideSec?: number) => {
-    const { level, voice } = store.get().mix.metronome;
+    const { level, voice, phaseVolume } = store.get().mix.metronome;
     const g = metronomeGains(level);
-    for (const id of PHASE_LAYERS) engine.setTrim(id, trimOf(id) * g.phase);
+    for (const id of PHASE_LAYERS)
+      engine.setTrim(id, trimOf(id) * g.phase * phaseScale(phaseVolume));
     for (const id of VOICE_LAYERS) engine.setTrim(id, trimOf(id) * (id === voice ? g.beat : 0));
     // A fade-out leaves a ramp on the layer; a glide clears it so the tones return.
     if (glideSec !== undefined) {

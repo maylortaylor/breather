@@ -19,6 +19,8 @@ import {
   stepTempo,
   tempoText,
   PHASE_SOUNDS,
+  PHASE_VOLUME_TEXTS,
+  phaseVolumeText,
   VOICES,
 } from "./breathLogic";
 import { Slider, type Detent } from "./Slider";
@@ -54,6 +56,8 @@ const METRONOME_DETENT: Detent = {
 const setTempo = (tempo: number) => store.set((s) => ({ mix: { ...s.mix, tempo } }));
 const setLevel = (level: number) =>
   store.set((s) => ({ mix: { ...s.mix, metronome: { ...s.mix.metronome, level } } }));
+const setPhaseVolume = (phaseVolume: number) =>
+  store.set((s) => ({ mix: { ...s.mix, metronome: { ...s.mix.metronome, phaseVolume } } }));
 const setVibrate = (vibrate: boolean) => store.set({ vibrate });
 const canVibrate = () => typeof navigator !== "undefined" && "vibrate" in navigator;
 const setSecondsMode = (secondsMode: boolean) => store.set({ secondsMode });
@@ -111,6 +115,7 @@ export function BreathTab() {
   const level = useStore((s) => s.mix.metronome.level);
   const voice = useStore((s) => s.mix.metronome.voice);
   const phaseSound = useStore((s) => s.mix.metronome.phaseSound);
+  const phaseVolume = useStore((s) => s.mix.metronome.phaseVolume);
   const secondsMode = useStore((s) => s.secondsMode);
   const vibrate = useStore((s) => s.vibrate);
   return (
@@ -187,6 +192,15 @@ export function BreathTab() {
           </label>
         </Tip>
       )}
+      <Slider
+        label="Phase sound volume"
+        value={phaseVolume}
+        onChange={setPhaseVolume}
+        ends={["Off", "Louder"]}
+        valueText={phaseVolumeText(phaseVolume)}
+        valueChars={longestOf(PHASE_VOLUME_TEXTS)}
+        tip="How loud the tone at each phase change is, on its own. It follows the metronome setting above."
+      />
       <Tip
         text="The sound at each phase change: breathe in, hold, breathe out. Tap one to hear it."
         grow="fill"
