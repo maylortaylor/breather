@@ -11,6 +11,12 @@ export const toMasterGain = (value: number): number => sliderToGain(value) * MAS
 
 export interface Engine {
   ctx: AudioContext;
+  /**
+   * Set on Android Chrome: the mix as a MediaStream, to play through an <audio> element. Chrome
+   * mutes a bare Web Audio graph when the screen locks but keeps a playing media element alive.
+   * When set, the mix reaches the speaker only through that element.
+   */
+  stream?: MediaStream;
   /** Input of the shared reverb. Feed it through a send gain. */
   reverbSend: GainNode;
   /** The master gain parameter, for schedules that run on the audio clock. */
@@ -32,6 +38,10 @@ export interface Engine {
   setTrim(name: string, trim: number): void;
 }
 
+/** Android Chrome is the one browser that needs the media-element route. */
+const needsMediaRoute = () =>
+  typeof navigator !== "undefined" && /Android/i.test(navigator.userAgent);
+
 /** Create the one shared context. Must be called from a user gesture (the Begin click). */
 export function createEngine(): Engine {
   const ctx = new AudioContext();
@@ -45,7 +55,9 @@ export function createEngine(): Engine {
   limiter.ratio.value = 12;
   limiter.attack.value = 0.005;
   limiter.release.value = 0.25;
-  master.connect(limiter).connect(ctx.destination);
+  const route = needsMediaRoute() && typeof ctx.createMediaStreamDestination === "function";
+  const sink = route ? ctx.createMediaStreamDestination() : null;
+  master.connect(limiter).connect(sink ?? ctx.destination);
 
   // Shared reverb: generated impulse, returned into the master.
   const [left, right] = makeImpulse(ctx.sampleRate, REVERB_SECONDS, 2.5, createRng(42));
@@ -95,6 +107,7 @@ export function createEngine(): Engine {
 
   return {
     ctx,
+    stream: sink?.stream,
     reverbSend,
     masterGain: master.gain,
     layer,

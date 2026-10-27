@@ -125,7 +125,9 @@ describe("parsePreset", () => {
   });
 
   it("drops unknown sound ids", () => {
-    const raw = base() as unknown as { mix: { sounds: Record<string, unknown> } };
+    const raw = base() as unknown as {
+      mix: { sounds: Record<string, unknown> };
+    };
     raw.mix.sounds["whale-c"] = { lfo: 0, min: 0, max: 1 };
     raw.mix.sounds["__proto__x"] = { lfo: 0, min: 0, max: 1 };
     const p = parsePreset(raw)!;
@@ -133,7 +135,9 @@ describe("parsePreset", () => {
   });
 
   it("clamps levels to 0..1 and keeps min at or under max", () => {
-    const raw = base() as unknown as { mix: { sounds: Record<string, unknown> } };
+    const raw = base() as unknown as {
+      mix: { sounds: Record<string, unknown> };
+    };
     raw.mix.sounds.brown = { lfo: 0, min: -3, max: 9 };
     raw.mix.sounds.ocean = { lfo: 1, min: 0.8, max: 0.2 };
     const p = parsePreset(raw)!;
@@ -168,7 +172,11 @@ describe("parsePreset", () => {
     raw.mix.lfos[0]!.shape = "square";
     const p = parsePreset(raw)!;
     expect(p.mix.tempo).toBe(1);
-    expect(p.mix.metronome).toEqual({ level: 0, voice: "metro-heartbeat-thump" });
+    expect(p.mix.metronome).toEqual({
+      level: 0,
+      voice: "metro-heartbeat-thump",
+      phaseSound: "tones",
+    });
     expect(p.mix.sounds.brown!.lfo).toBe(0);
     expect(p.mix.lfos[0]!.shape).toBe("sine");
   });

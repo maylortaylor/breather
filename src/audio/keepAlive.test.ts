@@ -89,3 +89,17 @@ describe("startKeepAlive", () => {
     expect(revoke).toHaveBeenCalledWith("blob:gone");
   });
 });
+
+describe("startKeepAlive with a stream", () => {
+  it("plays the mix stream instead of the silent loop, so a locked screen keeps the sound", () => {
+    const { el, play } = fakeEl();
+    const stream = {} as MediaStream;
+    startKeepAlive(
+      { createElement: () => el, createUrl: () => "blob:silent", revokeUrl: () => {} },
+      stream
+    );
+    expect(el.srcObject).toBe(stream);
+    expect(el.src).toBe("");
+    expect(play).toHaveBeenCalledTimes(1);
+  });
+});

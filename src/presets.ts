@@ -23,15 +23,24 @@ export const METRONOME_IDS = [
 ] as const;
 export type VoiceId = (typeof METRONOME_IDS)[number];
 
+export const PHASE_SOUND_IDS = ["tones", "bowl", "chime"] as const;
+export type PhaseSoundId = (typeof PHASE_SOUND_IDS)[number];
+
 export type SoundSetting = { lfo: 0 | 1 | 2 | 3; min: number; max: number }; // level is max at lfo 0
 export type LfoSetting = { period: number; shape: LfoShape };
 export type Mix = {
   sounds: Partial<Record<LoopId, SoundSetting>>;
   lfos: [LfoSetting, LfoSetting, LfoSetting];
   tempo: number; // slider 0..1, 0.5 is 60 BPM
-  metronome: { level: number; voice: VoiceId };
+  metronome: { level: number; voice: VoiceId; phaseSound: PhaseSoundId };
 };
-export type Preset = { id: string; name: string; builtIn: boolean; mix: Mix; dim: boolean };
+export type Preset = {
+  id: string;
+  name: string;
+  builtIn: boolean;
+  mix: Mix;
+  dim: boolean;
+};
 
 /** What `breather.state` holds, minus the version. Master volume and the timer never persist. */
 export type SavedMix = {
@@ -48,6 +57,7 @@ export const MAX_NAME_LENGTH = 24;
 export const DEFAULT_MASTER = 0.7;
 
 const DEFAULT_VOICE: VoiceId = "metro-heartbeat-thump";
+const DEFAULT_PHASE_SOUND: PhaseSoundId = "tones";
 /** Metronome detent 1: beats sound on phase changes only (spec, ticket 21). */
 const PHASE_ONLY = 0.2;
 
@@ -82,7 +92,11 @@ const SLEEP: Preset = {
     },
     lfos: lfos(),
     tempo: 0, // slow end, about 28 s a cycle
-    metronome: { level: PHASE_ONLY, voice: DEFAULT_VOICE },
+    metronome: {
+      level: PHASE_ONLY,
+      voice: DEFAULT_VOICE,
+      phaseSound: DEFAULT_PHASE_SOUND,
+    },
   },
 };
 
@@ -97,7 +111,11 @@ export const BUILT_INS: readonly Preset[] = deepFreeze([
       sounds: { pink: steady(0.5), "pad-tonal": steady(0.2) },
       lfos: lfos(),
       tempo: 0.5,
-      metronome: { level: 0, voice: "metro-soft-tick-700-hz" },
+      metronome: {
+        level: 0,
+        voice: "metro-soft-tick-700-hz",
+        phaseSound: DEFAULT_PHASE_SOUND,
+      },
     },
   },
   {
@@ -109,7 +127,11 @@ export const BUILT_INS: readonly Preset[] = deepFreeze([
       sounds: { ocean: { lfo: 1, min: 0.3, max: 0.6 }, "pad-dreamy": steady(0.4) },
       lfos: lfos(),
       tempo: 0.5,
-      metronome: { level: PHASE_ONLY, voice: DEFAULT_VOICE },
+      metronome: {
+        level: PHASE_ONLY,
+        voice: DEFAULT_VOICE,
+        phaseSound: DEFAULT_PHASE_SOUND,
+      },
     },
   },
 ] satisfies Preset[]);
@@ -160,6 +182,7 @@ export function parseMix(raw: unknown): Mix {
   const defaults = DEFAULT_MIX.lfos;
   const metro = isRecord(src.metronome) ? src.metronome : {};
   const voice = METRONOME_IDS.find((id) => id === metro.voice) ?? DEFAULT_VOICE;
+  const phaseSound = PHASE_SOUND_IDS.find((id) => id === metro.phaseSound) ?? DEFAULT_PHASE_SOUND;
   return {
     sounds,
     lfos: [
@@ -168,7 +191,7 @@ export function parseMix(raw: unknown): Mix {
       parseLfo(rawLfos[2], defaults[2]),
     ],
     tempo: num(src.tempo, 0, 1, 0.5),
-    metronome: { level: num(metro.level, 0, 1, 0), voice },
+    metronome: { level: num(metro.level, 0, 1, 0), voice, phaseSound },
   };
 }
 

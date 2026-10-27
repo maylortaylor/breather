@@ -31,6 +31,7 @@ export function silentWav(): Uint8Array {
 
 export interface KeepAliveElement {
   src: string;
+  srcObject?: MediaProvider | null;
   loop: boolean;
   playsInline?: boolean;
   setAttribute(name: string, value: string): void;
@@ -59,10 +60,18 @@ export const browserKeepAliveDeps = (): KeepAliveDeps => ({
   revokeUrl: (url) => URL.revokeObjectURL(url),
 });
 
-export function startKeepAlive(deps: KeepAliveDeps = browserKeepAliveDeps()): KeepAlive {
+/**
+ * With a `stream` the element plays the mix itself (Android), so a locked screen keeps the sound.
+ * Without one it loops silence (iPhone), which holds the playback channel open.
+ */
+export function startKeepAlive(
+  deps: KeepAliveDeps = browserKeepAliveDeps(),
+  stream?: MediaStream
+): KeepAlive {
   const url = deps.createUrl(silentWav());
   const el = deps.createElement();
-  el.src = url;
+  if (stream) el.srcObject = stream;
+  else el.src = url;
   el.loop = true;
   el.playsInline = true;
   el.setAttribute("playsinline", "");

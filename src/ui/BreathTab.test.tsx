@@ -152,10 +152,20 @@ describe("metronome", () => {
   });
 });
 
+describe("phase sound picker", () => {
+  it("offers three phase sounds, rising tones selected, and stores the pick", () => {
+    render(<BreathTab />);
+    expect((screen.getByLabelText("Rising tones") as HTMLInputElement).checked).toBe(true);
+    fireEvent.click(screen.getByLabelText("Singing bowl"));
+    expect(store.get().mix.metronome.phaseSound).toBe("bowl");
+    expect(screen.getByLabelText("Chime")).toBeTruthy();
+  });
+});
+
 describe("voice picker", () => {
   it("offers four voices by name with the heartbeat thump selected (AC5)", () => {
     render(<BreathTab />);
-    const radios = screen.getAllByRole("radio");
+    const radios = screen.getAllByRole("radio", { name: /thump|block|tick/i });
     expect(radios.map((r) => r.parentElement?.textContent)).toEqual([
       "Heartbeat thump",
       "Wood block",
@@ -192,11 +202,17 @@ describe("persistence (AC6)", () => {
     fireEvent.click(screen.getByLabelText("Wood block"));
     const saved = JSON.parse(localStorage.getItem("breather.state") ?? "{}") as {
       version: number;
-      value: { mix: { tempo: number; metronome: { level: number; voice: string } } };
+      value: {
+        mix: { tempo: number; metronome: { level: number; voice: string } };
+      };
     };
     expect(saved.version).toBe(1);
     expect(saved.value.mix.tempo).toBe(0.8);
-    expect(saved.value.mix.metronome).toEqual({ level: 0.7, voice: "metro-wood-block" });
+    expect(saved.value.mix.metronome).toEqual({
+      level: 0.7,
+      voice: "metro-wood-block",
+      phaseSound: "tones",
+    });
   });
 });
 

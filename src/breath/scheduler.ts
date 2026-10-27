@@ -7,7 +7,7 @@ export interface BeatSchedulerOptions {
   now: () => number;
   machine: PhaseMachine;
   /** How far ahead of `now` to hand out beats, in seconds. */
-  lookahead?: number;
+  lookahead?: number | (() => number);
   /** A tick later than this after the last one skips past beats instead of replaying them. */
   maxCatchUp?: number;
   onBeat: (beat: Beat) => void;
@@ -39,7 +39,7 @@ export function createBeatScheduler({
       const t = now();
       let from = horizon !== null && t - horizon <= maxCatchUp ? horizon : t;
       from = Math.max(from, floor);
-      const to = t + lookahead;
+      const to = t + (typeof lookahead === "function" ? lookahead() : lookahead);
       if (to > from) {
         for (const beat of machine.beatsBetween(from, to)) onBeat(beat);
       }

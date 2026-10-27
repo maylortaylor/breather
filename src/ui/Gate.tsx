@@ -3,6 +3,7 @@ import { beginAudio } from "../audio/session";
 import { restoreLaunch, type LaunchState } from "../presets";
 import { loadState, store, useStore, type AudioStatus } from "../store";
 import { colors } from "../theme.stylex";
+import { getInstaller, useCanInstall } from "./install";
 
 export const SAFETY_LINE =
   "Stop if you feel lightheaded. Not for use while driving or in water. Not medical advice.";
@@ -53,6 +54,19 @@ const styles = stylex.create({
   // puts it beneath the button on screen.
   below: { order: 2, maxWidth: 360 },
   beginGroup: { display: "flex", flexDirection: "column", alignItems: "center", gap: 16 },
+  install: {
+    minHeight: 44,
+    paddingInline: 24,
+    borderRadius: 999,
+    borderWidth: 1,
+    borderStyle: "solid",
+    borderColor: colors.thumb,
+    backgroundColor: "transparent",
+    color: colors.textMuted,
+    fontFamily: "inherit",
+    fontSize: 16,
+    cursor: "pointer",
+  },
   note: { margin: 0, color: colors.textMuted },
 });
 
@@ -94,6 +108,21 @@ function Welcome() {
   );
 }
 
+/** One tap installs the app. Shown only on a phone whose browser can install it. */
+function InstallButton() {
+  const can = useCanInstall();
+  if (!can) return null;
+  return (
+    <button
+      type="button"
+      {...stylex.props(styles.install)}
+      onClick={() => void getInstaller()?.install()}
+    >
+      Install app
+    </button>
+  );
+}
+
 function BeginScreen({ begin }: { begin: BeginFn }) {
   const onBegin = () => {
     // The audio context must be made and resumed inside this tap.
@@ -109,6 +138,7 @@ function BeginScreen({ begin }: { begin: BeginFn }) {
         <button type="button" {...stylex.props(styles.button)} onClick={onBegin}>
           Begin
         </button>
+        <InstallButton />
       </div>
     </div>
   );
