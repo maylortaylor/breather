@@ -9,7 +9,7 @@ on:
     paths-ignore:
       - "**.md"
       - ".scratch/**"
-  # Re-run a deploy without a new commit (a docs-only push is skipped by the filter above).
+  # Retry a failed deploy without a new commit. The job only runs on main.
   workflow_dispatch:
 
 concurrency:
@@ -24,6 +24,7 @@ permissions:
 jobs:
   deploy:
     name: Build and deploy
+    if: github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
     environment:
       name: github-pages

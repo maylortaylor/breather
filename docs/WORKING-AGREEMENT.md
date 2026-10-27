@@ -1,8 +1,8 @@
 # Working agreement
 
-How work gets from an idea to merged code in breather. Local-first: tickets are files in `.scratch/`, branches merge locally, and GitHub steps start at v1 (see [From v1](#from-v1)).
+How work gets from an idea to merged code in breather. Tickets are files in `.scratch/`. The repo is public (v1 shipped 2026-10-26), so code changes go through pull requests into `main` (see [Since v1](#since-v1)).
 
-Derived from the roboborealis-platform working agreement, slimmed for a repo with no remote.
+Derived from the roboborealis-platform working agreement, slimmed for a solo repo.
 
 ---
 
@@ -72,7 +72,7 @@ A convention, carried as a `Model:` line on each build ticket so it is visible r
 
 ### 8. Never commit to `main` directly
 
-Until v1, with no remote:
+Before v1, with no remote (history; since v1 use a PR, see [Since v1](#since-v1)):
 
 1. Start. Pick the ticket, set `Status: claimed`. Branch off `main`: `type/short-description`, 3 to 5 words.
 2. Commit. Run `/simplify` before committing. Conventional Commit subject, 72 characters or fewer.
@@ -96,9 +96,9 @@ A ticket is `open`, `claimed` or `resolved`. A ticket is unblocked when every fi
 
 ---
 
-## From v1
+## Since v1
 
-These steps apply only after the v1 gate ticket resolves and the repo has a remote:
+The repo has a remote and is public. These steps apply now:
 
 - Open a PR into `main` instead of merging locally. Body under 20 lines, `Closes #N`, draft until the gate is green.
 - Run the `bootstrap-process.sh` script from roboborealis-platform to create the labels.

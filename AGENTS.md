@@ -19,7 +19,7 @@ Triage roles are in [`docs/agents/triage-labels.md`](docs/agents/triage-labels.m
 - **Never push to `main`.** The repo is public at `github.com/maylortaylor/breather`. Work goes through pull requests into `main`; secret scanning and push protection are on.
 - **Never use `:latest`** on any image or tool version.
 - **Never add analytics, a tracker, a network dependency or an API key** unless a new ADR allows it (ticket 04, temporary).
-- **Never put personal or client info in a ticket.** The repo goes public at v1, and so does every grill transcript in `.scratch/`.
+- **Never put personal or client info in a ticket.** The repo is public, and so is every grill transcript in `.scratch/`.
 - **Never take shader or noise code without a license check.** Only MIT-compatible code and CC0 audio. See `THIRD_PARTY.md`.
 - **Never build inside a wayfinder map.** Maps plan; build tickets execute.
 
