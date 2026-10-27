@@ -49,6 +49,8 @@ const creators: Record<Exclude<RendererKind, "css">, Create> = {
 /** The aurora behind the app. Falls back WebGL, then canvas, then the CSS gradient; never throws. */
 export function Background() {
   const dim = useStore((s) => s.dim);
+  // After a sleep timer ends the aurora stops and the CSS gradient holds until the next Begin.
+  const rested = useStore((s) => s.rested);
   const [available] = useState(() => ({
     webgl: contextAvailable("webgl"),
     canvas: contextAvailable("2d"),
@@ -60,7 +62,7 @@ export function Background() {
 
   useEffect(() => {
     const canvas = canvasRef.current;
-    if (kind === "css" || !canvas) return;
+    if (kind === "css" || rested || !canvas) return;
     let cancelled = false;
     let cleanup = () => {};
     const fail = () => setFailed((prev) => (prev.includes(kind) ? prev : [...prev, kind]));
@@ -92,14 +94,16 @@ export function Background() {
       rendererRef.current?.stop();
       rendererRef.current = null;
     };
-  }, [kind]);
+  }, [kind, rested]);
 
   // Keeps the live renderer's dim in step without rebuilding it.
   useEffect(() => rendererRef.current?.setDim(dim), [dim]);
 
   return (
     <div aria-hidden="true" {...stylex.props(styles.layer, dim && dimTheme)}>
-      {kind !== "css" && <canvas key={kind} ref={canvasRef} {...stylex.props(styles.canvas)} />}
+      {kind !== "css" && !rested && (
+        <canvas key={kind} ref={canvasRef} {...stylex.props(styles.canvas)} />
+      )}
     </div>
   );
 }

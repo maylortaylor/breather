@@ -76,6 +76,8 @@ export type AppState = {
   welcomeSeen: boolean;
   /** The Session tab's "How it works" shows the welcome card again; never stored. */
   reviewWelcome: boolean;
+  /** True after a sleep timer ends: the animation is stopped until the next Begin. Never stored. */
+  rested: boolean;
 };
 
 // The subset that survives a reload, under `breather.state`.
@@ -130,6 +132,7 @@ export const DEFAULT_STATE: AppState = {
   sheet: { open: false, tab: "breath" },
   welcomeSeen: false,
   reviewWelcome: false,
+  rested: false,
 };
 
 export const store = createStore<AppState>({ ...DEFAULT_STATE, ...loadState() });
