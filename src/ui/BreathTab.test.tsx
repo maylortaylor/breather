@@ -95,9 +95,10 @@ describe("metronome", () => {
     expect(metronome().getAttribute("aria-valuetext")).toBe("All beats, soft");
   });
 
-  it("labels the three marks", () => {
+  it("labels the marks and the free zone", () => {
     render(<BreathTab />);
-    for (const word of ["Off", "Phases", "Beats"]) expect(screen.getByText(word)).toBeTruthy();
+    for (const word of ["Off", "Phase", "Beats", "Louder"])
+      expect(screen.getByText(word)).toBeTruthy();
   });
 
   it("moves stop to stop with the arrow keys (AC7)", () => {

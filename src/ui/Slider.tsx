@@ -2,6 +2,7 @@ import * as stylex from "@stylexjs/stylex";
 import { useEffect, useRef, useState, type CSSProperties } from "react";
 import type { LfoChoice, Modulator, RowSetting } from "../audio/modulation";
 import { colors } from "../theme.stylex";
+import { layoutLabels, MIN_TRACK_PX, type LabelItem } from "./breathLogic";
 import { Tip } from "./Tip";
 
 const FRAME_MS = 33;
@@ -133,7 +134,8 @@ const plain = stylex.create({
   wrap: { display: "flex", alignItems: "center", gap: 12, color: colors.tabInk, fontSize: 16 },
   label: { minWidth: 64 },
   input: { flexGrow: 1, minWidth: 0, height: 28, margin: 0, accentColor: colors.thumb },
-  detentWrap: { alignItems: "flex-start" },
+  // Label on its own line, the track across the full row.
+  detentWrap: { flexDirection: "column", alignItems: "stretch", gap: 2 },
   track: {
     position: "relative",
     flexGrow: 1,
@@ -141,7 +143,7 @@ const plain = stylex.create({
     display: "flex",
     flexDirection: "column",
   },
-  marks: { position: "relative", height: 34 },
+  marks: { position: "relative" },
   mark: {
     position: "absolute",
     top: 0,
@@ -154,16 +156,19 @@ const plain = stylex.create({
     position: "absolute",
     top: 10,
     transform: "translateX(-50%)",
-    fontSize: 12,
+    fontSize: 13,
     whiteSpace: "nowrap",
     color: colors.textMuted,
   },
+  markLabelEnd: { transform: "none" },
   ends: { display: "flex", justifyContent: "space-between", fontSize: 13, color: colors.textMuted },
 });
 
 /** Detents for a plain slider: where to draw marks and how values stick to them. */
 export interface Detent {
   marks: readonly { at: number; label?: string }[];
+  /** Right-aligned label over the free zone past the last mark. */
+  endLabel?: string;
   /** Applied to every value from a drag or key, so the slider moves in stops. */
   live?: (value: number) => number;
   /** Applied once when a pointer drag ends. */
@@ -178,6 +183,36 @@ const KEY_DIR: Record<string, 1 | -1 | undefined> = {
   ArrowLeft: -1,
   ArrowDown: -1,
 };
+
+const ROW_PX = 18;
+
+function DetentMarks({ detent }: { detent: Detent }) {
+  const items: LabelItem[] = [
+    ...detent.marks.flatMap((m) => (m.label ? [{ at: m.at, text: m.label }] : [])),
+    ...(detent.endLabel ? [{ at: 1, text: detent.endLabel, align: "end" as const }] : []),
+  ];
+  const rows = layoutLabels(items, MIN_TRACK_PX);
+  const height = 10 + ROW_PX * (Math.max(0, ...rows) + 1);
+  return (
+    <span aria-hidden="true" {...stylex.props(plain.marks)} style={{ height }}>
+      {detent.marks.map((m) => (
+        <span key={m.at} {...stylex.props(plain.mark)} style={{ left: markPos(m.at) }} />
+      ))}
+      {items.map((it, i) => (
+        <span
+          key={it.text}
+          {...stylex.props(plain.markLabel, it.align === "end" && plain.markLabelEnd)}
+          style={{
+            top: 10 + ROW_PX * rows[i]!,
+            ...(it.align === "end" ? { right: 0 } : { left: markPos(it.at) }),
+          }}
+        >
+          {it.text}
+        </span>
+      ))}
+    </span>
+  );
+}
 
 const markPos = (v: number) => `calc(${THUMB / 2}px + (100% - ${THUMB}px) * ${v})`;
 
@@ -238,20 +273,7 @@ export function Slider({
         {decorated ? (
           <span {...stylex.props(plain.track)}>
             {input}
-            {detent && (
-              <span aria-hidden="true" {...stylex.props(plain.marks)}>
-                {detent.marks.map((m) => (
-                  <span key={m.at}>
-                    <span {...stylex.props(plain.mark)} style={{ left: markPos(m.at) }} />
-                    {m.label && (
-                      <span {...stylex.props(plain.markLabel)} style={{ left: markPos(m.at) }}>
-                        {m.label}
-                      </span>
-                    )}
-                  </span>
-                ))}
-              </span>
-            )}
+            {detent && <DetentMarks detent={detent} />}
             {ends && (
               <span aria-hidden="true" {...stylex.props(plain.ends)}>
                 <span>{ends[0]}</span>

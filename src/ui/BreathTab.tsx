@@ -41,9 +41,10 @@ const TEMPO_DETENT: Detent = {
 const METRONOME_DETENT: Detent = {
   marks: [
     { at: 0, label: "Off" },
-    { at: D1, label: "Phases" },
+    { at: D1, label: "Phase" },
     { at: D2, label: "Beats" },
   ],
+  endLabel: "Louder",
   live: settleMetronome,
   step: stepMetronome,
 };
