@@ -30,3 +30,30 @@ npm run build
 npm run preview
 ```
 - Matt checks: run the 10 steps in `docs/research/ios-audio.md` section 7 on a real iPhone, in Safari and installed, and record iOS version and each result as a comment on this ticket.
+
+## Comments
+
+### Device test for Matt (docs/research/ios-audio.md section 7)
+
+Run each in a Safari tab, then installed. Note the iOS version and the result. Not run by the builder: no iPhone was available.
+
+iOS version: ______
+
+| # | Step | Pass if | Safari tab | Installed |
+|---|------|---------|------------|-----------|
+| 1 | Silent switch: ringer on silent, tap Begin | Noise plays. Remove the `audioSession` line once to confirm it was the fix | | |
+| 2 | Lock: play 2 minutes, press the side button | Sound continues 5 minutes; state reads running on unlock | | |
+| 3 | 90 minute run: set the timer to 90, lock, leave | Audio fades near the end and is not silent early. Log any early stop | | |
+| 4 | Interruption: play, call the phone (or ask Siri), hang up | One tap resumes; "Sound paused. Tap to resume." showed | | |
+| 5 | App switch: play, open another app for 30 seconds, return | Resumes without a reload | | |
+| 6 | Metronome: play 10 minutes in foreground, lock 2 minutes, unlock | The beat does not burst through a backlog | | |
+| 7 | Lock-screen controls: pause from the lock screen, wait 60 seconds, press play | Record the response | | |
+| 8 | Cold start (the iOS 26 bug): force-quit the installed app, relaunch, tap Begin, three times | Sound starts each time | | |
+| 9 | Vibration: show `"vibrate" in navigator` in a debug line | Expect false | | |
+| 10 | Install: Add to Home Screen from `/breather/`, launch in airplane mode | Standalone and offline | | |
+
+### Build notes
+
+- The tap control reads "Sound paused. Tap to resume." (`src/ui/Resume.tsx`), mounted in `Screens` in `src/App.tsx`.
+- Lock-screen play and pause have no handlers on purpose, so they cannot fight the sleep timer.
+- Step 9 needs a debug line the app does not have; check it from Safari's web inspector on a Mac.
