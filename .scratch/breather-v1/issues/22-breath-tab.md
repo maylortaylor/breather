@@ -41,3 +41,6 @@ npm run dev
 
 ## Answer
 Resolved 2026-10-26. All 8 criteria pass. Matt checked the Breath tab in the browser and approved ("all look good"): the tempo snap, the hint matching the ring, the metronome detents and the voice picker. This also settles the 10-minute steady-beat check deferred from ticket 21. The mix persistence this ticket originally added was dropped in favour of ticket 24's identical change, so one copy of the logic saves both tabs.
+
+### Fix after review, 2026-10-26
+Matt found the metronome detent labels overlapping and the slider shifting while dragged. The labels under the interior marks were removed. The current setting is now live text on the label row in a fixed-width box ("Off", "Phase changes", "All beats, quiet", "All beats, louder"), and only "Off" and "Louder" sit under the ends (Tempo: "Slow" and "Fast"). Matt confirmed it looks much better.
