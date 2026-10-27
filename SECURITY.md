@@ -8,9 +8,9 @@ Please do not open a public issue or pull request for a security problem.
 
 ## What to expect
 
-- A first reply within 7 days.
-- A fix or a clear answer on whether it is a vulnerability, usually within 30 days.
-- Credit in the release notes if you want it.
+- I will reply as soon as I can.
+- A fix, or a clear answer on whether it is a vulnerability.
+- Credit in the fix commit if you want it.
 
 ## Supported version
 

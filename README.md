@@ -4,7 +4,7 @@ A calm, installable web app for winding down. Layered synthesized sound, an opti
 
 Every sound is generated live with the Web Audio API, so the app ships no audio files. Music, effects, metronome and breathing text can each be turned fully off. It works offline and installs to the home screen like an app.
 
-**Status:** pre-v1, local only. No remote, no releases yet. The planned address is `https://roboborealis.com/breather/`.
+**Status:** v1. Live at [maylortaylor.github.io/breather](https://maylortaylor.github.io/breather/). The canonical address, once the proxy is live, is `https://roboborealis.com/breather/`.
 
 ## Run it
 
@@ -37,7 +37,7 @@ npm run check:build   # fails on a missing asset, an uncached asset, a bad CSP o
 npm run preview       # serves dist/ at /breather/
 ```
 
-`.github/workflows/deploy.yml` builds and publishes `dist/` to GitHub Pages on every push to `main` that changes more than docs. The workflow stays inert until the repository has a remote. The app is served under `/breather/` and is proxied from roboborealis.com; see [ADR-0002](docs/adr/0002-hosting-and-owner.md).
+`.github/workflows/deploy.yml` builds and publishes `dist/` to GitHub Pages on every push to `main` that changes more than docs. The app is served under `/breather/` and is proxied from roboborealis.com; see [ADR-0002](docs/adr/0002-hosting-and-owner.md).
 
 ## iPhone limits
 
