@@ -3,9 +3,6 @@ import { D1, D2 } from "../breath/tempo";
 import {
   inhaleHint,
   inhaleSeconds,
-  labelWidth,
-  layoutLabels,
-  THUMB_PX,
   metronomeText,
   releaseTempo,
   settleMetronome,
@@ -96,13 +93,15 @@ describe("metronome detents", () => {
     expect(stepMetronome(1, 1)).toBe(1);
   });
 
-  it("describes the level without numbers", () => {
+  it("names every zone and detent boundary, without numbers", () => {
     expect(metronomeText(0)).toBe("Off");
-    expect(metronomeText(D1)).toBe("Phase changes only");
-    expect(metronomeText(D2)).toBe("All beats, very quiet");
-    expect(metronomeText(0.55)).toBe("All beats, soft");
-    expect(metronomeText(0.75)).toBe("All beats");
-    expect(metronomeText(1)).toBe("All beats, loud");
+    expect(metronomeText(0.01)).toBe("Phase changes");
+    expect(metronomeText(D1)).toBe("Phase changes");
+    expect(metronomeText(D1 + 0.01)).toBe("All beats, quiet");
+    expect(metronomeText(D2)).toBe("All beats, quiet");
+    expect(metronomeText(D2 + 0.01)).toBe("All beats, louder");
+    expect(metronomeText(1)).toBe("All beats, louder");
+    for (let v = 0; v <= 1; v += 0.05) expect(metronomeText(v)).not.toMatch(/\d/);
   });
 });
 
@@ -115,38 +114,5 @@ describe("voices", () => {
       "Soft tick 350 Hz",
     ]);
     expect(VOICES[0]!.id).toBe("metro-heartbeat-thump");
-  });
-});
-
-describe("layoutLabels", () => {
-  const items = [
-    { at: 0, text: "Off" },
-    { at: D1, text: "Phase" },
-    { at: D2, text: "Beats" },
-    { at: 1, text: "Louder", align: "end" as const },
-  ];
-
-  // Boxes by row, so a test can assert that none overlap.
-  const boxes = (rows: number[], px: number) =>
-    items.map((it, i) => {
-      const w = labelWidth(it.text);
-      const left = it.align === "end" ? px - w : THUMB_PX / 2 + (px - THUMB_PX) * it.at - w / 2;
-      return { row: rows[i]!, left, right: left + w };
-    });
-
-  it("keeps adjacent labels from overlapping at a 300 px track", () => {
-    const rows = layoutLabels(items, 300);
-    const b = boxes(rows, 300);
-    for (let i = 0; i < b.length; i++) {
-      for (let j = i + 1; j < b.length; j++) {
-        if (b[i]!.row !== b[j]!.row) continue;
-        expect(b[i]!.right <= b[j]!.left || b[j]!.right <= b[i]!.left).toBe(true);
-      }
-    }
-  });
-
-  it("uses one row when there is room, and a second when the track is too short", () => {
-    expect(layoutLabels(items, 300)).toEqual([0, 0, 0, 0]);
-    expect(Math.max(...layoutLabels(items, 140))).toBe(1);
   });
 });

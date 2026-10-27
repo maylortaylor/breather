@@ -39,12 +39,8 @@ const TEMPO_DETENT: Detent = {
 };
 
 const METRONOME_DETENT: Detent = {
-  marks: [
-    { at: 0, label: "Off" },
-    { at: D1, label: "Phase" },
-    { at: D2, label: "Beats" },
-  ],
-  endLabel: "Louder",
+  // Ticks only: the live value above the track says where the slider is.
+  marks: [{ at: 0 }, { at: D1 }, { at: D2 }],
   live: settleMetronome,
   step: stepMetronome,
 };
@@ -134,6 +130,7 @@ export function BreathTab() {
         value={level}
         onChange={setLevel}
         detent={METRONOME_DETENT}
+        ends={["Off", "Louder"]}
         valueText={metronomeText(level)}
         tip="Off, then a tone on each phase change, then every beat very quietly, then louder."
       />

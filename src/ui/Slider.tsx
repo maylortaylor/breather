@@ -1,8 +1,7 @@
 import * as stylex from "@stylexjs/stylex";
-import { useEffect, useRef, useState, type CSSProperties } from "react";
+import { useEffect, useId, useRef, useState, type CSSProperties } from "react";
 import type { LfoChoice, Modulator, RowSetting } from "../audio/modulation";
 import { colors } from "../theme.stylex";
-import { layoutLabels, MIN_TRACK_PX, type LabelItem } from "./breathLogic";
 import { Tip } from "./Tip";
 
 const FRAME_MS = 33;
@@ -152,23 +151,16 @@ const plain = stylex.create({
     marginLeft: -1,
     backgroundColor: colors.tabInk,
   },
-  markLabel: {
-    position: "absolute",
-    top: 10,
-    transform: "translateX(-50%)",
-    fontSize: 13,
-    whiteSpace: "nowrap",
-    color: colors.textMuted,
-  },
-  markLabelEnd: { transform: "none" },
+  head: { display: "flex", justifyContent: "space-between", alignItems: "baseline", gap: 12 },
+  value: { fontSize: 14, color: colors.textMuted, textAlign: "end" },
+  endStart: { textAlign: "start" },
+  endEnd: { textAlign: "end" },
   ends: { display: "flex", justifyContent: "space-between", fontSize: 13, color: colors.textMuted },
 });
 
 /** Detents for a plain slider: where to draw marks and how values stick to them. */
 export interface Detent {
-  marks: readonly { at: number; label?: string }[];
-  /** Right-aligned label over the free zone past the last mark. */
-  endLabel?: string;
+  marks: readonly { at: number }[];
   /** Applied to every value from a drag or key, so the slider moves in stops. */
   live?: (value: number) => number;
   /** Applied once when a pointer drag ends. */
@@ -183,36 +175,6 @@ const KEY_DIR: Record<string, 1 | -1 | undefined> = {
   ArrowLeft: -1,
   ArrowDown: -1,
 };
-
-const ROW_PX = 18;
-
-function DetentMarks({ detent }: { detent: Detent }) {
-  const items: LabelItem[] = [
-    ...detent.marks.flatMap((m) => (m.label ? [{ at: m.at, text: m.label }] : [])),
-    ...(detent.endLabel ? [{ at: 1, text: detent.endLabel, align: "end" as const }] : []),
-  ];
-  const rows = layoutLabels(items, MIN_TRACK_PX);
-  const height = 10 + ROW_PX * (Math.max(0, ...rows) + 1);
-  return (
-    <span aria-hidden="true" {...stylex.props(plain.marks)} style={{ height }}>
-      {detent.marks.map((m) => (
-        <span key={m.at} {...stylex.props(plain.mark)} style={{ left: markPos(m.at) }} />
-      ))}
-      {items.map((it, i) => (
-        <span
-          key={it.text}
-          {...stylex.props(plain.markLabel, it.align === "end" && plain.markLabelEnd)}
-          style={{
-            top: 10 + ROW_PX * rows[i]!,
-            ...(it.align === "end" ? { right: 0 } : { left: markPos(it.at) }),
-          }}
-        >
-          {it.text}
-        </span>
-      ))}
-    </span>
-  );
-}
 
 const markPos = (v: number) => `calc(${THUMB / 2}px + (100% - ${THUMB}px) * ${v})`;
 
@@ -232,13 +194,14 @@ export function Slider({
   onChange: (value: number) => void;
   tip: string;
   detent?: Detent;
-  /** Visible words under the left and right ends. */
+  /** Visible words under the left end (left-aligned) and the right end (right-aligned). */
   ends?: [string, string];
-  /** Replaces the number a screen reader hears. */
+  /** Replaces the number a screen reader hears; a detent slider also shows it above the track. */
   valueText?: string;
   disabled?: boolean;
 }) {
   const decorated = Boolean(detent || ends);
+  const labelId = useId();
   const input = (
     <input
       type="range"
@@ -248,6 +211,7 @@ export function Slider({
       value={value}
       disabled={disabled}
       aria-valuetext={valueText}
+      aria-labelledby={decorated ? labelId : undefined}
       {...stylex.props(plain.input)}
       onChange={(ev) => {
         const v = Number(ev.target.value);
@@ -269,15 +233,28 @@ export function Slider({
   return (
     <Tip text={tip} grow="fill">
       <label {...stylex.props(plain.wrap, decorated && plain.detentWrap)}>
-        <span {...stylex.props(plain.label)}>{label}</span>
+        {decorated ? (
+          <span {...stylex.props(plain.head)}>
+            <span id={labelId}>{label}</span>
+            {valueText && <span {...stylex.props(plain.value)}>{valueText}</span>}
+          </span>
+        ) : (
+          <span {...stylex.props(plain.label)}>{label}</span>
+        )}
         {decorated ? (
           <span {...stylex.props(plain.track)}>
             {input}
-            {detent && <DetentMarks detent={detent} />}
+            {detent && (
+              <span aria-hidden="true" {...stylex.props(plain.marks)}>
+                {detent.marks.map((m) => (
+                  <span key={m.at} {...stylex.props(plain.mark)} style={{ left: markPos(m.at) }} />
+                ))}
+              </span>
+            )}
             {ends && (
               <span aria-hidden="true" {...stylex.props(plain.ends)}>
-                <span>{ends[0]}</span>
-                <span>{ends[1]}</span>
+                <span {...stylex.props(plain.endStart)}>{ends[0]}</span>
+                <span {...stylex.props(plain.endEnd)}>{ends[1]}</span>
               </span>
             )}
           </span>

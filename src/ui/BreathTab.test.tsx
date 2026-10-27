@@ -92,13 +92,34 @@ describe("metronome", () => {
     expect(store.get().mix.metronome.level).toBe(D2);
     change(metronome(), 0.62);
     expect(store.get().mix.metronome.level).toBe(0.62);
-    expect(metronome().getAttribute("aria-valuetext")).toBe("All beats, soft");
+    expect(metronome().getAttribute("aria-valuetext")).toBe("All beats, louder");
   });
 
-  it("labels the marks and the free zone", () => {
+  it("shows the live setting as text next to the label, matching aria-valuetext", () => {
     render(<BreathTab />);
-    for (const word of ["Off", "Phase", "Beats", "Louder"])
-      expect(screen.getByText(word)).toBeTruthy();
+    const live = (text: string) => {
+      expect(metronome().getAttribute("aria-valuetext")).toBe(text);
+      expect(metronome().closest("label")?.firstElementChild?.textContent).toContain(text);
+    };
+    change(metronome(), 0);
+    live("Off");
+    change(metronome(), 0.16);
+    live("Phase changes");
+    change(metronome(), 0.33);
+    live("All beats, quiet");
+    change(metronome(), 0.7);
+    live("All beats, louder");
+  });
+
+  it("puts words only at the two ends, never under the interior marks", () => {
+    render(<BreathTab />);
+    const marks = metronome().closest("label")!.querySelectorAll("[aria-hidden]");
+    // Ticks hold no text; the end row holds exactly the left and right labels, in that order.
+    const [ticks, ends] = [marks[0]!, marks[1]!];
+    expect(ticks.textContent).toBe("");
+    expect(ticks.children).toHaveLength(3);
+    expect([...ends.children].map((c) => c.textContent)).toEqual(["Off", "Louder"]);
+    for (const word of ["Phase", "Beats"]) expect(screen.queryByText(word)).toBeNull();
   });
 
   it("moves stop to stop with the arrow keys (AC7)", () => {
