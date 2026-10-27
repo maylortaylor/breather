@@ -60,6 +60,16 @@ const names = (els: Element[]) => els.map(accessibleName);
 function accessibleName(el: Element): string {
   const label = el.getAttribute("aria-label");
   if (label) return label;
+  // aria-labelledby wins over a wrapping <label>, as in browsers: the slider labels name
+  // themselves from their own label element, not from the live value text beside it.
+  const by = el.getAttribute("aria-labelledby");
+  if (by) {
+    return by
+      .split(/\s+/)
+      .map((id) => visibleText(el.ownerDocument.getElementById(id) ?? el))
+      .join(" ")
+      .trim();
+  }
   const wrapped = el.closest("label");
   return visibleText(wrapped ?? el);
 }
