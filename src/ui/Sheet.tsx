@@ -71,6 +71,12 @@ const styles = stylex.create({
     pointerEvents: "none",
   },
   dockClosed: { bottom: "max(16px, env(safe-area-inset-bottom))" },
+  // Falls back down as the sheet dissolves; reduced motion gets no slide.
+  dockSlide: {
+    transitionProperty: "bottom",
+    transitionDuration: "1s",
+    transitionTimingFunction: "ease-in",
+  },
   dockOpenSheet: { bottom: "calc(60dvh + 12px)" },
   settings: {
     pointerEvents: "auto",
@@ -307,7 +313,8 @@ export function Sheet() {
       <div
         {...stylex.props(
           styles.settingsDock,
-          open && !wide ? styles.dockOpenSheet : styles.dockClosed
+          open && !wide && !dissolved ? styles.dockOpenSheet : styles.dockClosed,
+          !reduced && styles.dockSlide
         )}
       >
         <Tip text="Sounds, tempo and presets">

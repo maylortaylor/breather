@@ -3,7 +3,8 @@ import { CATALOG, ONE_SHOT_LAYER, trimOf } from "../audio/catalog";
 import type { Engine } from "../audio/engine";
 import { getSession } from "../audio/session";
 import { D1, D2 } from "../breath/tempo";
-import type { Mix, VoiceId } from "../presets";
+import { PHASE_TONE_IDS } from "../breath/beats";
+import type { Mix, PhaseSoundId } from "../presets";
 import { store, useStore } from "../store";
 import { colors } from "../theme.stylex";
 import {
@@ -17,6 +18,7 @@ import {
   stepMetronome,
   stepTempo,
   tempoText,
+  PHASE_SOUNDS,
   VOICES,
 } from "./breathLogic";
 import { Slider, type Detent } from "./Slider";
@@ -27,7 +29,7 @@ const PREVIEW_LAYER = "metro-preview";
 const PREVIEW_GAIN = 0.6;
 
 /** Plays one beat of a voice on its own layer, so the running beats keep their own levels. */
-export function previewVoice(engine: Engine, voice: VoiceId): void {
+export function previewVoice(engine: Engine, voice: string): void {
   const entry = CATALOG.find((e) => e.id === voice);
   if (!entry || !("once" in entry)) return;
   engine.setLayer(PREVIEW_LAYER, ONE_SHOT_LAYER);
@@ -57,6 +59,14 @@ const setVoice = (voice: Mix["metronome"]["voice"]) => {
   store.set((s) => ({ mix: { ...s.mix, metronome: { ...s.mix.metronome, voice } } }));
   const engine = getSession()?.engine;
   if (engine) previewVoice(engine, voice);
+};
+
+const setPhaseSound = (phaseSound: PhaseSoundId) => {
+  store.set((s) => ({
+    mix: { ...s.mix, metronome: { ...s.mix.metronome, phaseSound } },
+  }));
+  const engine = getSession()?.engine;
+  if (engine) previewVoice(engine, PHASE_TONE_IDS[phaseSound].inhale);
 };
 
 const styles = stylex.create({
@@ -98,6 +108,7 @@ export function BreathTab() {
   const tempo = useStore((s) => s.mix.tempo);
   const level = useStore((s) => s.mix.metronome.level);
   const voice = useStore((s) => s.mix.metronome.voice);
+  const phaseSound = useStore((s) => s.mix.metronome.phaseSound);
   const secondsMode = useStore((s) => s.secondsMode);
   return (
     <div {...stylex.props(styles.tab)}>
@@ -152,6 +163,32 @@ export function BreathTab() {
                   checked={v.id === voice}
                   {...stylex.props(styles.radio)}
                   onChange={() => setVoice(v.id)}
+                />
+                {v.label}
+              </label>
+            ))}
+          </div>
+        </fieldset>
+      </Tip>
+      <Tip
+        text="The sound at each phase change: breathe in, hold, breathe out. Tap one to hear it."
+        grow="fill"
+      >
+        <fieldset {...stylex.props(styles.voices)}>
+          <legend {...stylex.props(styles.legend)}>Phase sound</legend>
+          <div {...stylex.props(styles.list)}>
+            {PHASE_SOUNDS.map((v) => (
+              <label
+                key={v.id}
+                {...stylex.props(styles.voice, v.id === phaseSound && styles.voiceOn)}
+              >
+                <input
+                  type="radio"
+                  name="phase-sound"
+                  value={v.id}
+                  checked={v.id === phaseSound}
+                  {...stylex.props(styles.radio)}
+                  onChange={() => setPhaseSound(v.id)}
                 />
                 {v.label}
               </label>

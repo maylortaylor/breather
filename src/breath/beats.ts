@@ -6,6 +6,7 @@ import type { Phase, PhaseMachine } from "./phases";
 import { createHaptics, vibrateFromNavigator, type Vibrate } from "./haptics";
 import { createBeatScheduler } from "./scheduler";
 import { beatSeconds, metronomeGains } from "./tempo";
+import type { PhaseSoundId } from "../presets";
 import type { AppState, Store } from "../store";
 
 export const TICK_MS = 25;
@@ -14,12 +15,24 @@ export const PAUSE_FADE_SEC = 0.3;
 /** Seconds the phase tones take to come back on resume. */
 const RESUME_GLIDE_SEC = 0.05;
 
-export const PHASE_TONE_IDS: Record<Phase, string> = {
-  inhale: "phase-inhale-rising",
-  hold: "phase-hold-steady",
-  exhale: "phase-exhale-falling",
+export const PHASE_TONE_IDS: Record<PhaseSoundId, Record<Phase, string>> = {
+  tones: {
+    inhale: "phase-inhale-rising",
+    hold: "phase-hold-steady",
+    exhale: "phase-exhale-falling",
+  },
+  bowl: {
+    inhale: "phase-bowl-inhale",
+    hold: "phase-bowl-hold",
+    exhale: "phase-bowl-exhale",
+  },
+  chime: {
+    inhale: "phase-chime-inhale",
+    hold: "phase-chime-hold",
+    exhale: "phase-chime-exhale",
+  },
 };
-const PHASE_LAYERS = Object.values(PHASE_TONE_IDS);
+const PHASE_LAYERS = Object.values(PHASE_TONE_IDS).flatMap((set) => Object.values(set));
 const VOICE_LAYERS = CATALOG.filter((e) => e.group === "Metronome voices").map((e) => e.id);
 
 const oneShot = (id: string) => {
@@ -77,19 +90,20 @@ export function startBeats({
     vibrate,
     now: clock,
     later,
-    isPaused: () => store.get().paused,
+    // Metronome off means no phase cues at all: no tone and no pulse.
+    isPaused: () => store.get().paused || store.get().mix.metronome.level <= 0,
   });
 
   const scheduler = createBeatScheduler({
     now: clock,
     machine,
     onBeat(beat) {
-      haptics.onBeat(beat);
-      const { level, voice } = store.get().mix.metronome;
+      const { level, voice, phaseSound } = store.get().mix.metronome;
       const g = metronomeGains(level);
+      if (level > 0) haptics.onBeat(beat);
       if (beat.phaseStart) {
-        if (g.phase > 0)
-          oneShot(PHASE_TONE_IDS[beat.phase])?.(engine, beat.at, PHASE_TONE_IDS[beat.phase]);
+        const id = PHASE_TONE_IDS[phaseSound][beat.phase];
+        if (g.phase > 0) oneShot(id)?.(engine, beat.at, id);
       } else if (g.beat > 0) {
         oneShot(voice)?.(engine, beat.at, voice);
       }
@@ -121,7 +135,10 @@ export function startBeats({
       if (next.paused) for (const id of PHASE_LAYERS) engine.silenceLayer(id, PAUSE_FADE_SEC);
       else applyGains(RESUME_GLIDE_SEC);
     }
-    if (next.metronome !== last.metronome) applyGains();
+    if (next.metronome !== last.metronome) {
+      applyGains();
+      if (next.metronome.level <= 0) haptics.cancel();
+    }
     last = next;
   });
   const stopTimer = every(() => scheduler.tick(), TICK_MS);

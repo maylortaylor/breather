@@ -15,7 +15,11 @@ function setup(level: number, tempo = 0.5, voice: Mix["metronome"]["voice"] = "m
   let t = 0;
   const store = createStore<AppState>({
     ...DEFAULT_STATE,
-    mix: { ...DEFAULT_STATE.mix, tempo, metronome: { level, voice } },
+    mix: {
+      ...DEFAULT_STATE.mix,
+      tempo,
+      metronome: { level, voice, phaseSound: "tones" },
+    },
   });
   const machine = createPhaseMachine(1);
   machine.start(0);
@@ -42,6 +46,22 @@ function setup(level: number, tempo = 0.5, voice: Mix["metronome"]["voice"] = "m
 }
 
 const fed = (f: ReturnType<typeof createFakeEngine>, layer: string) => f.feeding(layer).length;
+
+describe("phase sound", () => {
+  it("plays the chosen set's phase tone, not the rising tones", () => {
+    const s = setup(LEVEL_D1);
+    s.store.set((st) => ({
+      mix: {
+        ...st.mix,
+        metronome: { ...st.mix.metronome, phaseSound: "bowl" },
+      },
+    }));
+    s.run(4.2);
+    expect(fed(s.fake, "phase-bowl-inhale")).toBe(2);
+    expect(fed(s.fake, "phase-bowl-hold")).toBe(2);
+    expect(fed(s.fake, "phase-inhale-rising")).toBe(0);
+  });
+});
 
 describe("startBeats", () => {
   it("plays the phase tone alone on a phase change, then the voice on the other beats", () => {
@@ -84,7 +104,10 @@ describe("startBeats", () => {
     expect(quiet).toBeGreaterThan(0);
     expect(thump).toBe(0);
     s.store.set({
-      mix: { ...s.store.get().mix, metronome: { level: 1, voice: "metro-wood-block" } },
+      mix: {
+        ...s.store.get().mix,
+        metronome: { level: 1, voice: "metro-wood-block", phaseSound: "tones" },
+      },
     });
     expect(wood()).toBeGreaterThan(quiet);
   });
@@ -114,13 +137,13 @@ describe("startBeats", () => {
     s.run(0.5);
     s.machine.pause(s.now());
     s.store.set({ paused: true });
-    expect(s.fake.calls.filter((c) => c.startsWith("silence phase-")).length).toBe(3);
+    expect(s.fake.calls.filter((c) => c.startsWith("silence phase-")).length).toBe(9);
     const before = s.fake.oscillators.length;
     s.run(8);
     expect(s.fake.oscillators.length).toBe(before);
     s.machine.resume(s.now());
     s.store.set({ paused: false });
-    expect(s.fake.calls.filter((c) => /^layer phase-\S+ 0\.8 over 0\.05$/.test(c)).length).toBe(3);
+    expect(s.fake.calls.filter((c) => /^layer phase-\S+ 0\.8 over 0\.05$/.test(c)).length).toBe(9);
     s.run(9.1);
     expect(s.fake.oscillators.length).toBeGreaterThan(before);
   });
@@ -229,7 +252,15 @@ describe("seconds mode", () => {
     const store = createStore<AppState>({
       ...DEFAULT_STATE,
       secondsMode: true,
-      mix: { ...DEFAULT_STATE.mix, tempo: 1, metronome: { level: 0.4, voice: "metro-wood-block" } },
+      mix: {
+        ...DEFAULT_STATE.mix,
+        tempo: 1,
+        metronome: {
+          level: 0.4,
+          voice: "metro-wood-block",
+          phaseSound: "tones",
+        },
+      },
     });
     const machine = createPhaseMachine(1);
     machine.start(0);
@@ -289,6 +320,31 @@ describe("haptics", () => {
     const s = rig({ vibrate: false });
     expect(() => s.run(12)).not.toThrow();
     expect(s.pulses).toHaveLength(0);
+  });
+
+  it("sends no pulse at all while the metronome is off, and resumes when it is raised", () => {
+    const s = rig();
+    const set = (level: number) =>
+      s.store.set((st) => ({
+        mix: { ...st.mix, metronome: { ...st.mix.metronome, level } },
+      }));
+    set(0);
+    s.run(12);
+    expect(s.pulses).toHaveLength(0);
+    set(LEVEL_D1);
+    s.run(30);
+    expect(s.pulses.length).toBeGreaterThan(0);
+  });
+
+  it("drops a pulse already queued when the metronome goes off", () => {
+    const s = rig();
+    s.run(3.95);
+    expect(s.pulses).toHaveLength(1);
+    s.store.set((st) => ({
+      mix: { ...st.mix, metronome: { ...st.mix.metronome, level: 0 } },
+    }));
+    s.run(5);
+    expect(s.pulses).toHaveLength(1);
   });
 
   it("drops queued pulses when torn down", () => {

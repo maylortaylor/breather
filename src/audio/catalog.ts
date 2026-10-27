@@ -1,6 +1,13 @@
 import { bubblesSound, whaleSound } from "./creatures";
 import type { Engine, Sound } from "./engine";
-import { METRONOME_VOICES, PHASE_TONES, TEST_TONE, type OneShot } from "./metronome";
+import {
+  BOWL_TONES,
+  CHIME_TONES,
+  METRONOME_VOICES,
+  PHASE_TONES,
+  TEST_TONE,
+  type OneShot,
+} from "./metronome";
 import { noiseSound, oceanSound } from "./noise";
 import { padSound } from "./pads";
 
@@ -31,6 +38,13 @@ export const TRIMS: Record<string, number> = {
   "phase-inhale-rising": 0.69,
   "phase-hold-steady": 0.7,
   "phase-exhale-falling": 0.69,
+  // Set by ear to sit near the rising tones; re-measure with the analyser when you can.
+  "phase-bowl-inhale": 0.7,
+  "phase-bowl-hold": 0.7,
+  "phase-bowl-exhale": 0.7,
+  "phase-chime-inhale": 0.85,
+  "phase-chime-hold": 0.85,
+  "phase-chime-exhale": 0.85,
 };
 export const trimOf = (id: string): number => TRIMS[id] ?? 1;
 
@@ -69,11 +83,18 @@ export const CATALOG: Entry[] = [
     group: "Metronome voices",
     once,
   })),
-  ...Object.entries(PHASE_TONES).map(([name, once]): Entry => ({
-    id: `phase-${slug(name)}`,
-    label: name,
-    group: "Phase tones",
-    once,
-  })),
-  { id: "test-tone", label: "Test tone (quiet)", group: "Engine", once: TEST_TONE },
+  ...Object.entries({ ...PHASE_TONES, ...BOWL_TONES, ...CHIME_TONES }).map(
+    ([name, once]): Entry => ({
+      id: `phase-${slug(name)}`,
+      label: name,
+      group: "Phase tones",
+      once,
+    })
+  ),
+  {
+    id: "test-tone",
+    label: "Test tone (quiet)",
+    group: "Engine",
+    once: TEST_TONE,
+  },
 ];

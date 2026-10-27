@@ -1,6 +1,6 @@
 // Pure rules for the Breath tab: the live hint, the spoken value phrases, the detent snapping
 // and the voice list. No DOM, no audio.
-import type { VoiceId } from "../presets";
+import type { PhaseSoundId, VoiceId } from "../presets";
 import { beatSeconds, D1, D2, DETENT_RADIUS, snap } from "../breath/tempo";
 
 const CENTER = 0.5;
@@ -61,6 +61,12 @@ export function metronomeText(level: number): string {
   if (level <= D2) return "All beats, quiet";
   return "All beats, louder";
 }
+
+export const PHASE_SOUNDS: { id: PhaseSoundId; label: string }[] = [
+  { id: "tones", label: "Rising tones" },
+  { id: "bowl", label: "Singing bowl" },
+  { id: "chime", label: "Chime" },
+];
 
 export const VOICES: { id: VoiceId; label: string }[] = [
   { id: "metro-heartbeat-thump", label: "Heartbeat thump" },
