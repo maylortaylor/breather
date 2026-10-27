@@ -4,4 +4,5 @@
 set -euo pipefail
 
 node_modules/.bin/vp check
+node scripts/check-licenses.mjs
 node_modules/.bin/vp test run

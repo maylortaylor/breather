@@ -75,8 +75,22 @@ if (!existsSync(swPath)) {
       failures.push(`font has no OFL.txt beside it: ${rel}`);
     }
   }
+  // The licence notices ship and work offline (MIT needs them in every copy).
+  if (!precached.has("notices.txt")) {
+    failures.push("notices.txt is not in the service worker precache");
+  }
   for (const url of precached) {
     if (!existsSync(join(dist, url))) failures.push(`precache entry is missing from dist/: ${url}`);
+  }
+}
+
+// 2a. The licence notices: present, and naming what ships.
+if (!existsSync(join(dist, "notices.txt"))) {
+  failures.push("dist/notices.txt is missing");
+} else {
+  const notices = readFileSync(join(dist, "notices.txt"), "utf8");
+  for (const name of ["react@", "three@", "Nunito"]) {
+    if (!notices.includes(name)) failures.push(`dist/notices.txt does not mention ${name}`);
   }
 }
 

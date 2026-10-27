@@ -31,7 +31,7 @@ Triage roles are in [`docs/agents/triage-labels.md`](docs/agents/triage-labels.m
 4. No audio files in v1. Later samples must be CC0, approved by ear, logged with source, license URL, date and SHA-256.
 5. Never use CC BY-NC or Sampling+. CC BY only with an in-app About credit.
 6. Ship Nunito with its `OFL.txt`. Keep the copyright notice and never sell the font alone.
-7. npm licenses: allow MIT, ISC, BSD-2/3, Apache-2.0, 0BSD, CC0, Unlicense. Deny GPL, AGPL, CC-BY-NC, unlicensed.
+7. npm licenses: allow MIT, ISC, BSD-2/3, Apache-2.0, 0BSD, CC0, Unlicense. Deny GPL, AGPL, CC-BY-NC, unlicensed. One exception: dev-only dependencies may also carry MPL-2.0 (axe-core, lightningcss), BlueOak-1.0.0, MIT-0 and CC-BY data licences, because none of them ships in `dist/`. Production dependencies get the strict list. `node scripts/check-licenses.mjs` enforces both and runs in pre-push.
 8. Details and the check command: `docs/research/license-provenance.md`.
 
 ## Models

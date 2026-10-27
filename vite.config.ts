@@ -2,7 +2,9 @@ import react from "@vitejs/plugin-react";
 import stylex from "@stylexjs/unplugin/vite";
 import { defineConfig } from "vite-plus";
 import { VitePWA } from "vite-plugin-pwa";
+import { readFileSync } from "node:fs";
 import { withCsp } from "./scripts/buildRules";
+import { renderNotices } from "./scripts/licenseRules";
 
 const testing = Boolean(process.env.VITEST);
 
@@ -14,6 +16,25 @@ export default defineConfig({
       name: "breather:csp",
       apply: "build",
       transformIndexHtml: { order: "pre", handler: withCsp },
+    },
+    // dist/notices.txt: licence text of every package in the bundle, plus the font. Linked from
+    // the About line in the Session tab and precached, so it opens offline.
+    {
+      name: "breather:notices",
+      apply: "build",
+      async generateBundle() {
+        // Loaded here so the dev server and the tests never pay for the checker.
+        const { scanLicenses } = await import("./scripts/scanLicenses");
+        const found = await scanLicenses(process.cwd(), "production");
+        const font = readFileSync("public/fonts/OFL.txt", "utf8");
+        this.emitFile({
+          type: "asset",
+          fileName: "notices.txt",
+          source: renderNotices(found, [
+            { name: "Nunito (variable font, latin subset)", license: "OFL-1.1", text: font },
+          ]),
+        });
+      },
     },
     // Build-only plugins hold dev servers open, which stalls vitest on exit.
     ...(testing
@@ -47,7 +68,7 @@ export default defineConfig({
                 },
               ],
             },
-            workbox: { globPatterns: ["**/*.{js,css,html,woff2,png,webmanifest}"] },
+            workbox: { globPatterns: ["**/*.{js,css,html,woff2,png,webmanifest,txt}"] },
           }),
         ]),
   ],
@@ -84,6 +105,7 @@ export default defineConfig({
         "src/ui/soundsLogic.ts",
         "src/ui/tooltipTimer.ts",
         "scripts/buildRules.ts",
+        "scripts/licenseRules.ts",
         "src/store.ts",
         "src/presets.ts",
         "src/presetStore.ts",

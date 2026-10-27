@@ -16,7 +16,11 @@ None. The aurora shader and the noise generators are written from scratch. v1 sh
 
 ## npm dependencies
 
-Run the license check in the research file (section 5). A generated notices file is linked from the About screen.
+`node scripts/check-licenses.mjs` checks every installed package against the allow list and runs in pre-push. The build writes the licence text of each shipped package to `dist/notices.txt`, which the Session tab links as "Licence notices".
+
+Shipped (production dependencies): react, react-dom, scheduler, three, @stylexjs/stylex, css-mediaquery, styleq, invariant, loose-envify and js-tokens. All are MIT except css-mediaquery, which declares a bare "BSD"; its own `LICENSE` is three-clause BSD (Yahoo), recorded as an override in `scripts/licenseRules.ts`. `@stylexjs/stylex` ships no licence file; its `package.json` declares MIT.
+
+**Dev-only exception.** axe-core (via `vitest-axe`) and lightningcss are MPL-2.0. Neither ships in `dist/`, so the file-level copyleft never reaches users. The check allows MPL-2.0, BlueOak-1.0.0, MIT-0 and the CC-BY data licences (caniuse-lite, SPDX tables) for dev dependencies only, and denies them in production. `license-checker-rseidelsohn` 5.0.1 (BSD-3-Clause, dev) reads the installed packages from disk and makes no network calls.
 
 | Package | Version | License | Notes |
 |---|---|---|---|
