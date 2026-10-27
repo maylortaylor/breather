@@ -4,6 +4,7 @@ import { Background } from "./background/Background";
 import { Breath } from "./breath/Ring";
 import { Gate, SoundNote } from "./ui/Gate";
 import { Sheet } from "./ui/Sheet";
+import { Moon } from "./ui/SleepTimer";
 import { useStore } from "./store";
 import { dimTheme } from "./theme.stylex";
 
@@ -66,6 +67,7 @@ export function Screens() {
         <SoundNote />
       </Breath>
       <Sheet />
+      <Moon />
     </>
   ) : (
     <Gate />

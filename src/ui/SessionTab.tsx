@@ -18,6 +18,7 @@ import {
   type NameFailure,
 } from "./sessionLogic";
 import { About } from "./About";
+import { SleepSection } from "./SleepTimer";
 import { Tip } from "./Tip";
 
 const styles = stylex.create({
@@ -301,6 +302,7 @@ export function SessionTab() {
           Dim mode
         </label>
       </Tip>
+      <SleepSection />
       <div {...stylex.props(styles.footer)}>
         <p {...stylex.props(styles.note)}>{STORAGE_LINE}</p>
         <button type="button" {...stylex.props(styles.link)} onClick={reopenWelcome}>
