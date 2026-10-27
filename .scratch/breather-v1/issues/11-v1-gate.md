@@ -15,3 +15,11 @@ Define done for v1 and the first-push procedure.
 
 ## How to resolve
 Type `/grill-me`. Produces a v1 checklist under `## Answer` with numbered acceptance criteria. Then run `bootstrap-process.sh` for labels and decide whether to migrate `.scratch/` tickets to GitHub issues.
+
+## Comments
+- Ready (ticket 32, branch `build/32-acceptance`): the full gate passes (579 tests, coverage gate, build, `check:build`, licence check, pre-push hook); `gitleaks git .` is clean over the 162 local commits; `dist/` holds no Lab code, dev timer, source map, console call of the app's own outside the error boundary, or third-party host.
+- Ticket 11 still owns: the final full-history `gitleaks` run right before the push; the first push (manual, `main` to origin); enabling GitHub secret scanning, push protection and private vulnerability reporting; the platform Caddy ticket (proxy `/breather/*`, trailing slash, `no-cache` on `sw.js`, "Apps by roboBOREALIS" link).
+- Also ticket 11: re-read `SECURITY.md` (reply and fix times and release-notes credit were agent-drafted) and update the README status line ("pre-v1, local only").
+- After the first HTTPS deploy: install from `roboborealis.com/breather/`, reload offline, and run the ticket 29 iPhone checklist.
+- Matt still owes the 10 minute stopwatch run (ticket 32 AC3), if not done, and criterion 14.
+- Tickets 33 (hidden-tab metronome) and 34 (focus on screen swap) are open and not blockers for v1 unless Matt says so.
