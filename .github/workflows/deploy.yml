@@ -1,7 +1,5 @@
 name: Deploy
 
-# Inert until the first push: this repo has no remote before v1.
-#
 # Publishes dist/ to GitHub Pages on push to main (ADR-0002, ADR-0003). Docs-only and
 # ticket-only changes skip it. The secret scan in scan.yml is not filtered this way.
 # No schedule: every deploy follows a commit.
@@ -11,6 +9,8 @@ on:
     paths-ignore:
       - "**.md"
       - ".scratch/**"
+  # Retry a failed deploy without a new commit. The job only runs on main.
+  workflow_dispatch:
 
 concurrency:
   group: deploy
@@ -24,6 +24,7 @@ permissions:
 jobs:
   deploy:
     name: Build and deploy
+    if: github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
     environment:
       name: github-pages

@@ -17,3 +17,7 @@ Breather is a small open-source app. The repo goes public at v1. Until then ther
 - The v1 gate ticket owns a clean `gitleaks git .` over full history and the first-push procedure.
 - Migrating `.scratch/` tickets to GitHub issues is optional and decided at the v1 gate.
 - Borrowed shader or noise code needs a license check before it enters the repo.
+
+## Amended 2026-10-26
+
+The v1 gate cleared: a clean `gitleaks git .` over the full history (162 commits, none with a personal email), then a manual first push of `main` by Matt. The repo is public at `github.com/maylortaylor/breather`. Branches now go through pull requests into `main`. Tickets stay in `.scratch/`.

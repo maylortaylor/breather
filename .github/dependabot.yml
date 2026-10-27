@@ -1,4 +1,4 @@
-# Monthly, one grouped pull request per ecosystem (ADR-0003). Inert until the first push.
+# Monthly, one grouped pull request per ecosystem (ADR-0003).
 version: 2
 updates:
   - package-ecosystem: npm

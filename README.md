@@ -37,7 +37,7 @@ npm run check:build   # fails on a missing asset, an uncached asset, a bad CSP o
 npm run preview       # serves dist/ at /breather/
 ```
 
-`.github/workflows/deploy.yml` builds and publishes `dist/` to GitHub Pages on every push to `main` that changes more than docs. The app is served under `/breather/` and is proxied from roboborealis.com; see [ADR-0002](docs/adr/0002-hosting-and-owner.md).
+`.github/workflows/deploy.yml` builds and publishes `dist/` to GitHub Pages on every push to `main` that changes more than docs. In the repository settings, Pages must use the **GitHub Actions** source. The app is served under `/breather/` and is proxied from roboborealis.com; see [ADR-0002](docs/adr/0002-hosting-and-owner.md).
 
 ## iPhone limits
 
