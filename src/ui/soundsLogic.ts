@@ -2,7 +2,8 @@
 import { DEFAULT_LAYER } from "../audio/engine";
 import { sliderToGain } from "../audio/dsp";
 import { CATALOG } from "../audio/catalog";
-import { LOOP_IDS, type LoopId, type Mix, type SoundSetting } from "../presets";
+import { clampPeriod, MAX_PERIOD, MIN_PERIOD, type LfoShape } from "../audio/lfo";
+import { LOOP_IDS, type LfoSetting, type LoopId, type Mix, type SoundSetting } from "../presets";
 
 export interface Chip {
   id: LoopId;
@@ -73,3 +74,28 @@ export function mixRmsDb(sounds: Mix["sounds"]): number {
   }
   return power === 0 ? -Infinity : 10 * Math.log10(power);
 }
+
+/** Change one of the three LFOs in a mix. The period is clamped to 8..120 s; others stay as they are. */
+export function setLfo(mix: Mix, index: 0 | 1 | 2, patch: Partial<LfoSetting>): Mix {
+  const lfos = [...mix.lfos] as Mix["lfos"];
+  const prev = lfos[index];
+  lfos[index] = {
+    period: patch.period === undefined ? prev.period : clampPeriod(patch.period),
+    shape: patch.shape ?? prev.shape,
+  };
+  return { ...mix, lfos };
+}
+
+/** An LFO period as a phrase for screen readers. Never the raw seconds. */
+export function periodText(seconds: number): string {
+  const t = (seconds - MIN_PERIOD) / (MAX_PERIOD - MIN_PERIOD);
+  if (t < 0.1) return "Fast";
+  if (t < 0.35) return "Medium";
+  if (t < 0.7) return "Slow";
+  return "Very slow";
+}
+
+export const SHAPE_LABELS: Record<LfoShape, string> = {
+  sine: "Sine",
+  "smooth-random": "Smooth random",
+};
