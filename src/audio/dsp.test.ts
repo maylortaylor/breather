@@ -380,3 +380,24 @@ describe("sliderToGain", () => {
     expect(sliderToGain(1)).toBe(1);
   });
 });
+
+describe("trigger scheduler lookahead", () => {
+  it("reads a function lookahead on every tick, so a hidden page hands out triggers further ahead", () => {
+    let t = 0;
+    let ahead = 0.2;
+    const fired: number[] = [];
+    const s = createTriggerScheduler({
+      rng: () => 0,
+      now: () => t,
+      minGap: 1,
+      maxGap: 1,
+      lookahead: () => ahead,
+      fire: (at) => fired.push(at),
+    });
+    s.tick();
+    expect(fired).toEqual([]);
+    ahead = 3.5;
+    s.tick();
+    expect(fired).toEqual([1, 2, 3]);
+  });
+});

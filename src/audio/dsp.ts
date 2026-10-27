@@ -175,7 +175,8 @@ export interface TriggerSchedulerOptions {
   now: () => number;
   minGap: number;
   maxGap: number;
-  lookahead: number;
+  /** Seconds ahead to hand out triggers; a function is read on every tick. */
+  lookahead: number | (() => number);
   /** Receives the time at which to start the sound. */
   fire: (at: number) => void;
 }
@@ -186,7 +187,8 @@ export function createTriggerScheduler(opts: TriggerSchedulerOptions): TriggerSc
   let next = opts.now() + gap();
   return {
     tick() {
-      const horizon = opts.now() + opts.lookahead;
+      const horizon =
+        opts.now() + (typeof opts.lookahead === "function" ? opts.lookahead() : opts.lookahead);
       while (next < horizon) {
         opts.fire(next);
         next += gap();
@@ -235,7 +237,8 @@ export function bubbleCluster(rng: Rng): number[] {
 export interface BubbleSchedulerOptions {
   rng: Rng;
   now: () => number;
-  lookahead: number;
+  /** Seconds ahead to hand out triggers; a function is read on every tick. */
+  lookahead: number | (() => number);
   /** Delay before the first event, so a listener does not wait for a full gap. */
   firstDelay: number;
   fire: (at: number) => void;
@@ -246,7 +249,8 @@ export function createBubbleScheduler(opts: BubbleSchedulerOptions): TriggerSche
   let next = opts.now() + opts.firstDelay;
   return {
     tick() {
-      const horizon = opts.now() + opts.lookahead;
+      const horizon =
+        opts.now() + (typeof opts.lookahead === "function" ? opts.lookahead() : opts.lookahead);
       while (next < horizon) {
         for (const offset of bubbleCluster(opts.rng)) opts.fire(next + offset);
         next += bubbleGap(opts.rng);

@@ -106,6 +106,7 @@ export function createFakeEngine(): FakeEngine {
     reverbSend,
     layer: layerNode,
     setMod: () => {},
+    rampMod: () => {},
     addWetMod: (name: string, node: unknown) => {
       let set = wets.get(name);
       if (!set) wets.set(name, (set = new Set()));
