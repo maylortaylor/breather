@@ -44,7 +44,9 @@ const needsMediaRoute = () =>
 
 /** Create the one shared context. Must be called from a user gesture (the Begin click). */
 export function createEngine(): Engine {
-  const ctx = new AudioContext();
+  // "playback" asks for large output buffers. A locked phone throttles the CPU, and the small
+  // default buffers underrun first on the busy pads, which is the stutter heard with the screen off.
+  const ctx = new AudioContext({ latencyHint: "playback" });
 
   // layers -> master -> limiter -> output
   const master = ctx.createGain();
