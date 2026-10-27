@@ -6,7 +6,7 @@ import type { LoopId, Mix } from "../presets";
 import { store, useStore } from "../store";
 import { colors } from "../theme.stylex";
 import { RowVolume, Slider } from "./Slider";
-import { chipGroups, playingIds, setSound, toggleSound } from "./soundsLogic";
+import { chipGroups, playingIds, setSound, toggleSound, volumeText } from "./soundsLogic";
 import { Tip } from "./Tip";
 
 /** Seconds a tap on a chip or a button takes to land. Slider drags glide a touch shorter. */
@@ -102,6 +102,7 @@ export function SoundsTab() {
         label="Master"
         value={master}
         onChange={changeMaster}
+        valueText={volumeText(master)}
         tip="How loud everything is. It resets to a gentle default each time you open the app."
       />
       {GROUPS.map(({ group, chips }) => (

@@ -2,6 +2,7 @@ import * as stylex from "@stylexjs/stylex";
 import { useEffect, useId, useRef, useState, type CSSProperties } from "react";
 import type { LfoChoice, Modulator, RowSetting } from "../audio/modulation";
 import { colors } from "../theme.stylex";
+import { volumeText } from "./soundsLogic";
 import { Tip } from "./Tip";
 
 const FRAME_MS = 33;
@@ -384,6 +385,7 @@ export function RowVolume({
             <input
               type="range"
               aria-label={`${name} minimum volume`}
+              aria-valuetext={volumeText(row.min)}
               min={0}
               max={1}
               step={0.01}
@@ -396,6 +398,7 @@ export function RowVolume({
           <input
             type="range"
             aria-label={ranged ? `${name} maximum volume` : `${name} volume`}
+            aria-valuetext={volumeText(row.max)}
             min={0}
             max={1}
             step={0.01}

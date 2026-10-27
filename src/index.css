@@ -19,9 +19,35 @@ body {
 }
 
 .shell {
+  /* The keyboard focus ring. 3:1 or better on every ground of its theme (a11y.test.tsx checks). */
+  --focus: #ffffff;
   min-height: 100vh;
   box-sizing: border-box;
   padding: 24px;
+}
+
+/* The dim theme is set by data-dim on the shell: a warm ring, nothing blue. */
+.shell[data-dim] {
+  --focus: #f0dcb8;
+}
+
+/* One explicit ring for every control; the browser default is never relied on. */
+:focus-visible {
+  outline: 3px solid var(--focus, #ffffff);
+  outline-offset: 2px;
+}
+
+/* Text for screen readers only. Not display:none, which would hide it from them too. */
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  margin: -1px;
+  padding: 0;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+  border: 0;
 }
 
 .shell-fallback {

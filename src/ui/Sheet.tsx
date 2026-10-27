@@ -218,10 +218,25 @@ export function Sheet() {
   const hideRef = useRef<AutoHide | null>(null);
   const keyboard = useRef(false);
   const focusTab = useRef(false);
+  const settingsRef = useRef<HTMLButtonElement>(null);
 
   useOpenGestures(resting && !open, () => {
     focusTab.current = true;
   });
+
+  // Closing returns focus to the control that opened the sheet, or to Settings when focus was
+  // nowhere in particular (a tap, a click in Safari). Skipped if focus already moved elsewhere.
+  useEffect(() => {
+    if (!open) return;
+    const active = document.activeElement;
+    const from = active instanceof HTMLElement && active !== document.body ? active : null;
+    const settings = settingsRef.current;
+    return () => {
+      const to = from?.isConnected ? from : settings;
+      const now = document.activeElement;
+      if (to?.isConnected && (!now || now === document.body)) to.focus();
+    };
+  }, [open]);
 
   useEffect(() => {
     if (!open) return;
@@ -297,6 +312,7 @@ export function Sheet() {
       >
         <Tip text="Sounds, tempo and presets">
           <button
+            ref={settingsRef}
             type="button"
             aria-expanded={open}
             aria-controls={open ? SHEET_ID : undefined}

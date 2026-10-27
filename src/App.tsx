@@ -42,7 +42,11 @@ function Shell({ children }: { children?: ReactNode }) {
   const dim = useStore((s) => s.dim);
   const themed = stylex.props(dim && dimTheme);
   return (
-    <main className={["shell", themed.className].filter(Boolean).join(" ")} style={themed.style}>
+    <main
+      className={["shell", themed.className].filter(Boolean).join(" ")}
+      style={themed.style}
+      data-dim={dim ? "" : undefined}
+    >
       {children}
     </main>
   );

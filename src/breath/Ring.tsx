@@ -48,6 +48,7 @@ export function createRing(): BreathVisual {
   let reduced = false;
   let dim = false;
   let last: BreathState | null = null;
+  let wasPaused = false;
 
   const setText = (el: HTMLElement | null, text: string) => {
     // Writing only on change keeps the live region quiet between phase changes.
@@ -67,6 +68,11 @@ export function createRing(): BreathVisual {
       ring?.style.setProperty("--ring-glow", `${glow.toFixed(1)}px`);
       setText(q(root, "count"), String(state.countdown));
       setText(q(root, "word"), PHASE_WORDS[state.phase]);
+      // Pause and resume get their own short announcement; the phase word stays as it is.
+      if (state.paused !== wasPaused) {
+        wasPaused = state.paused;
+        setText(q(root, "paused"), state.paused ? "Paused" : "Resumed");
+      }
     },
     setDim(on) {
       dim = on;
@@ -202,6 +208,7 @@ export function Breath({ now, machine, children }: BreathProps) {
         <span data-count aria-hidden="true" {...stylex.props(styles.count)} />
       </button>
       <p data-word role="status" {...stylex.props(styles.word)} />
+      <p data-paused aria-live="polite" className="sr-only" />
       {children}
     </div>
   );

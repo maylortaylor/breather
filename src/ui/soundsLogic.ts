@@ -45,6 +45,16 @@ export function setSound(mix: Mix, id: LoopId, next: SoundSetting): Mix {
   };
 }
 
+/** A 0..1 volume as a phrase for screen readers. Never the raw number. */
+export function volumeText(v: number): string {
+  if (v <= 0) return "Silent";
+  if (v < 0.2) return "Very quiet";
+  if (v < 0.4) return "Quiet";
+  if (v < 0.6) return "Medium";
+  if (v < 0.8) return "Loud";
+  return "Very loud";
+}
+
 /** Every loop measures about -30 dBFS RMS at the output at the default level (catalog TRIMS). */
 const LOOP_RMS_DB = -30;
 /** The limiter sits at -3 dBFS; 18 dB of RMS headroom leaves it room for a 15 dB crest. */
