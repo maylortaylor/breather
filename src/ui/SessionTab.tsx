@@ -17,6 +17,7 @@ import {
   updatePreset,
   type NameFailure,
 } from "./sessionLogic";
+import { About } from "./About";
 import { Tip } from "./Tip";
 
 const styles = stylex.create({
@@ -306,6 +307,7 @@ export function SessionTab() {
           How it works
         </button>
       </div>
+      <About />
     </div>
   );
 }
