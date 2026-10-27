@@ -91,12 +91,13 @@ export function startBeats({
     }
   };
 
+  const vibrates = () => store.get().vibrate && store.get().mix.metronome.level > 0;
   const haptics = createHaptics({
     vibrate,
     now: clock,
     later,
     // Metronome off means no phase cues at all: no tone and no pulse.
-    isPaused: () => store.get().paused || store.get().mix.metronome.level <= 0,
+    isPaused: () => store.get().paused || !vibrates(),
   });
 
   const scheduler = createBeatScheduler({
@@ -107,7 +108,7 @@ export function startBeats({
     onBeat(beat) {
       const { level, voice, phaseSound } = store.get().mix.metronome;
       const g = metronomeGains(level);
-      if (level > 0) haptics.onBeat(beat);
+      if (vibrates()) haptics.onBeat(beat);
       if (beat.phaseStart) {
         const id = PHASE_TONE_IDS[phaseSound][beat.phase];
         if (g.phase > 0) oneShot(id)?.(engine, beat.at, id);
@@ -144,8 +145,8 @@ export function startBeats({
     }
     if (next.metronome !== last.metronome) {
       applyGains();
-      if (next.metronome.level <= 0) haptics.cancel();
     }
+    if (!vibrates()) haptics.cancel();
     last = next;
   });
   const stopTimer = every(() => scheduler.tick(), TICK_MS);

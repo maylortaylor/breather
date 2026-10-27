@@ -54,6 +54,8 @@ const METRONOME_DETENT: Detent = {
 const setTempo = (tempo: number) => store.set((s) => ({ mix: { ...s.mix, tempo } }));
 const setLevel = (level: number) =>
   store.set((s) => ({ mix: { ...s.mix, metronome: { ...s.mix.metronome, level } } }));
+const setVibrate = (vibrate: boolean) => store.set({ vibrate });
+const canVibrate = () => typeof navigator !== "undefined" && "vibrate" in navigator;
 const setSecondsMode = (secondsMode: boolean) => store.set({ secondsMode });
 const setVoice = (voice: Mix["metronome"]["voice"]) => {
   store.set((s) => ({ mix: { ...s.mix, metronome: { ...s.mix.metronome, voice } } }));
@@ -110,6 +112,7 @@ export function BreathTab() {
   const voice = useStore((s) => s.mix.metronome.voice);
   const phaseSound = useStore((s) => s.mix.metronome.phaseSound);
   const secondsMode = useStore((s) => s.secondsMode);
+  const vibrate = useStore((s) => s.vibrate);
   return (
     <div {...stylex.props(styles.tab)}>
       <Slider
@@ -170,6 +173,20 @@ export function BreathTab() {
           </div>
         </fieldset>
       </Tip>
+      {canVibrate() && (
+        <Tip text="A short buzz at each phase change. It needs the metronome on.">
+          <label {...stylex.props(styles.switchRow)}>
+            <input
+              type="checkbox"
+              role="switch"
+              checked={vibrate}
+              {...stylex.props(styles.switch)}
+              onChange={(ev) => setVibrate(ev.target.checked)}
+            />
+            Vibrate on phase change
+          </label>
+        </Tip>
+      )}
       <Tip
         text="The sound at each phase change: breathe in, hold, breathe out. Tap one to hear it."
         grow="fill"
