@@ -1,5 +1,5 @@
 Type: build
-Status: claimed
+Status: resolved
 Blocked by: 23, 26, 27
 Model: sonnet
 
@@ -36,3 +36,6 @@ npm run dev
 - Defects found and fixed: no explicit focus style (now a 3px `:focus-visible` ring, white, warm in dim); Master and row sliders had no `aria-valuetext` (now words via `volumeText`); closing the sheet dropped focus to the page (now returns to the opener, or Settings); pause and resume were silent (new polite `.sr-only` region says Paused or Resumed).
 - Not checked here, needs VoiceOver: real reading order, whether the tab semantics and toggle buttons are spoken sensibly, and how chatty the status regions are.
 - Follow-ups: focus is lost when a screen swaps (welcome to Begin to resting, and "How it works"). "Resume control accessibility" waits on `src/ui/Resume.tsx` from ticket 29.
+
+## Answer
+Resolved 2026-10-26. All 8 criteria pass (551 tests; every screen and tab clean through axe in both themes). The audit found and fixed four defects: no focus style, sliders without spoken values, focus lost when the sheet closed, and silent pause and resume. Matt approved merging. Not proven in a real browser or with VoiceOver: the real tab order, the visible focus ring and how the announcements sound. Follow-ups carried to ticket 32: check the "Tap to resume" control, and focus is lost when one screen swaps for another (welcome card, Begin, resting screen).
