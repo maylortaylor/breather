@@ -3,6 +3,7 @@ import { Component, type ErrorInfo, type ReactNode } from "react";
 import { Background } from "./background/Background";
 import { Breath } from "./breath/Ring";
 import { Gate, SoundNote } from "./ui/Gate";
+import { Resume } from "./ui/Resume";
 import { Sheet } from "./ui/Sheet";
 import { Moon } from "./ui/SleepTimer";
 import { useStore } from "./store";
@@ -68,6 +69,7 @@ export function Screens() {
       </Breath>
       <Sheet />
       <Moon />
+      <Resume />
     </>
   ) : (
     <Gate />
