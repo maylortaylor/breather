@@ -1,9 +1,12 @@
+import { readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
 import {
   CANONICAL_URL,
   CSP,
   checkHtml,
   checkManifest,
+  checkNoDevTimer,
+  DEV_TIMER_MARK,
   checkPrecache,
   withCsp,
 } from "../scripts/buildRules";
@@ -146,5 +149,22 @@ describe("checkPrecache", () => {
     expect(problems.join("\n")).toMatch(/apple-touch-icon\.png/);
     expect(problems.join("\n")).toMatch(/manifest\.webmanifest/);
     expect(problems.join("\n")).not.toMatch(/icon-192\.png/);
+  });
+});
+
+describe("checkNoDevTimer (AC7)", () => {
+  it("flags the dev timer marker in a built file", () => {
+    expect(checkNoDevTimer(`x("${DEV_TIMER_MARK}")`, "assets/a.js")).toEqual([
+      "dev-only 2 minute timer is in dist/: assets/a.js",
+    ]);
+  });
+
+  it("accepts a file without it", () => {
+    expect(checkNoDevTimer("const a = 2;", "assets/a.js")).toEqual([]);
+  });
+
+  it("matches the marker the timer button actually carries", () => {
+    const source = readFileSync("src/ui/SleepTimer.tsx", "utf8");
+    expect(source).toContain(DEV_TIMER_MARK);
   });
 });

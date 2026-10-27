@@ -3,7 +3,7 @@
 // exists in dist/, and that every one of them is in the service worker precache list.
 import { existsSync, readdirSync, readFileSync, statSync } from "node:fs";
 import { join, posix } from "node:path";
-import { checkHtml, checkManifest, checkPrecache } from "./buildRules.ts";
+import { checkHtml, checkManifest, checkNoDevTimer, checkPrecache } from "./buildRules.ts";
 
 const BASE = "/breather/";
 const dist = new URL("../dist/", import.meta.url).pathname;
@@ -111,6 +111,13 @@ for (const rel of files) {
     if (readFileSync(join(dist, rel), "utf8").includes("Listening Lab")) {
       failures.push(`dev-only Lab code is in dist/: ${rel}`);
     }
+  }
+}
+
+// 3b. The dev-only 2 minute sleep timer must not ship.
+for (const rel of files) {
+  if (/\.(?:html|js|css|map|json|webmanifest)$/.test(rel)) {
+    failures.push(...checkNoDevTimer(readFileSync(join(dist, rel), "utf8"), rel));
   }
 }
 

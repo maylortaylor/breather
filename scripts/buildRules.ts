@@ -141,3 +141,10 @@ export function checkPrecache(precached: Set<string>, files: string[]): string[]
   }
   return problems;
 }
+
+/** The string the dev-only 2 minute timer button carries; it must never reach `dist/`. */
+export const DEV_TIMER_MARK = "breather-dev-timer";
+
+export function checkNoDevTimer(code: string, name: string): string[] {
+  return code.includes(DEV_TIMER_MARK) ? [`dev-only 2 minute timer is in dist/: ${name}`] : [];
+}
