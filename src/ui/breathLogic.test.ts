@@ -3,6 +3,9 @@ import { D1, D2 } from "../breath/tempo";
 import {
   inhaleHint,
   inhaleSeconds,
+  labelWidth,
+  layoutLabels,
+  THUMB_PX,
   metronomeText,
   releaseTempo,
   settleMetronome,
@@ -112,5 +115,38 @@ describe("voices", () => {
       "Soft tick 350 Hz",
     ]);
     expect(VOICES[0]!.id).toBe("metro-heartbeat-thump");
+  });
+});
+
+describe("layoutLabels", () => {
+  const items = [
+    { at: 0, text: "Off" },
+    { at: D1, text: "Phase" },
+    { at: D2, text: "Beats" },
+    { at: 1, text: "Louder", align: "end" as const },
+  ];
+
+  // Boxes by row, so a test can assert that none overlap.
+  const boxes = (rows: number[], px: number) =>
+    items.map((it, i) => {
+      const w = labelWidth(it.text);
+      const left = it.align === "end" ? px - w : THUMB_PX / 2 + (px - THUMB_PX) * it.at - w / 2;
+      return { row: rows[i]!, left, right: left + w };
+    });
+
+  it("keeps adjacent labels from overlapping at a 300 px track", () => {
+    const rows = layoutLabels(items, 300);
+    const b = boxes(rows, 300);
+    for (let i = 0; i < b.length; i++) {
+      for (let j = i + 1; j < b.length; j++) {
+        if (b[i]!.row !== b[j]!.row) continue;
+        expect(b[i]!.right <= b[j]!.left || b[j]!.right <= b[i]!.left).toBe(true);
+      }
+    }
+  });
+
+  it("uses one row when there is room, and a second when the track is too short", () => {
+    expect(layoutLabels(items, 300)).toEqual([0, 0, 0, 0]);
+    expect(Math.max(...layoutLabels(items, 140))).toBe(1);
   });
 });

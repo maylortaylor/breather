@@ -70,3 +70,39 @@ export const VOICES: { id: VoiceId; label: string }[] = [
   { id: "metro-soft-tick-700-hz", label: "Soft tick 700 Hz" },
   { id: "metro-soft-tick-350-hz", label: "Soft tick 350 Hz" },
 ];
+
+/** Width of the slider thumb; marks sit this much in from each end of the track. */
+export const THUMB_PX = 18;
+// Estimated 12 px Nunito width per character, plus padding. A fixed estimate keeps this pure.
+const CHAR_PX = 7;
+const LABEL_PAD_PX = 8;
+const LABEL_GAP_PX = 4;
+/** The narrowest track the labels must fit on one row: a 360 px phone minus gutters. */
+export const MIN_TRACK_PX = 300;
+
+export type LabelItem = { at: number; text: string; align?: "center" | "end" };
+
+export const labelWidth = (text: string) => text.length * CHAR_PX + LABEL_PAD_PX;
+
+/**
+ * The row (0 or higher) for each label so no two boxes in a row overlap. Labels stay on row 0
+ * when they fit and drop to the next row only when they would collide.
+ */
+export function layoutLabels(items: readonly LabelItem[], trackPx: number): number[] {
+  const placed: { row: number; left: number; right: number }[] = [];
+  return items.map((it) => {
+    const w = labelWidth(it.text);
+    const left =
+      it.align === "end" ? trackPx - w : THUMB_PX / 2 + (trackPx - THUMB_PX) * it.at - w / 2;
+    let row = 0;
+    while (
+      placed.some(
+        (p) => p.row === row && left < p.right + LABEL_GAP_PX && p.left < left + w + LABEL_GAP_PX
+      )
+    ) {
+      row++;
+    }
+    placed.push({ row, left, right: left + w });
+    return row;
+  });
+}
