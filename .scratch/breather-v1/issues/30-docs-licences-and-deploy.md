@@ -1,5 +1,5 @@
 Type: build
-Status: claimed
+Status: resolved
 Blocked by: 25, 27
 Model: sonnet
 
@@ -39,3 +39,6 @@ gitleaks git . --config .gitleaks.toml
 - `@stylexjs/stylex` ships no licence file, so `notices.txt` says so for that entry.
 - SECURITY.md's 7 day and 30 day response times are placeholders for Matt to confirm.
 - The notices link works in the built app only; the dev server does not serve `notices.txt`.
+
+## Answer
+Resolved 2026-10-26. All 8 criteria pass (471 tests, licence check 597 packages with 0 problems, gitleaks clean). Matt read the README, SECURITY.md and the About line and approved ("everything else looks good"). Carried to ticket 11: re-read `SECURITY.md` before the push (the 7-day reply and 30-day fix times and "credit in the release notes" were written by the agent, not decided by Matt) and update the README status line, which says pre-v1 and local only. The licence checker `license-checker-rseidelsohn` 5.0.1 is BSD-3-Clause and dev-only; `axe-core` (MPL-2.0) is allowed dev-only.
