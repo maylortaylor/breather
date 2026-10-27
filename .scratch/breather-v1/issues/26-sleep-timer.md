@@ -1,5 +1,5 @@
 Type: build
-Status: claimed
+Status: resolved
 Blocked by: 25
 Model: sonnet
 
@@ -39,3 +39,6 @@ npm run dev
 - The master slider is not honoured inside the final fade; the fade continues down from the current gain.
 - A new store flag `rested` stops the aurora until the next Begin. It is never stored.
 - The 2-minute test timer is hidden by default. Open http://localhost:5187/breather/?devtimer=1 in a dev build to see it. It never shows in a production build, and `check:build` fails if its marker reaches `dist/`.
+
+## Answer
+Resolved 2026-10-26. All 8 criteria pass (470 tests). Matt reviewed the Session tab and approved ("everything else looks good") after one change: the menu shows only 30, 60 and 90 plus Cancel. The 2-minute test timer is development-only and hidden behind `?devtimer=1`; the build fails if its marker ever ships (`dist/` checked, none present). Matt did not run the full 2-minute fade by ear; the schedule is covered by tests against a fake `AudioParam`. A second Begin after a timer ends now restarts sound.
