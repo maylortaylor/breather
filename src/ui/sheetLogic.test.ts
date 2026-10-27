@@ -1,12 +1,5 @@
 import { describe, expect, it } from "vite-plus/test";
-import {
-  classifyGesture,
-  createAutoHide,
-  IDLE_MS,
-  isWide,
-  sheetStyle,
-  WIDE_QUERY_PX,
-} from "./sheetLogic";
+import { classifyGesture, createAutoHide, IDLE_MS, isWide, WIDE_QUERY_PX } from "./sheetLogic";
 
 /** A manual clock: `after` queues a callback, `advance` runs what has come due. */
 function fakeClock() {
@@ -45,7 +38,7 @@ function setup() {
 }
 
 describe("createAutoHide", () => {
-  it("dissolves after 5 s with no input", () => {
+  it("closes after 8 s with no input", () => {
     const { clock, seen, hide } = setup();
     hide.start();
     clock.advance(IDLE_MS - 1);
@@ -58,9 +51,9 @@ describe("createAutoHide", () => {
   it("restarts the wait on every input", () => {
     const { clock, hide } = setup();
     hide.start();
-    clock.advance(4000);
+    clock.advance(IDLE_MS - 1000);
     hide.activity();
-    clock.advance(4000);
+    clock.advance(IDLE_MS - 1000);
     expect(hide.dissolved()).toBe(false);
     clock.advance(1000);
     expect(hide.dissolved()).toBe(true);
@@ -85,7 +78,7 @@ describe("createAutoHide", () => {
     expect(seen).toEqual([]);
   });
 
-  it("never dissolves while held, and waits a full 5 s after the hold ends", () => {
+  it("never dissolves while held, and waits a full 8 s after the hold ends", () => {
     const { clock, hide } = setup();
     hide.start();
     hide.setHeld(true);
@@ -145,32 +138,5 @@ describe("isWide", () => {
     expect(WIDE_QUERY_PX).toBe(900);
     expect(isWide(899)).toBe(false);
     expect(isWide(900)).toBe(true);
-  });
-});
-
-describe("sheetStyle", () => {
-  it("is fully shown with a 0.4 s fade in", () => {
-    const s = sheetStyle(false, false);
-    expect(s.opacity).toBe(1);
-    expect(s.transform).toBe("none");
-    expect(s.filter).toBe("none");
-    expect(s.transition).toContain("0.4s");
-  });
-  it("drifts up and right with blur and a mask cut over 1.5 s when dissolved", () => {
-    const s = sheetStyle(true, false);
-    expect(s.opacity).toBe(0);
-    expect(s.transform).toMatch(/translate\(\d+px, -\d+px\)/);
-    expect(s.filter).toMatch(/blur\(\d+px\)/);
-    expect(s["--cut"]).toBe("12px");
-    expect(s.transition).toContain("1.5s");
-    expect(s.pointerEvents).toBe("none");
-  });
-  it("is a plain fade under reduced motion: no move, no blur, no mask", () => {
-    const s = sheetStyle(true, true);
-    expect(s.opacity).toBe(0);
-    expect(s.transform).toBe("none");
-    expect(s.filter).toBe("none");
-    expect(s["--cut"]).toBe("-1px");
-    expect(s.transition).toBe("opacity 1.5s ease-in");
   });
 });

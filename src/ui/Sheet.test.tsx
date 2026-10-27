@@ -135,15 +135,13 @@ describe("Settings button", () => {
     expect(button().getAttribute("aria-expanded")).toBe("false");
   });
 
-  it("stays on screen when the sheet dissolves, and a press brings the sheet back", () => {
+  it("stays on screen when the sheet closes by itself, with the sheet gone", () => {
     render(<Sheet />);
     fireEvent.click(button());
-    const sheet = document.querySelector<HTMLElement>("[data-sheet]")!;
-    act(() => void vi.advanceTimersByTime(5000));
-    expect(sheet.dataset.dissolved).toBe("true");
+    act(() => void vi.advanceTimersByTime(8000));
+    expect(document.querySelector("[data-sheet]")).toBeNull();
+    expect(store.get().sheet.open).toBe(false);
     expect(button()).toBeTruthy();
-    fireEvent.pointerDown(button());
-    expect(sheet.dataset.dissolved).toBe("false");
   });
 
   it("a press on it does not also open the sheet as a tap away", () => {
@@ -203,72 +201,44 @@ describe("layout", () => {
   });
 });
 
-describe("dissolve", () => {
-  it("dissolves after 5 s idle with the noise mask, drift and blur (AC3)", () => {
+describe("idle close", () => {
+  it("closes after 8 s idle, with no fade, drift or mask (AC3)", () => {
     const sheet = openSheet();
-    act(() => void vi.advanceTimersByTime(4999));
-    expect(sheet.dataset.dissolved).toBe("false");
-    expect(sheet.style.opacity).toBe("1");
+    act(() => void vi.advanceTimersByTime(7999));
+    expect(document.contains(sheet)).toBe(true);
+    expect(sheet.style.opacity).toBe("");
     act(() => void vi.advanceTimersByTime(1));
-    expect(sheet.dataset.dissolved).toBe("true");
-    expect(sheet.style.opacity).toBe("0");
-    expect(sheet.style.transform).toContain("translate(48px, -72px)");
-    expect(sheet.style.filter).toBe("blur(4px)");
-    expect(sheet.style.getPropertyValue("--cut")).toBe("12px");
-    expect(sheet.style.transition).toContain("1.5s");
-    expect(sheet.className).toContain("sheet-mask");
+    expect(document.contains(sheet)).toBe(false);
+    expect(store.get().sheet.open).toBe(false);
   });
 
-  it("any pointer move brings it back with a 0.4 s fade, and it dissolves again (AC4)", () => {
+  it("a pointer move late in the wait keeps it open (AC4)", () => {
     const sheet = openSheet();
-    act(() => void vi.advanceTimersByTime(5000));
+    act(() => void vi.advanceTimersByTime(7000));
     fireEvent.pointerMove(document.body);
-    expect(sheet.dataset.dissolved).toBe("false");
-    expect(sheet.style.opacity).toBe("1");
-    expect(sheet.style.transition).toContain("0.4s");
-    act(() => void vi.advanceTimersByTime(5000));
-    expect(sheet.dataset.dissolved).toBe("true");
+    act(() => void vi.advanceTimersByTime(7000));
+    expect(document.contains(sheet)).toBe(true);
+    act(() => void vi.advanceTimersByTime(1000));
+    expect(document.contains(sheet)).toBe(false);
   });
 
-  it("returns on a tap too, and a pointer move late in the wait keeps it open (AC4)", () => {
-    const sheet = openSheet();
-    act(() => void vi.advanceTimersByTime(4500));
-    fireEvent.pointerMove(document.body);
-    act(() => void vi.advanceTimersByTime(4500));
-    expect(sheet.dataset.dissolved).toBe("false");
-    act(() => void vi.advanceTimersByTime(500));
-    tap(document.body);
-    expect(sheet.dataset.dissolved).toBe("false");
-  });
-
-  it("is a plain fade under reduced motion, shown by the applied style (AC5)", () => {
-    reduced = true;
-    const sheet = openSheet();
-    act(() => void vi.advanceTimersByTime(5000));
-    expect(sheet.style.opacity).toBe("0");
-    expect(sheet.style.transform).toBe("none");
-    expect(sheet.style.filter).toBe("none");
-    expect(sheet.style.getPropertyValue("--cut")).toBe("-1px");
-    expect(sheet.style.transition).toBe("opacity 1.5s ease-in");
-  });
-
-  it("never dissolves while a control has keyboard focus (AC6)", () => {
+  it("never closes while a control has keyboard focus (AC6)", () => {
     const sheet = openSheet();
     fireEvent.keyDown(document.body, { key: "Tab" });
     screen.getByRole("tab", { name: "Sounds" }).focus();
     act(() => void vi.advanceTimersByTime(30000));
-    expect(sheet.dataset.dissolved).toBe("false");
+    expect(document.contains(sheet)).toBe(true);
     act(() => screen.getByRole("tab", { name: "Sounds" }).blur());
-    act(() => void vi.advanceTimersByTime(5000));
-    expect(sheet.dataset.dissolved).toBe("true");
+    act(() => void vi.advanceTimersByTime(8000));
+    expect(document.contains(sheet)).toBe(false);
   });
 
-  it("does not hold on mouse focus, so a clicked tab still dissolves", () => {
+  it("does not hold on mouse focus, so a clicked tab still closes", () => {
     const sheet = openSheet();
     fireEvent.pointerDown(screen.getByRole("tab", { name: "Sounds" }));
     screen.getByRole("tab", { name: "Sounds" }).focus();
-    act(() => void vi.advanceTimersByTime(5000));
-    expect(sheet.dataset.dissolved).toBe("true");
+    act(() => void vi.advanceTimersByTime(8000));
+    expect(document.contains(sheet)).toBe(false);
   });
 });
 

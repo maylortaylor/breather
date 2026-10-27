@@ -15,7 +15,6 @@ import { auroraLook, createAuroraClock } from "./background/logic";
 import { BUILT_INS } from "./presets";
 import { DEFAULT_STATE, store, type TabName } from "./store";
 import { About } from "./ui/About";
-import { sheetStyle } from "./ui/sheetLogic";
 import { volumeText } from "./ui/soundsLogic";
 
 vi.mock("./audio/session", () => ({
@@ -528,26 +527,6 @@ describe("reduced motion", () => {
         false
       ).scale
     ).toBeCloseTo(0.8, 6);
-  });
-
-  it("dissolve: a plain fade with no move, blur or mask", () => {
-    const shown = sheetStyle(false, true);
-    const gone = sheetStyle(true, true);
-    expect(gone).toMatchObject({ opacity: 0, transform: "none", filter: "none", "--cut": "-1px" });
-    expect(String(gone.transition)).toBe("opacity 1.5s ease-in");
-    expect(String(shown.transition)).toBe("opacity 0.4s ease-out");
-    const full = sheetStyle(true, false);
-    expect(full.transform).not.toBe("none");
-    expect(full["--cut"]).toBe("12px");
-  });
-
-  it("dissolve: the rendered sheet takes the reduced style from the media query", () => {
-    reduced = true;
-    resting({ sheet: { open: true, tab: "breath" } });
-    render(<Screens />);
-    const sheet = document.querySelector<HTMLElement>("[data-sheet]")!;
-    expect(sheet.style.transition).toBe("opacity 0.4s ease-out");
-    expect(sheet.style.getPropertyValue("--cut")).toBe("-1px");
   });
 
   it("aurora: slower and flatter, and its clock advances more slowly", () => {

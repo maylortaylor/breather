@@ -1,9 +1,8 @@
-// Pure rules for the controls sheet: when it dissolves, what counts as a tap or a swipe, which
-// layout fits the width, and the styles for each look. No DOM here, so every rule is testable.
-import type { CSSProperties } from "react";
+// Pure rules for the controls sheet: when it closes, what counts as a tap or a swipe, which
+// layout fits the width. No DOM here, so every rule is testable.
 
-/** Idle time before the sheet dissolves. */
-export const IDLE_MS = 5000;
+/** Idle time before the sheet closes. */
+export const IDLE_MS = 8000;
 /** At this width and wider the sheet becomes a right-side panel. */
 export const WIDE_QUERY_PX = 900;
 
@@ -87,44 +86,4 @@ export function classifyGesture({ dx, dy, ms }: { dx: number; dy: number; ms: nu
   // Upward and mostly vertical.
   if (-dy >= SWIPE_MIN && Math.abs(dx) <= -dy) return "swipe-up";
   return null;
-}
-
-export type SheetStyle = CSSProperties & { "--cut": string };
-
-/**
- * The look of the sheet. Dissolved: the noise mask opens (--cut grows), the sheet drifts up and to
- * the right and blurs, over 1.5 s. Shown: back over 0.4 s. Reduced motion keeps only the fade.
- * Transitions, not keyframes, so a return mid-dissolve reverses from where it is.
- */
-export function sheetStyle(dissolved: boolean, reducedMotion: boolean): SheetStyle {
-  if (!dissolved) {
-    return {
-      opacity: 1,
-      transform: "none",
-      filter: "none",
-      "--cut": "-1px",
-      transition: reducedMotion
-        ? "opacity 0.4s ease-out"
-        : "opacity 0.4s ease-out, transform 0.4s ease-out, filter 0.4s ease-out, --cut 0.4s ease-out",
-    };
-  }
-  if (reducedMotion) {
-    return {
-      opacity: 0,
-      transform: "none",
-      filter: "none",
-      "--cut": "-1px",
-      transition: "opacity 1.5s ease-in",
-      pointerEvents: "none",
-    };
-  }
-  return {
-    opacity: 0,
-    transform: "translate(48px, -72px)",
-    filter: "blur(4px)",
-    "--cut": "12px",
-    transition:
-      "opacity 1.5s ease-in, transform 1.5s ease-in, filter 1.5s ease-in, --cut 1.5s linear",
-    pointerEvents: "none",
-  };
 }
