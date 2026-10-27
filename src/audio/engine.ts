@@ -6,10 +6,15 @@ const REVERB_SECONDS = 4;
 export const DEFAULT_LAYER = 0.3;
 export const FADE_IN_SEC = 1.5;
 
+/** The master gain a slider position maps to. The sleep timer fades this value to silence. */
+export const toMasterGain = (value: number): number => sliderToGain(value) * MASTER_CAP;
+
 export interface Engine {
   ctx: AudioContext;
   /** Input of the shared reverb. Feed it through a send gain. */
   reverbSend: GainNode;
+  /** The master gain parameter, for schedules that run on the audio clock. */
+  masterGain: AudioParam;
   /** Where a sound plugs into its named layer (the modulation stage), created on first use. */
   layer(name: string): GainNode;
   /** Modulation multiplier for a layer, 1 = unchanged. Smoothed, so a 50 ms update rate is click-free. */
@@ -33,7 +38,7 @@ export function createEngine(): Engine {
 
   // layers -> master -> limiter -> output
   const master = ctx.createGain();
-  master.gain.value = sliderToGain(0.7) * MASTER_CAP;
+  master.gain.value = toMasterGain(0.7);
   const limiter = ctx.createDynamicsCompressor();
   limiter.threshold.value = -3;
   limiter.knee.value = 6;
@@ -91,6 +96,7 @@ export function createEngine(): Engine {
   return {
     ctx,
     reverbSend,
+    masterGain: master.gain,
     layer,
     setMod: (name, value) => {
       const l = stage(name);
@@ -106,7 +112,7 @@ export function createEngine(): Engine {
       const i = l.wets.indexOf(node);
       if (i >= 0) l.wets.splice(i, 1);
     },
-    setMaster: (v) => ramp(master.gain, sliderToGain(v) * MASTER_CAP),
+    setMaster: (v) => ramp(master.gain, toMasterGain(v)),
     setLayer: (name, v, glideSec) => {
       levels.set(name, v);
       const target = sliderToGain(v) * (trims.get(name) ?? 1);

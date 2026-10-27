@@ -98,6 +98,7 @@ export default defineConfig({
         "src/audio/lfo.ts",
         "src/audio/mixer.ts",
         "src/audio/session.ts",
+        "src/audio/sleep.ts",
         "src/contrast.ts",
         "src/ui/breathLogic.ts",
         "src/ui/sheetLogic.ts",

@@ -81,3 +81,28 @@ describe("beginAudio start", () => {
     vi.useRealTimers();
   });
 });
+
+describe("beginAudio after a sleep timer ended (AC4)", () => {
+  it("reuses the context but resumes it, restores master and starts the mix again", () => {
+    vi.useFakeTimers();
+    const fake = createFakeEngine();
+    const resume = vi.fn(() => Promise.resolve());
+    Object.assign(fake.engine.ctx, { resume, state: "running" });
+    const d: SessionDeps = {
+      createEngine: () => fake.engine,
+      hasAudio: () => true,
+      onStatus: () => {},
+    };
+    const first = beginAudio(launch, d.onStatus, d)!;
+    first.mixer.stopAll(0.1);
+    vi.advanceTimersByTime(200);
+    expect(first.mixer.playing()).toEqual([]);
+    fake.calls.length = 0;
+    const second = beginAudio(launch, d.onStatus, d);
+    expect(second).toBe(first);
+    expect(resume).toHaveBeenCalledTimes(2);
+    expect(fake.calls).toContain("master 0.7");
+    expect(second?.mixer.playing()).toEqual(["brown", "ocean", "bubbles", "whale-b"]);
+    vi.useRealTimers();
+  });
+});

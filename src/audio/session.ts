@@ -31,14 +31,21 @@ let current: AudioSession | null = null;
 
 /**
  * Call inside the Begin tap. Returns the session, or null when sound is not available (the
- * caller still moves on to the resting screen). A second call reuses the first session.
+ * caller still moves on to the resting screen). A second call reuses the first session and starts the mix again.
  */
 export function beginAudio(
   launch: LaunchState,
   onStatus: (status: AudioStatus) => void,
   deps: SessionDeps = defaultDeps(onStatus)
 ): AudioSession | null {
-  if (current) return current;
+  if (current) {
+    // Begin again after a sleep timer ended: the context lives on, so bring the sound back.
+    void current.engine.ctx.resume?.();
+    current.engine.setMaster(launch.master);
+    current.mixer.apply(launch.mix, { fadeSec: BEGIN_FADE_SEC });
+    deps.onStatus("running");
+    return current;
+  }
   if (!deps.hasAudio()) {
     deps.onStatus("unsupported");
     return null;
