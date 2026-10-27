@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import {
   createSleep,
+  devTimerFlag,
   FINAL_FADE_SEC,
   minutesLeft,
   RESTORE_SEC,
@@ -59,6 +60,16 @@ describe("timerOptions", () => {
 
   it("adds the 2 minute test timer first in a dev build", () => {
     expect(timerOptions(true)).toEqual([2, 30, 60, 90]);
+  });
+});
+
+describe("devTimerFlag", () => {
+  it("needs a dev build and ?devtimer=1", () => {
+    expect(devTimerFlag(true, "?devtimer=1")).toBe(true);
+    expect(devTimerFlag(true, "?a=b&devtimer=1")).toBe(true);
+    expect(devTimerFlag(true, "")).toBe(false);
+    expect(devTimerFlag(true, "?devtimer=0")).toBe(false);
+    expect(devTimerFlag(false, "?devtimer=1")).toBe(false);
   });
 });
 

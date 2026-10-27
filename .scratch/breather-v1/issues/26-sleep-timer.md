@@ -38,3 +38,4 @@ npm run dev
 - Begin after a timer ends reuses the audio context and now restores master and restarts the mix (`beginAudio`).
 - The master slider is not honoured inside the final fade; the fade continues down from the current gain.
 - A new store flag `rested` stops the aurora until the next Begin. It is never stored.
+- The 2-minute test timer is hidden by default. Open http://localhost:5187/breather/?devtimer=1 in a dev build to see it. It never shows in a production build, and `check:build` fails if its marker reaches `dist/`.

@@ -55,10 +55,25 @@ const tick = (seconds: number) => {
 };
 
 describe("timer controls (AC1, AC5)", () => {
-  it("offers the 2 minute test timer in dev, then 30, 60 and 90", () => {
+  it("offers only 30, 60 and 90 by default, even in a dev build", () => {
     render(<SleepSection />);
     const labels = screen.getAllByRole("button").map((b) => b.textContent);
-    expect(labels).toEqual(["2 min", "30 min", "60 min", "90 min"]);
+    expect(labels).toEqual(["30 min", "60 min", "90 min"]);
+  });
+
+  it("adds the 2 minute test timer in dev with ?devtimer=1", async () => {
+    window.history.replaceState(null, "", "/breather/?devtimer=1");
+    vi.resetModules();
+    const { SleepSection: Flagged } = await import("./SleepTimer");
+    render(<Flagged />);
+    window.history.replaceState(null, "", "/");
+    expect(screen.getAllByRole("button").map((b) => b.textContent)).toEqual([
+      "2 min",
+      "30 min",
+      "60 min",
+      "90 min",
+    ]);
+    cleanup();
   });
 
   it("starting 30 minutes stores an audio-clock end and schedules the ramp at once", () => {
@@ -127,12 +142,12 @@ describe("corner moon (AC3, AC4, AC6)", () => {
 
   it("at the end: master silent, sounds stopped, animation stopped, back to Begin", () => {
     render(<SleepSection />);
-    fireEvent.click(screen.getByRole("button", { name: "2 min" }));
+    fireEvent.click(screen.getByRole("button", { name: "30 min" }));
     render(<Moon />);
     store.set({ paused: true, sheet: { open: true, tab: "session" } });
-    tick(119);
+    tick(1700);
     expect(store.get().screen).toBe("resting");
-    tick(2);
+    tick(101);
     const s = store.get();
     expect(s.screen).toBe("begin");
     expect(s.rested).toBe(true);
@@ -141,7 +156,7 @@ describe("corner moon (AC3, AC4, AC6)", () => {
     expect(s.sheet.open).toBe(false);
     expect(s.master).toBe(0.7);
     expect(stopAll).toHaveBeenCalledTimes(1);
-    expect(events.at(-1)).toEqual(["set", 0, 221]);
+    expect(events.at(-1)).toEqual(["set", 0, 1901]);
     expect(screen.queryByText(/min$/, { selector: "span" })).toBeNull();
   });
 

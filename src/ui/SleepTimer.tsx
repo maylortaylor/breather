@@ -1,10 +1,13 @@
 import * as stylex from "@stylexjs/stylex";
 import { useEffect, useState } from "react";
-import { minutesLeft, timerOptions } from "../audio/sleep";
+import { devTimerFlag, minutesLeft, timerOptions } from "../audio/sleep";
 import { useStore } from "../store";
 import { colors } from "../theme.stylex";
 import { canSleep, cancelTimer, checkTimer, clockNow, startTimer } from "./sleepControl";
 import { Tip } from "./Tip";
+
+// Read once at load. In a production build `import.meta.env.DEV` is false and this folds away.
+const DEV_TIMER = import.meta.env.DEV && devTimerFlag(true, location.search);
 
 const styles = stylex.create({
   section: { display: "flex", flexDirection: "column", gap: 12 },
@@ -61,13 +64,15 @@ export function SleepSection() {
       <h2 {...stylex.props(styles.heading)}>Sleep timer</h2>
       <Tip text="Sound fades to silence over the last 5 minutes, then the app returns to Begin.">
         <div role="group" aria-label="Sleep timer length" {...stylex.props(styles.row)}>
-          {timerOptions(import.meta.env.DEV).map((m) => (
+          {timerOptions(DEV_TIMER).map((m) => (
             <button
               key={m}
               type="button"
               disabled={!audio}
               aria-pressed={sleep?.minutes === m}
-              data-dev-timer={import.meta.env.DEV && m === 2 ? "breather-dev-timer" : undefined}
+              data-dev-timer={
+                import.meta.env.DEV && DEV_TIMER && m === 2 ? "breather-dev-timer" : undefined
+              }
               {...stylex.props(styles.button, sleep?.minutes === m && styles.on)}
               onClick={() => startTimer(m)}
             >

@@ -10,6 +10,10 @@ export const RESTORE_SEC = 1;
 const BASE_MINUTES = [30, 60, 90];
 const DEV_MINUTES = 2;
 
+/** The test timer shows only in a dev build whose page URL carries `?devtimer=1`. */
+export const devTimerFlag = (dev: boolean, search: string): boolean =>
+  dev && new URLSearchParams(search).get("devtimer") === "1";
+
 /** The timer lengths on offer. The 2 minute test timer exists only when `dev` is true. */
 export const timerOptions = (dev: boolean): number[] =>
   dev ? [DEV_MINUTES, ...BASE_MINUTES] : [...BASE_MINUTES];
