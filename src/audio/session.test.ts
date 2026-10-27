@@ -127,7 +127,7 @@ describe("iOS audio session (tickets 07 and 29)", () => {
       },
     } as { type: string };
     const statuses: AudioStatus[] = [];
-    const keep = { play: vi.fn(), stop: vi.fn() };
+    const keep = { play: vi.fn(), pause: vi.fn(), stop: vi.fn() };
     const media: string[] = [];
     let wake: () => void = () => {};
     let presetChanged: (n: string) => void = () => {};
@@ -254,6 +254,15 @@ describe("iOS audio session (tickets 07 and 29)", () => {
     expect(s.media).toEqual(["Sleep"]);
     s.presetChanged("Focus");
     expect(s.media).toEqual(["Sleep", "Focus"]);
+  });
+
+  it("pauseKeepAlive on the session pauses the silent loop and a second Begin plays it again", () => {
+    const s = setup();
+    const session = beginAudio(launch, s.d.onStatus, s.d);
+    session?.pauseKeepAlive();
+    expect(s.keep.pause).toHaveBeenCalledTimes(1);
+    beginAudio(launch, s.d.onStatus, s.d);
+    expect(s.keep.play).toHaveBeenCalledTimes(1);
   });
 
   it("a second Begin restarts the silent loop; reset stops it and the listeners", () => {

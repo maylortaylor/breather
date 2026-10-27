@@ -10,6 +10,7 @@ type Ev = [string, number, number];
 const clock = { t: 0 };
 const events: Ev[] = [];
 const stopAll = vi.fn();
+const pauseKeepAlive = vi.fn();
 let hasSession = true;
 const masterGain = {
   value: 0.15 * 0.49,
@@ -30,6 +31,7 @@ vi.mock("../audio/session", () => ({
             },
           },
           mixer: { stopAll },
+          pauseKeepAlive,
         }
       : null,
 }));
@@ -39,6 +41,7 @@ beforeEach(() => {
   clock.t = 100;
   events.length = 0;
   stopAll.mockClear();
+  pauseKeepAlive.mockClear();
   hasSession = true;
   store.set({ ...DEFAULT_STATE, screen: "resting", master: 0.7 });
 });
@@ -156,6 +159,7 @@ describe("corner moon (AC3, AC4, AC6)", () => {
     expect(s.sheet.open).toBe(false);
     expect(s.master).toBe(0.7);
     expect(stopAll).toHaveBeenCalledTimes(1);
+    expect(pauseKeepAlive).toHaveBeenCalledTimes(1);
     expect(events.at(-1)).toEqual(["set", 0, 1901]);
     expect(screen.queryByText(/min$/, { selector: "span" })).toBeNull();
   });

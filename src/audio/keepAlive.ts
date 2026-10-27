@@ -47,6 +47,8 @@ export interface KeepAliveDeps {
 export interface KeepAlive {
   /** Play (again) the silent loop. Call inside a gesture. A rejected play is ignored. */
   play(): void;
+  /** Pause the loop but keep the source, so `play` can start it again. */
+  pause(): void;
   /** Pause and free the blob URL. */
   stop(): void;
 }
@@ -75,6 +77,7 @@ export function startKeepAlive(deps: KeepAliveDeps = browserKeepAliveDeps()): Ke
   play();
   return {
     play,
+    pause: () => el.pause(),
     stop() {
       el.pause();
       deps.revokeUrl(url);

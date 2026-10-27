@@ -40,6 +40,19 @@ describe("createBeatScheduler", () => {
     expect(s.times()).toEqual([0, 1, 2, 3, 4, 5, 6]);
   });
 
+  it("keeps every beat on its whole second for 10 minutes of jittery 25 ms ticks", () => {
+    const s = setup();
+    let ms = 0;
+    for (let i = 0; ms <= 600_000; i++) {
+      s.advance(ms / 1000);
+      // Up to 9 ms of timer jitter, never more than a tick late.
+      ms += 25 + ((i * 7) % 10) - 4;
+    }
+    const times = s.times();
+    expect(times.slice(0, 601)).toEqual(Array.from({ length: 601 }, (_, k) => k));
+    expect(times.length).toBe(601);
+  });
+
   it("fires beats up to `lookahead` seconds ahead of the clock, not further", () => {
     const s = setup({ lookahead: 0.1 });
     s.advance(0.5);

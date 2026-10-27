@@ -99,7 +99,8 @@ function BeginScreen({ begin }: { begin: BeginFn }) {
     // The audio context must be made and resumed inside this tap.
     const launch = launchState();
     begin(launch, (audio) => store.set({ audio }));
-    store.set({ screen: "resting", mix: launch.mix });
+    // `rested` clears so the aurora returns after a sleep timer ended.
+    store.set({ screen: "resting", mix: launch.mix, rested: false });
   };
   return (
     <div {...stylex.props(styles.screen)}>

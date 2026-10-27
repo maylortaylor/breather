@@ -60,6 +60,22 @@ describe("startKeepAlive", () => {
     await Promise.resolve();
   });
 
+  it("pauses without revoking the URL, so a later play still has a source", () => {
+    const { el, pause, play } = fakeEl();
+    const revoke = vi.fn();
+    const ka = startKeepAlive({
+      createElement: () => el,
+      createUrl: () => "blob:kept",
+      revokeUrl: revoke,
+    });
+    ka.pause();
+    expect(pause).toHaveBeenCalledTimes(1);
+    expect(revoke).not.toHaveBeenCalled();
+    ka.play();
+    expect(play).toHaveBeenCalledTimes(2);
+    expect(el.src).toBe("blob:kept");
+  });
+
   it("pauses and revokes the URL on stop", () => {
     const { el, pause } = fakeEl();
     const revoke = vi.fn();

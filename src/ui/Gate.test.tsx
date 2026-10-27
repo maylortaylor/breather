@@ -104,6 +104,13 @@ describe("Begin screen", () => {
     expect(begin.mock.calls[0]![0].mix.sounds).toEqual(sounds);
   });
 
+  it("Begin after a sleep timer ended brings the animation back", () => {
+    store.set({ rested: true });
+    render(<Gate begin={vi.fn()} />);
+    fireEvent.click(screen.getByRole("button", { name: "Begin" }));
+    expect(store.get().rested).toBe(false);
+  });
+
   it("without AudioContext shows one calm line and still reaches the resting screen", () => {
     vi.stubGlobal("AudioContext", undefined);
     render(<Screens />);

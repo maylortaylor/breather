@@ -56,6 +56,7 @@ export function cancelTimer(): void {
 function finish(): void {
   timer?.end();
   getSession()?.mixer.stopAll(STOP_SEC);
+  getSession()?.pauseKeepAlive();
   store.set((s) => ({
     sleep: null,
     screen: "begin",

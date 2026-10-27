@@ -33,6 +33,8 @@ export interface AudioSession {
   modulator: Modulator;
   /** Resumes a suspended or interrupted context. True once it is running; false keeps the tap control. */
   resume(): Promise<boolean>;
+  /** Pauses the silent iPhone loop, so a finished sleep timer leaves nothing playing. */
+  pauseKeepAlive(): void;
 }
 
 const defaultDeps = (onStatus: (s: AudioStatus) => void): SessionDeps => ({
@@ -131,7 +133,7 @@ export function beginAudio(
     const mixer = createMixer(engine, modulator);
     engine.setMaster(launch.master);
     mixer.apply(launch.mix, { fadeSec: BEGIN_FADE_SEC });
-    current = { mixer, engine, modulator, resume };
+    current = { mixer, engine, modulator, resume, pauseKeepAlive: () => keepAlive?.pause() };
     const name = presetNameOf(launch.presetId);
     deps.setMedia?.(name);
     teardown = [];
