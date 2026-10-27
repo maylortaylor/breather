@@ -8,7 +8,9 @@ import {
 import { connectOut, fadeIn, type Disposer, type Engine, type Sound } from "./engine";
 
 const TICK_MS = 50;
-const LOOKAHEAD = 0.2;
+/** Seconds of triggers handed out ahead. A hidden or locked page ticks about once a second, so it
+ * looks further ahead; otherwise late triggers would pile up and burst out together. */
+const LOOKAHEAD = () => (typeof document !== "undefined" && document.hidden ? 3 : 0.2);
 
 /** Drive a scheduler from a short timer. `kickoff` fires once right away so Play is audible. */
 function ticking(make: () => TriggerScheduler, kickoff?: () => void): Sound {

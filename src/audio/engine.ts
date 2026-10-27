@@ -25,6 +25,11 @@ export interface Engine {
   layer(name: string): GainNode;
   /** Modulation multiplier for a layer, 1 = unchanged. Smoothed, so a 50 ms update rate is click-free. */
   setMod(name: string, value: number): void;
+  /**
+   * Replace a layer's modulation with a ramp through `points` (times on the audio clock). The
+   * audio thread plays it, so it stays smooth even when the page's timers are throttled.
+   */
+  rampMod(name: string, points: readonly { at: number; value: number }[]): void;
   /** Let a layer's reverb send follow the same modulation as its dry signal. */
   addWetMod(name: string, node: GainNode): void;
   /** Drop a wet node registered with `addWetMod`, so the list never outgrows the sounds playing. */
@@ -114,8 +119,19 @@ export function createEngine(): Engine {
     setMod: (name, value) => {
       const l = stage(name);
       const t = ctx.currentTime;
-      l.mod.gain.setTargetAtTime(value, t, 0.05);
-      for (const w of l.wets) w.gain.setTargetAtTime(value, t, 0.05);
+      for (const p of [l.mod.gain, ...l.wets.map((w) => w.gain)]) {
+        p.cancelScheduledValues(t);
+        p.setTargetAtTime(value, t, 0.05);
+      }
+    },
+    rampMod: (name, points) => {
+      const l = stage(name);
+      const t = ctx.currentTime;
+      for (const p of [l.mod.gain, ...l.wets.map((w) => w.gain)]) {
+        p.cancelScheduledValues(t);
+        p.setValueAtTime(p.value, t);
+        for (const pt of points) p.linearRampToValueAtTime(pt.value, Math.max(t, pt.at));
+      }
     },
     addWetMod: (name, node) => {
       stage(name).wets.push(node);
