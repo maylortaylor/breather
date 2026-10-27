@@ -234,6 +234,7 @@ describe("persistence (AC6)", () => {
       level: 0.7,
       voice: "metro-wood-block",
       phaseSound: "tones",
+      phaseVolume: 0.7,
     });
   });
 });

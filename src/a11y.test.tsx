@@ -193,6 +193,7 @@ describe("tab order", () => {
       "Seconds mode",
       "Metronome",
       "Heartbeat thump",
+      "Phase sound volume",
       "Rising tones",
     ]);
   });

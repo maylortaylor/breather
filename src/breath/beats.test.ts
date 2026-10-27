@@ -18,7 +18,7 @@ function setup(level: number, tempo = 0.5, voice: Mix["metronome"]["voice"] = "m
     mix: {
       ...DEFAULT_STATE.mix,
       tempo,
-      metronome: { level, voice, phaseSound: "tones" },
+      metronome: { level, voice, phaseSound: "tones", phaseVolume: 0.7 },
     },
   });
   const machine = createPhaseMachine(1);
@@ -77,6 +77,23 @@ describe("hidden page", () => {
     // Visible again: no doubled beat at the switch.
     const after = fake.oscillators.length;
     expect(after).toBeLessThanOrEqual(hiddenHandedOut + 2);
+  });
+});
+
+describe("phase volume", () => {
+  it("scales the phase tones alone: unity at 0.7, silent at 0, boosted above", () => {
+    const s = setup(LEVEL_D1);
+    const trimOfLast = (id: string) => s.trims.filter(([t]) => t === id).at(-1)![1];
+    const base = trimOfLast("phase-inhale-rising");
+    s.store.set((st) => ({
+      mix: { ...st.mix, metronome: { ...st.mix.metronome, phaseVolume: 0 } },
+    }));
+    expect(trimOfLast("phase-inhale-rising")).toBe(0);
+    s.store.set((st) => ({
+      mix: { ...st.mix, metronome: { ...st.mix.metronome, phaseVolume: 1 } },
+    }));
+    expect(trimOfLast("phase-inhale-rising")).toBeCloseTo(base / 0.7, 6);
+    expect(trimOfLast("metro-wood-block")).toBe(0);
   });
 });
 
@@ -139,7 +156,7 @@ describe("startBeats", () => {
     s.store.set({
       mix: {
         ...s.store.get().mix,
-        metronome: { level: 1, voice: "metro-wood-block", phaseSound: "tones" },
+        metronome: { level: 1, voice: "metro-wood-block", phaseSound: "tones", phaseVolume: 0.7 },
       },
     });
     expect(wood()).toBeGreaterThan(quiet);
@@ -292,6 +309,7 @@ describe("seconds mode", () => {
           level: 0.4,
           voice: "metro-wood-block",
           phaseSound: "tones",
+          phaseVolume: 0.7,
         },
       },
     });

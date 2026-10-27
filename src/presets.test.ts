@@ -176,6 +176,7 @@ describe("parsePreset", () => {
       level: 0,
       voice: "metro-heartbeat-thump",
       phaseSound: "tones",
+      phaseVolume: 0.7,
     });
     expect(p.mix.sounds.brown!.lfo).toBe(0);
     expect(p.mix.lfos[0]!.shape).toBe("sine");
