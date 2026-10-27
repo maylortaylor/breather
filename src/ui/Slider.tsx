@@ -134,15 +134,16 @@ const plain = stylex.create({
   label: { minWidth: 64 },
   input: { flexGrow: 1, minWidth: 0, height: 28, margin: 0, accentColor: colors.thumb },
   // Label on its own line, the track across the full row.
-  detentWrap: { flexDirection: "column", alignItems: "stretch", gap: 2 },
+  detentWrap: { flexDirection: "column", alignItems: "stretch", gap: 2, width: "100%" },
   track: {
     position: "relative",
-    flexGrow: 1,
+    width: "100%",
     minWidth: 0,
     display: "flex",
     flexDirection: "column",
   },
-  marks: { position: "relative" },
+  // Zero height: the ticks hang below the input and the end labels start below them.
+  marks: { position: "relative", height: 0 },
   mark: {
     position: "absolute",
     top: 0,
@@ -151,11 +152,30 @@ const plain = stylex.create({
     marginLeft: -1,
     backgroundColor: colors.tabInk,
   },
-  head: { display: "flex", justifyContent: "space-between", alignItems: "baseline", gap: 12 },
-  value: { fontSize: 14, color: colors.textMuted, textAlign: "end" },
+  head: {
+    display: "flex",
+    justifyContent: "space-between",
+    alignItems: "center",
+    gap: 12,
+    height: 24,
+  },
+  headLabel: { flexShrink: 0 },
+  value: {
+    flexShrink: 0,
+    fontSize: 14,
+    color: colors.textMuted,
+    textAlign: "end",
+    whiteSpace: "nowrap",
+  },
   endStart: { textAlign: "start" },
   endEnd: { textAlign: "end" },
-  ends: { display: "flex", justifyContent: "space-between", fontSize: 13, color: colors.textMuted },
+  ends: {
+    marginTop: 8,
+    display: "flex",
+    justifyContent: "space-between",
+    fontSize: 13,
+    color: colors.textMuted,
+  },
 });
 
 /** Detents for a plain slider: where to draw marks and how values stick to them. */
@@ -187,6 +207,7 @@ export function Slider({
   detent,
   ends,
   valueText,
+  valueChars,
   disabled,
 }: {
   label: string;
@@ -198,6 +219,8 @@ export function Slider({
   ends?: [string, string];
   /** Replaces the number a screen reader hears; a detent slider also shows it above the track. */
   valueText?: string;
+  /** Characters in the longest possible `valueText`; the live box never gets narrower. */
+  valueChars?: number;
   disabled?: boolean;
 }) {
   const decorated = Boolean(detent || ends);
@@ -235,8 +258,21 @@ export function Slider({
       <label {...stylex.props(plain.wrap, decorated && plain.detentWrap)}>
         {decorated ? (
           <span {...stylex.props(plain.head)}>
-            <span id={labelId}>{label}</span>
-            {valueText && <span {...stylex.props(plain.value)}>{valueText}</span>}
+            <span id={labelId} {...stylex.props(plain.headLabel)}>
+              {label}
+            </span>
+            {/* A fixed-size box: the phrase changes length as the slider moves, and nothing
+                beside it may move or resize with it. Keep the min-width, nowrap and the fixed
+                head height; the track below is a separate full-width block. */}
+            {valueText && (
+              <span
+                data-live
+                {...stylex.props(plain.value)}
+                style={valueChars ? { minWidth: `${valueChars}ch` } : undefined}
+              >
+                {valueText}
+              </span>
+            )}
           </span>
         ) : (
           <span {...stylex.props(plain.label)}>{label}</span>

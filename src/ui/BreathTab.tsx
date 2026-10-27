@@ -8,6 +8,9 @@ import { store, useStore } from "../store";
 import { colors } from "../theme.stylex";
 import {
   inhaleHint,
+  longestOf,
+  METRONOME_TEXTS,
+  TEMPO_TEXTS,
   metronomeText,
   releaseTempo,
   settleMetronome,
@@ -105,6 +108,7 @@ export function BreathTab() {
         detent={TEMPO_DETENT}
         ends={["Slow", "Fast"]}
         valueText={tempoText(tempo)}
+        valueChars={longestOf(TEMPO_TEXTS)}
         disabled={secondsMode}
         tip={
           secondsMode
@@ -132,6 +136,7 @@ export function BreathTab() {
         detent={METRONOME_DETENT}
         ends={["Off", "Louder"]}
         valueText={metronomeText(level)}
+        valueChars={longestOf(METRONOME_TEXTS)}
         tip="Off, then a tone on each phase change, then every beat very quietly, then louder."
       />
       <Tip text="The sound of each beat. Tap one to hear it." grow="fill">

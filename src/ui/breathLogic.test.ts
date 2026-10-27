@@ -3,6 +3,9 @@ import { D1, D2 } from "../breath/tempo";
 import {
   inhaleHint,
   inhaleSeconds,
+  longestOf,
+  METRONOME_TEXTS,
+  TEMPO_TEXTS,
   metronomeText,
   releaseTempo,
   settleMetronome,
@@ -114,5 +117,16 @@ describe("voices", () => {
       "Soft tick 350 Hz",
     ]);
     expect(VOICES[0]!.id).toBe("metro-heartbeat-thump");
+  });
+});
+
+describe("live value phrases", () => {
+  it("only ever produce a listed phrase, and the longest is known", () => {
+    for (let v = 0; v <= 1.0001; v += 0.01) {
+      expect(METRONOME_TEXTS).toContain(metronomeText(v));
+      expect(TEMPO_TEXTS).toContain(tempoText(v));
+    }
+    expect(longestOf(METRONOME_TEXTS)).toBe("All beats, louder".length);
+    expect(longestOf(TEMPO_TEXTS)).toBe("Resting pace".length);
   });
 });

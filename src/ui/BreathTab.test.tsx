@@ -111,6 +111,20 @@ describe("metronome", () => {
     live("All beats, louder");
   });
 
+  it("reserves a fixed-width live box that does not depend on the current phrase", () => {
+    render(<BreathTab />);
+    const box = () => metronome().closest("label")!.querySelector<HTMLElement>("[data-live]")!;
+    const widths = new Set<string>();
+    for (const v of [0, 0.16, 0.33, 0.7]) {
+      change(metronome(), v);
+      widths.add(box().style.minWidth);
+    }
+    expect([...widths]).toEqual([`${"All beats, louder".length}ch`]);
+    change(tempo(), 0.5);
+    const tempoBox = tempo().closest("label")!.querySelector<HTMLElement>("[data-live]")!;
+    expect(tempoBox.style.minWidth).toBe(`${"Resting pace".length}ch`);
+  });
+
   it("puts words only at the two ends, never under the interior marks", () => {
     render(<BreathTab />);
     const marks = metronome().closest("label")!.querySelectorAll("[aria-hidden]");

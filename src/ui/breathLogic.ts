@@ -68,3 +68,15 @@ export const VOICES: { id: VoiceId; label: string }[] = [
   { id: "metro-soft-tick-700-hz", label: "Soft tick 700 Hz" },
   { id: "metro-soft-tick-350-hz", label: "Soft tick 350 Hz" },
 ];
+
+/** Every phrase the live value box can show. The box is sized for the longest of each list. */
+export const TEMPO_TEXTS = ["Slowest", "Slow", "Resting pace", "Fast", "Fastest"] as const;
+export const METRONOME_TEXTS = [
+  "Off",
+  "Phase changes",
+  "All beats, quiet",
+  "All beats, louder",
+] as const;
+
+/** Characters in the longest phrase, so a box can reserve that width. */
+export const longestOf = (texts: readonly string[]) => Math.max(...texts.map((t) => t.length));
