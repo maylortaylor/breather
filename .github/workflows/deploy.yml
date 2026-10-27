@@ -1,0 +1,51 @@
+name: Deploy
+
+# Inert until the first push: this repo has no remote before v1.
+#
+# Publishes dist/ to GitHub Pages on push to main (ADR-0002, ADR-0003). Docs-only and
+# ticket-only changes skip it. The secret scan in scan.yml is not filtered this way.
+# No schedule: every deploy follows a commit.
+on:
+  push:
+    branches: [main]
+    paths-ignore:
+      - "**.md"
+      - ".scratch/**"
+
+concurrency:
+  group: deploy
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+jobs:
+  deploy:
+    name: Build and deploy
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      # SHA-pinned. The SHAs were resolved from the API; the version comment is
+      # a courtesy and can say anything.
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+
+      - run: npm ci
+      - run: npm run build
+      # Fails on a missing or uncached asset, a loose CSP and missing licence notices.
+      - run: npm run check:build
+
+      - uses: actions/upload-pages-artifact@fc324d3547104276b827a68afc52ff2a11cc49c9 # v5.0.0
+        with:
+          path: dist
+
+      - id: deployment
+        uses: actions/deploy-pages@368f82528645a54fb793d4d04e342629a3f51346 # v5.0.1
