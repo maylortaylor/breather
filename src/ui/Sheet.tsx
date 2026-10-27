@@ -2,7 +2,6 @@ import * as stylex from "@stylexjs/stylex";
 import {
   useEffect,
   useRef,
-  useState,
   useSyncExternalStore,
   type KeyboardEvent as ReactKeyboardEvent,
   type ReactNode,
@@ -13,13 +12,7 @@ import { BreathTab } from "./BreathTab";
 import { SessionTab } from "./SessionTab";
 import { SoundsTab } from "./SoundsTab";
 import { Tip } from "./Tip";
-import {
-  classifyGesture,
-  createAutoHide,
-  sheetStyle,
-  WIDE_QUERY_PX,
-  type AutoHide,
-} from "./sheetLogic";
+import { classifyGesture, createAutoHide, WIDE_QUERY_PX, type AutoHide } from "./sheetLogic";
 
 const TABS: { name: TabName; label: string }[] = [
   { name: "breath", label: "Breath" },
@@ -71,12 +64,6 @@ const styles = stylex.create({
     pointerEvents: "none",
   },
   dockClosed: { bottom: "max(16px, env(safe-area-inset-bottom))" },
-  // Falls back down as the sheet dissolves; reduced motion gets no slide.
-  dockSlide: {
-    transitionProperty: "bottom",
-    transitionDuration: "1s",
-    transitionTimingFunction: "ease-in",
-  },
   dockOpenSheet: { bottom: "calc(60dvh + 12px)" },
   settings: {
     pointerEvents: "auto",
@@ -149,7 +136,6 @@ const ACCENT = {
 };
 
 const SHEET_ID = "sheet-controls";
-const REDUCED_QUERY = "(prefers-reduced-motion: reduce)";
 const WIDE_QUERY = `(min-width: ${WIDE_QUERY_PX}px)`;
 
 function useMedia(query: string): boolean {
@@ -211,15 +197,13 @@ function useOpenGestures(enabled: boolean, onKeyboardOpen: () => void) {
 }
 
 /**
- * Every control in one sheet: a bottom sheet on phones, a right panel from 900 px. It dissolves
- * after 5 s of no input and returns on any tap or pointer move.
+ * Every control in one sheet: a bottom sheet on phones, a right panel from 900 px. It closes
+ * after 8 s of no input; Settings returns to the bottom.
  */
 export function Sheet() {
   const resting = useStore((s) => s.screen === "resting");
   const { open, tab } = useStore((s) => s.sheet);
   const wide = useMedia(WIDE_QUERY);
-  const reduced = useMedia(REDUCED_QUERY);
-  const [dissolved, setDissolved] = useState(false);
   const rootRef = useRef<HTMLDivElement>(null);
   const hideRef = useRef<AutoHide | null>(null);
   const keyboard = useRef(false);
@@ -251,7 +235,10 @@ export function Sheet() {
         const id = setTimeout(fn, ms);
         return () => clearTimeout(id);
       },
-      onChange: setDissolved,
+      // Idle means the sheet closes; Settings is back at the bottom, as if nothing had opened.
+      onChange: (gone) => {
+        if (gone) setOpen(false);
+      },
     });
     hideRef.current = hide;
     hide.start();
@@ -313,8 +300,7 @@ export function Sheet() {
       <div
         {...stylex.props(
           styles.settingsDock,
-          open && !wide && !dissolved ? styles.dockOpenSheet : styles.dockClosed,
-          !reduced && styles.dockSlide
+          open && !wide ? styles.dockOpenSheet : styles.dockClosed
         )}
       >
         <Tip text="Sounds, tempo and presets">
@@ -337,9 +323,6 @@ export function Sheet() {
           aria-label="Sound controls"
           data-sheet
           data-layout={wide ? "panel" : "sheet"}
-          data-dissolved={dissolved}
-          className="sheet-mask"
-          style={sheetStyle(dissolved, reduced)}
           {...stylex.props(styles.root, wide ? styles.panel : styles.sheet, FIELD[tab])}
         >
           <button

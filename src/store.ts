@@ -68,6 +68,8 @@ export type AppState = {
   mix: Mix;
   dim: boolean;
   secondsMode: boolean;
+  /** Pulse the phone on each phase change, where the browser can. */
+  vibrate: boolean;
   master: number;
   presetId: string | null;
   paused: boolean;
@@ -85,6 +87,7 @@ export type AppState = {
 // `mix` is stored only once it differs from the default, so a first launch still gets Sleep.
 export type SavedState = Pick<AppState, "welcomeSeen" | "dim" | "secondsMode" | "presetId"> & {
   mix?: Mix;
+  vibrate?: boolean;
 };
 
 const SAVED_TYPES: { [K in keyof SavedState]: (v: unknown) => boolean } = {
@@ -92,6 +95,7 @@ const SAVED_TYPES: { [K in keyof SavedState]: (v: unknown) => boolean } = {
   dim: (v) => typeof v === "boolean",
   secondsMode: (v) => typeof v === "boolean",
   presetId: (v) => typeof v === "string",
+  vibrate: (v) => typeof v === "boolean",
   mix: (v) => typeof v === "object" && v !== null && !Array.isArray(v),
 };
 
@@ -115,6 +119,7 @@ export function saveState(s: SavedState): void {
     dim: s.dim,
     secondsMode: s.secondsMode,
     presetId: s.presetId,
+    vibrate: s.vibrate,
     ...(s.mix && persistableMix(s.mix) ? { mix: s.mix } : {}),
   });
 }
@@ -125,6 +130,7 @@ export const DEFAULT_STATE: AppState = {
   mix: DEFAULT_MIX,
   dim: false,
   secondsMode: false,
+  vibrate: true,
   master: 0.7,
   presetId: null,
   paused: false,

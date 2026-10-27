@@ -152,6 +152,28 @@ describe("metronome", () => {
   });
 });
 
+describe("vibrate checkbox", () => {
+  const nav = navigator as unknown as { vibrate?: unknown };
+  afterEach(() => {
+    delete nav.vibrate;
+  });
+
+  it("is hidden where the browser cannot vibrate", () => {
+    delete nav.vibrate;
+    render(<BreathTab />);
+    expect(screen.queryByLabelText("Vibrate on phase change")).toBeNull();
+  });
+
+  it("is on by default where it can, and the choice reaches the store", () => {
+    nav.vibrate = () => true;
+    render(<BreathTab />);
+    const box = screen.getByLabelText("Vibrate on phase change") as HTMLInputElement;
+    expect(box.checked).toBe(true);
+    fireEvent.click(box);
+    expect(store.get().vibrate).toBe(false);
+  });
+});
+
 describe("phase sound picker", () => {
   it("offers three phase sounds, rising tones selected, and stores the pick", () => {
     render(<BreathTab />);

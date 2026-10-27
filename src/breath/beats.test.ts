@@ -369,6 +369,16 @@ describe("haptics", () => {
     expect(s.pulses.length).toBeGreaterThan(0);
   });
 
+  it("sends no pulse while Vibrate on phase change is unchecked", () => {
+    const s = rig();
+    s.store.set({ vibrate: false });
+    s.run(12);
+    expect(s.pulses).toHaveLength(0);
+    s.store.set({ vibrate: true });
+    s.run(30);
+    expect(s.pulses.length).toBeGreaterThan(0);
+  });
+
   it("drops a pulse already queued when the metronome goes off", () => {
     const s = rig();
     s.run(3.95);

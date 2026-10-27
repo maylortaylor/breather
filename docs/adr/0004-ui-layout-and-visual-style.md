@@ -18,10 +18,9 @@ to, and the app must stay readable at night. It ships as an offline PWA.
   - Session (plum): sleep timer, presets, dim mode.
 - **Sounds tab:** a palette of colour chips. A chip adds or removes a row with a volume slider and the 3 LFO
   colour buttons from ticket 12. Only playing sounds have rows.
-- **Auto-hide:** the sheet dissolves after 5 s idle. A CSS noise mask breaks it up while it drifts up and to
-  the right with a slight blur over about 1.5 s. Any tap or pointer move brings it back with a 0.4 s fade.
-  Reduced motion gets a plain fade.
-- **Sleep timer:** a moon icon and "42 min" low in a corner, visible while the sheet is dissolved, shown only
+- **Auto-hide:** the sheet closes after 8 s idle. Settings is back at the bottom, as if it had never opened. No
+  fade, drift or mask (changed from a 5 s noise-mask dissolve, 2026-10-27).
+- **Sleep timer:** a moon icon and "42 min" low in a corner, visible while the sheet is closed, shown only
   while a timer runs.
 - **Breath visual:** behind a small interface, like `BackgroundRenderer`. It takes the phase and its
   progress and draws itself. v1 ships the glowing ring only.
@@ -48,4 +47,3 @@ to, and the app must stay readable at night. It ships as an offline PWA.
 - Nunito is SIL OFL 1.1. Add it to `THIRD_PARTY.md` as a planned entry, and bundle the licence text with the
   font file.
 - The breath-visual interface lets Matt add more visuals later without touching the phase machine.
-- The dissolve is CSS only, so its look is limited by what a noise mask can do.
