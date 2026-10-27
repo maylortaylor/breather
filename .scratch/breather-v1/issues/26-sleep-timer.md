@@ -32,3 +32,9 @@ npm run check:build
 npm run dev
 ```
 - Matt checks: run the 2-minute dev timer; the fade is gentle and the ending is calm.
+
+## Comments
+- Built on branch build/26-sleep-timer. The schedule is `src/audio/sleep.ts`; wiring is `src/ui/sleepControl.ts`; UI is `src/ui/SleepTimer.tsx`.
+- Begin after a timer ends reuses the audio context and now restores master and restarts the mix (`beginAudio`).
+- The master slider is not honoured inside the final fade; the fade continues down from the current gain.
+- A new store flag `rested` stops the aurora until the next Begin. It is never stored.
