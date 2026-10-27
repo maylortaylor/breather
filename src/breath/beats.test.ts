@@ -47,6 +47,39 @@ function setup(level: number, tempo = 0.5, voice: Mix["metronome"]["voice"] = "m
 
 const fed = (f: ReturnType<typeof createFakeEngine>, layer: string) => f.feeding(layer).length;
 
+describe("hidden page", () => {
+  it("hands out beats 2 s ahead while hidden, so a 1 s tick misses none", () => {
+    const fake = createFakeEngine();
+    let t = 0;
+    let hidden = true;
+    const store = createStore<AppState>({ ...DEFAULT_STATE });
+    const machine = createPhaseMachine(1);
+    machine.start(0);
+    let tick: () => void = () => {};
+    startBeats({
+      machine,
+      clock: () => t,
+      engine: fake.engine,
+      store,
+      every: (fn) => {
+        tick = fn;
+        return () => {};
+      },
+      hidden: () => hidden,
+      vibrate: null,
+    });
+    // Hidden: ticks one second apart, as a throttled tab delivers them.
+    for (t = 0; t <= 4; t += 1) tick();
+    const hiddenHandedOut = fake.oscillators.length;
+    expect(hiddenHandedOut).toBeGreaterThan(0);
+    hidden = false;
+    tick();
+    // Visible again: no doubled beat at the switch.
+    const after = fake.oscillators.length;
+    expect(after).toBeLessThanOrEqual(hiddenHandedOut + 2);
+  });
+});
+
 describe("phase sound", () => {
   it("plays the chosen set's phase tone, not the rising tones", () => {
     const s = setup(LEVEL_D1);

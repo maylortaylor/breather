@@ -10,6 +10,8 @@ import type { PhaseSoundId } from "../presets";
 import type { AppState, Store } from "../store";
 
 export const TICK_MS = 25;
+/** Seconds of beats handed out ahead while the page is hidden. */
+export const HIDDEN_LOOKAHEAD_SEC = 2;
 /** Seconds the ringing phase tones take to fade when the guide pauses. */
 export const PAUSE_FADE_SEC = 0.3;
 /** Seconds the phase tones take to come back on resume. */
@@ -49,6 +51,8 @@ export interface BeatsDeps {
   every?: (fn: () => void, ms: number) => () => void;
   /** The phase-change pulse. Defaults to `navigator.vibrate`; null when the device has none. */
   vibrate?: Vibrate | null;
+  /** True while the page is hidden or the screen is locked. Defaults to `document.hidden`. */
+  hidden?: () => boolean;
   /** Runs a function after a delay; returns a canceller. Defaults to `setTimeout`. */
   later?: (fn: () => void, ms: number) => () => void;
 }
@@ -72,6 +76,7 @@ export function startBeats({
   every = defaultEvery,
   vibrate = vibrateFromNavigator(),
   later = defaultLater,
+  hidden = () => typeof document !== "undefined" && document.hidden,
 }: BeatsDeps): () => void {
   for (const id of [...PHASE_LAYERS, ...VOICE_LAYERS]) engine.setLayer(id, ONE_SHOT_LAYER);
 
@@ -97,6 +102,8 @@ export function startBeats({
   const scheduler = createBeatScheduler({
     now: clock,
     machine,
+    // A hidden page ticks about once a second; hand out beats far enough ahead to cover that.
+    lookahead: () => (hidden() ? HIDDEN_LOOKAHEAD_SEC : 0.1),
     onBeat(beat) {
       const { level, voice, phaseSound } = store.get().mix.metronome;
       const g = metronomeGains(level);

@@ -17,7 +17,7 @@ export interface SessionDeps {
   /** `navigator.audioSession`, when the browser has one. Missing means no feature. */
   audioSession?: { type: string } | null;
   /** Starts the silent looping <audio>. Called inside the Begin tap. */
-  startKeepAlive?: () => KeepAlive;
+  startKeepAlive?: (stream?: MediaStream) => KeepAlive;
   /** Sets the Media Session metadata to the named preset. */
   setMedia?: (presetName: string) => void;
   /** Subscribes to a user-visible preset change; returns the unsubscribe. */
@@ -45,7 +45,7 @@ const defaultDeps = (onStatus: (s: AudioStatus) => void): SessionDeps => ({
     typeof navigator !== "undefined" && "audioSession" in navigator
       ? (navigator as unknown as { audioSession: { type: string } }).audioSession
       : null,
-  startKeepAlive: () => startKeepAlive(),
+  startKeepAlive: (stream) => startKeepAlive(undefined, stream),
   setMedia: (name) => void setMediaMetadata(name),
   watchPreset: (fn) => {
     let last = store.get().presetId;
@@ -109,7 +109,7 @@ export function beginAudio(
     void first.then(() => {
       if (current && idle(engine.ctx.state)) deps.onStatus("needs-tap");
     });
-    keepAlive = deps.startKeepAlive?.() ?? null;
+    keepAlive = deps.startKeepAlive?.(engine.stream) ?? null;
     // suspended and WebKit's interrupted both mean "tap to resume"; a closed context stays as is.
     engine.ctx.onstatechange = () => {
       const state = engine.ctx.state;

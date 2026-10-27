@@ -139,3 +139,25 @@ describe("createBeatScheduler", () => {
     expect(s.times()).toEqual([10]);
   });
 });
+
+describe("lookahead as a function", () => {
+  it("reads the lookahead on every tick, so a hidden page can hand out beats further ahead", () => {
+    const machine = createPhaseMachine(1);
+    machine.start(0);
+    let t = 0;
+    let ahead = 0.1;
+    const got: number[] = [];
+    const s = createBeatScheduler({
+      now: () => t,
+      machine,
+      lookahead: () => ahead,
+      onBeat: (b) => got.push(b.at),
+    });
+    s.tick();
+    expect(got).toEqual([0]);
+    ahead = 2;
+    t = 1;
+    s.tick();
+    expect(got).toEqual([0, 1, 2]);
+  });
+});
