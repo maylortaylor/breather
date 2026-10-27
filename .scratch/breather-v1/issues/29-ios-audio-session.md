@@ -1,5 +1,5 @@
 Type: build
-Status: claimed
+Status: resolved
 Blocked by: 21, 26, 28
 Model: sonnet
 
@@ -57,3 +57,6 @@ iOS version: ______
 - The tap control reads "Sound paused. Tap to resume." (`src/ui/Resume.tsx`), mounted in `Screens` in `src/App.tsx`.
 - Lock-screen play and pause have no handlers on purpose, so they cannot fight the sleep timer.
 - Step 9 needs a debug line the app does not have; check it from Safari's web inspector on a Mac.
+
+## Answer
+Resolved 2026-10-26. All 7 criteria pass against stubs and fake contexts (525 tests). Matt approved merging the code. NOT verified on a real iPhone: silent-switch behaviour, screen lock and the 90-minute run, the interrupted state and one-tap resume, the iOS 26 cold start, and lock-screen controls. The 10-step device checklist stays in the Comments above with an empty result column. It must run after the first HTTPS deploy, because an installed app and a service worker need a secure origin; carried to ticket 32 and ticket 11.
