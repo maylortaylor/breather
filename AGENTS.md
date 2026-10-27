@@ -8,7 +8,7 @@ Breather is a static, installable web app for winding down: synthesized Web Audi
 
 ## Tickets
 
-Local until v1. Tickets live in `.scratch/` as markdown files, in the format of mattpocock-skills 1.3.1 `issue-tracker-local.md`. See [`docs/agents/issue-tracker.md`](docs/agents/issue-tracker.md). The current effort is [`.scratch/breather-v1/map.md`](.scratch/breather-v1/map.md).
+Tickets live in `.scratch/` as markdown files, in the format of mattpocock-skills 1.3.1 `issue-tracker-local.md`. See [`docs/agents/issue-tracker.md`](docs/agents/issue-tracker.md). The current effort is [`.scratch/breather-v1/map.md`](.scratch/breather-v1/map.md).
 
 Triage roles are in [`docs/agents/triage-labels.md`](docs/agents/triage-labels.md). Domain docs are in [`docs/agents/domain.md`](docs/agents/domain.md).
 
@@ -16,7 +16,7 @@ Triage roles are in [`docs/agents/triage-labels.md`](docs/agents/triage-labels.m
 
 - **Never put a secret in code.** The app is static; anything in a client bundle is public.
 - **Never commit `.env*`.** Only `.env.example` is tracked.
-- **Never add a git remote or push** until the v1 gate ticket (`.scratch/breather-v1/issues/11-v1-gate.md`) resolves.
+- **Never push to `main`.** The repo is public at `github.com/maylortaylor/breather`. Work goes through pull requests into `main`; secret scanning and push protection are on.
 - **Never use `:latest`** on any image or tool version.
 - **Never add analytics, a tracker, a network dependency or an API key** unless a new ADR allows it (ticket 04, temporary).
 - **Never put personal or client info in a ticket.** The repo goes public at v1, and so does every grill transcript in `.scratch/`.

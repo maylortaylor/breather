@@ -1,7 +1,5 @@
 name: Scan
 
-# Inert until the first push: this repo has no remote before v1.
-#
 # Secret scanning on every PR and push to main. Deliberately unfiltered (no
 # paths-ignore), because a secret can be committed in a docs-only PR. No
 # schedule: every commit reaches main through one of these two triggers
